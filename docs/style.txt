@@ -1,0 +1,24 @@
+Style conventions
+-----------------
+
+Variable, function, class names, commit comments and branch names should be descriptive, but as short as possible.
+
+For .cpp code:
+
+Variable names (camelCase):
+    -exampleVariable
+Function and class names (CapitalCase):
+    -ExampleFunction
+    -ExampleClass
+Comments:
+    -Keep the amount of comments to a minimum.
+    -Comments should be short but descriptive.
+    -Comments like "adding loop to iterate here" are worse than useless
+    -Outdated comments are worse than useless. Comments should be updated with the code, or else deleted.
+    
+For all files:
+    -File names should use all lowercase and underscores (eg. example_file.cpp
+    
+For source control:
+    -Commits such as "feature added", or "bug fixed" are again, worse than useless
+    -Keep commit names under 20 characters
