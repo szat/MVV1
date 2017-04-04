@@ -1,0 +1,19 @@
+For now, I'd like us to put the todo list in git directly, rather than using trello or some other service.
+
+TODO Wed, April 5th
+-Make a call to a notary for an appointment on Friday
+-Add an exception for the two specific .dll files to be comitted to source control (push/pull before starting configuration) 
+-Configure Simon's computer such that VS2015/OpenCV is installed, with the grayscale image program displaying properly
+-Start setting up the individual AKAZE C++ library to work directly in our existing solution. This way, we can have a development
+environment that can use all the features of OpenCV, and has a functional feature matching library
+-Finish going over the contract (we can hold of on signing it until Friday if there are any corrections that need to be made)
+
+TODO Friday, April 7th
+
+-Each finish the git tutorial (Danny)
+-Finish setting up AKAZE, get a feature matching success running locally
+-Sign the completed contract (and get it notarized)
+
+TODO (some later date):
+-Come up with a company name (NDim, NTek, NTech, NSpace are some suggestions).
+
