@@ -21,6 +21,11 @@ int main() {
         }
     }
 
+    //A few ghost functions
+    GhostFct();
+    GhostFct();
+    GhostFct();
+
     int i = 0;
     printer();
 }
