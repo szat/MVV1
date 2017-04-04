@@ -1,0 +1,40 @@
+Steps for Visual Studio 2015 environment:
+
+Install OpenCV:
+Download link: https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.2.0/opencv-3.2.0-vc14.exe/download
+Install to C:\opencv directory
+
+Note: The opencv installer specified in the above download link has precompiled lib/bin that can be used in 
+
+
+Steps for creating a first OpenCV solution (.sln) and project (.csproj) for the first time:
+1. Go to File --> New --> Project, and select Project.
+2. New Project window appears, select Win32 Console Application (Visual C++).
+3. Enter the name of the project into field "name", click "OK".
+4. In the Win32 Application Wizard, click Next.
+5. In the Win32 Application Wizard, deselect Precompiled header, deselect Security, Development Lifecycle (SDL) checks.
+6. In the Win32 Application Wizard, click Finish.
+7. In the Solution Explorer, select the newly created project, right-click and select Properties. 
+8. In the Property Pages, go to C/C++ --> General, select the field "Additional Include Directories" and enter "C:\opencv\build\include;"
+9. In the Property Pages, go to Linker --> Input, select the field "Additional Dependencies" and enter "opencv_world320.lib;"
+10. In the Property Pages, go to Linker --> General, select the field "Additional Library Directories" and enter "C:\opencv\build\x64\vc14\lib;"
+11. In the Property Pages, click "OK".
+12. Finally navigate in a normal window browser to "C:\opencv\build\x64\vc14\bin;" and copy the files "opencv_world320.dll" and "opencv_world320d.dll", navigate to the folder containing the solution, and copy the two files into "...\x64\Debug".
+
+Steps for creating a new project (.csproj) in the solution, once you have a project that is already working:
+1. Open the solution (.sln) in which the team is working.
+2. In the Solution Explorer select the solution, right click and go to Add --> New Project...
+3. Project creator window appears, select Win32 Console Application (Visual C++).
+4. Enter the name of the project into field "name", click "OK".
+5. In the Win32 Application Wizard, click "Next".
+6. In the Win32 Application Wizard, deselect Precompiled header, deselect Security, Development Lifecycle (SDL) checks.
+7. In the Win32 Application Wizard, click "Finish".
+8. In the Solution Explorer, select the new project, right-click and select Properties.
+9. The project Property Pages will pop up, which has the nice feature that if you select another project in the Solution Explorer, then the Property Pages is updated to the new project; however, as you navigate away from one project's Property Pages, Visual Studio will ask whether to save. 
+10. In the Solution Explorer, select another project that is already working with OpenCV.
+11. In the Property Pages, go to C/C++ --> General, select and copy the field "Additional Include Directories".
+12. In the Solution Explorer, select the new project, go back to Property Pages, and paste into "Additional Include Directories". 
+13. Int the Solution Explorer, select the other project, Property Pages will prompt you whether you want to save the changes you've made in the property pages, click Yes. 
+14. Do steps 10 to 13 for the fields Linker --> General --> Additional Linker Directories, and Linker --> Input --> Additional Dependencies
+15. In order to work in your new project, in the Solution Explorer, select the new project, right-click and select "Set as Startup Project".
+
