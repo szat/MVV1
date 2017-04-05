@@ -31,3 +31,8 @@
 # Log files
 *.log
 *.tlog
+
+# Visual studio generated files
+*.db
+*.opendb
+*.sdf
