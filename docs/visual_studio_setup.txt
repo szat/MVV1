@@ -38,3 +38,14 @@ Steps for creating a new project (.csproj) in the solution, once you have a proj
 14. Do steps 10 to 13 for the fields Linker --> General --> Additional Linker Directories, and Linker --> Input --> Additional Dependencies
 15. In order to work in your new project, in the Solution Explorer, select the new project, right-click and select "Set as Startup Project".
 
+Git procedure:
+
+Start of every day (each person):
+1. git pull
+
+End of every day (each person):
+1. git add .
+2. git commit -m "Useful Comment"
+3. git pull
+4. resolve any merge conflicts that appear by editing the files manually
+5. git push
