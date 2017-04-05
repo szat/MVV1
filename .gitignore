@@ -36,3 +36,16 @@
 *.db
 *.opendb
 *.sdf
+*.aps
+*.idb
+*.ipch
+*.lastbuildstate
+*.lib
+*.manifest
+*.obj
+*.pch
+*.pdb
+*.res
+*.sdf
+*.suo
+*.tlog
