@@ -32,6 +32,13 @@
 *.log
 *.tlog
 
+# Image files
+*.png
+*.bmp
+*.jpg
+*.jpeg
+*.svg
+
 # Visual studio generated files
 *.db
 *.opendb
