@@ -33,19 +33,19 @@
 *.tlog
 
 # Visual studio generated files
-*.db
-*.opendb
-*.sdf
-*.aps
-*.idb
-*.ipch
-*.lastbuildstate
-*.lib
-*.manifest
-*.obj
-*.pch
-*.pdb
-*.res
-*.sdf
-*.suo
-*.tlog
+#*.db
+#*.opendb
+#*.sdf
+#*.aps
+#*.idb
+#*.ipch
+#*.lastbuildstate
+#*.lib
+#*.manifest
+#*.obj
+#*.pch
+#*.pdb
+#*.res
+#*.sdf
+#*.suo
+#*.tlog
