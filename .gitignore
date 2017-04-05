@@ -46,8 +46,6 @@
 *.pch
 *.pdb
 *.res
-*.sdf
 *.suo
 *.tlog
 *.ilk
-*.sdf
