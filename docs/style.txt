@@ -8,7 +8,7 @@ For .cpp code:
 Variable names (camelCase):
     -exampleVariable
 Function and class names (CapitalCase):
-    -ExampleFunction
+    -example_function
     -ExampleClass
 Comments:
     -Keep the amount of comments to a minimum.
