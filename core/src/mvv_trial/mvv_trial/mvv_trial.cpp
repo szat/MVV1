@@ -5,38 +5,39 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include <vector>
 
 using namespace cv;
 using namespace std;
+
+class PointCorrespondence {
+	public:
+		PointCorrespondence(float AX, float AY, float BX, float BY);
+		float imageAX;
+		float imageAY;
+		float imageBX;
+		float imageBY;
+};
+
+PointCorrespondence::PointCorrespondence(float AX, float AY, float BX, float BY) {
+	imageAX = AX;
+	imageAY = AY;
+	imageBX = BX;
+	imageBY = BY;
+}
+
 int main()
 {
 
+	cout << "Constructing polygons..." << endl;
 
-	cout << "Program started" << endl;
+	PointCorrespondence testCorr = PointCorrespondence(1,2,3,4);
 
-	waitKey(0);
+	vector<PointCorrespondence> testCorrVector = vector<PointCorrespondence>();
+	testCorrVector.push_back(testCorr);
 
-	Mat image1, image2;
-	image1 = imread("..\\data_store\\lena.bmp", CV_LOAD_IMAGE_COLOR);
-	if (!image1.data)
-	{
-		cout << "Could not open or find the image" << endl;
-		return -1;
-	}
 
-	image2 = imread("..\\data_store\\lena.bmp", CV_LOAD_IMAGE_GRAYSCALE);
-	if (!image2.data)
-	{
-		cout << "Could not open or find the image" << endl;
-		return -1;
-	}
+	cin.get();
 
-	cout << "opencv test" << endl;
-	namedWindow("Color Image", WINDOW_AUTOSIZE);
-	imshow("Color Image", WINDOW_AUTOSIZE);
-	namedWindow("Gray Scale Image", WINDOW_AUTOSIZE);
-	imshow("Gray Scale Image", image2);
-	waitKey(0);
-	destroyAllWindows();
 	return 0;
 }
