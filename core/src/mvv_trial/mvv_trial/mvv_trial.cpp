@@ -246,7 +246,7 @@ int main(int argc, char** argv)
 	// bool indicating graphical or not
 
 
-	bool graphics = false;
+	bool graphics = true;
 	string pointSample = "s";
 
 	vector<Point2f> points;
