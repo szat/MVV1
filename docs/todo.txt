@@ -8,3 +8,6 @@ TODO Thursday, April 6th
 
 TODO Friday, April 7th
 -Sign the completed contract
+
+TODO Wednesday, April 12th
+-Make the Harris corner detector work
