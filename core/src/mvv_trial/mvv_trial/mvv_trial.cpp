@@ -1,12 +1,62 @@
-// mvv_trial.cpp : Defines the entry point for the console application.
-//
+/*
+This code was adapted from the Delaunay demo code from openCV, and so we have attached
+the following BSD license.
 
+-----------------------------------------------
+
+By downloading, copying, installing or using the software you agree to this license.
+If you do not agree to this license, do not download, install,
+copy or use the software.
+
+License Agreement
+For Open Source Computer Vision Library
+
+(3 - clause BSD License)
+
+Copyright(C) 2000 - 2016, Intel Corporation, all rights reserved.
+Copyright(C) 2009 - 2011, Willow Garage Inc., all rights reserved.
+Copyright(C) 2009 - 2016, NVIDIA Corporation, all rights reserved.
+Copyright(C) 2010 - 2013, Advanced Micro Devices, Inc., all rights reserved.
+Copyright(C) 2015 - 2016, OpenCV Foundation, all rights reserved.
+Copyright(C) 2015 - 2016, Itseez Inc., all rights reserved.
+
+Third party copyrights are property of their respective owners.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met :
+
+* Redistributions of source code must retain the above copyright notice,
+
+this list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+
+this list of conditions and the following disclaimer in the documentation
+and / or other materials provided with the distribution.
+
+* Neither the names of the copyright holders nor the names of the contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+This software is provided by the copyright holders and contributors "as is" and
+any express or implied warranties, including, but not limited to, the implied
+warranties of merchantability and fitness for a particular purpose are disclaimed.
+
+In no event shall copyright holders or contributors be liable for any direct,
+indirect, incidental, special, exemplary, or consequential damages
+(including, but not limited to, procurement of substitute goods or services;
+loss of use, data, or profits; or business interruption) however caused
+and on any theory of liability, whether in contract, strict liability,
+or tort(including negligence or otherwise) arising in any way out of
+the use of this software, even if advised of the possibility of such damage.
+*/
 #include "stdafx.h"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <ctime>
 #include <stdio.h>
+#define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
 using namespace cv;
 using namespace std;
@@ -148,7 +198,7 @@ vector<Point2f> get_sample_points() {
 }
 
 
-void visual_triangulation() {
+Subdiv2D graphical_triangulation(vector<Point2f> points) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 	Rect rect(0, 0, 600, 600);
 
@@ -159,12 +209,6 @@ void visual_triangulation() {
 	string win = "Delaunay Demo";
 	imshow(win, img);
 
-	std::clock_t start;
-	double duration;
-	start = std::clock();
-
-
-	vector<Point2f> points = get_sample_points();
 	int numPoints = points.size();
 
 	for (int i = 0; i < numPoints; i++) {
@@ -181,80 +225,25 @@ void visual_triangulation() {
 	}
 
 	img = Scalar::all(0);
-
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	std::cout << "printf: " << duration << '\n';
-
-	subdiv;
-
-	cin.get();
+	return subdiv;
 }
 
-Subdiv2D raw_triangulation() {
+Subdiv2D raw_triangulation(vector<Point2f> points) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 	Rect rect(0, 0, 600, 600);
-
 	Subdiv2D subdiv(rect);
-	//Mat img(rect.size(), CV_8UC3);
-
-	//img = Scalar::all(0);
-	string win = "Delaunay Demo";
-	//imshow(win, img);
-
-	std::clock_t start;
-	double duration;
-	start = std::clock();
-
-
-	vector<Point2f> points = get_sample_points();
 	int numPoints = points.size();
 
 	for (int i = 0; i < numPoints; i++) {
-		//locate_point(img, subdiv, points[i], active_facet_color);
-		//imshow(win, img);
-		//waitKey(1);
-
 		subdiv.insert(points[i]);
-
-		//img = Scalar::all(0);
-		//draw_subdiv(img, subdiv, delaunay_color);
-		//imshow(win, img);
-		//waitKey(1);
 	}
-
-	/*
-	for (int i = 0; i < 200; i++)
-	{
-	Point2f fp((float)(rand() % (rect.width - 10) + 5),
-	(float)(rand() % (rect.height - 10) + 5));
-
-	locate_point(img, subdiv, fp, active_facet_color);
-	imshow(win, img);
-
-	waitKey(1);
-
-	subdiv.insert(fp);
-
-	img = Scalar::all(0);
-	draw_subdiv(img, subdiv, delaunay_color);
-	imshow(win, img);
-
-	waitKey(1);
-	}
-	*/
-
-	//img = Scalar::all(0);
-	//paint_voronoi(img, subdiv);
-	//imshow(win, img);
-
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	std::cout << "printf: " << duration << '\n';
 
 	return subdiv;
 }
 
 int main(int argc, char** argv)
 {
+	// Secure input arguments in main
 	cv::CommandLineParser parser(argc, argv, "{help h||}");
 	if (parser.has("help"))
 	{
@@ -262,16 +251,54 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	bool graphicalView = false;
+	// Program parameters:
+	// vector<Point2f> points
+	// Rect (cv type) boundingBox
+	// bool indicating graphical or not
 
-	Subdiv2D subdiv;
-	if (graphicalView) {
-		visual_triangulation();
+
+	bool graphics = true;
+	string pointSample = "s";
+
+	vector<Point2f> points;
+	if (pointSample == "s") {
+		points = get_small_sample_points();
+	}
+	else if (pointSample == "m") {
+		points = get_sample_points();
 	}
 	else {
-		subdiv = raw_triangulation();
+		cout << "Exception: No point sample matches this input.\n";
+		cin.get();
+		return -1;
 	}
 
+	Subdiv2D subdiv;
+	string processMessage;
+
+	// timing triangulation process
+	std::clock_t start;
+	double duration;
+	start = clock();
+
+	if (graphics) {
+		processMessage = "Graphical triangulation time: ";
+		subdiv = graphical_triangulation(points);
+	}
+	else {
+		processMessage = "Raw triangulation time: ";
+		subdiv = raw_triangulation(points);
+	}
+	// duration of raw or visual triangulation.
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	cout << processMessage << duration << "ms" << "\n" ;
+
+	cout << "Completed triangulation on source image.\n";
+	cout << "Program will now propagate triangulation to target image.\n";
+
+	cin.get();
+
+	
 
 
 	return 0;
