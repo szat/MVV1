@@ -132,6 +132,12 @@ static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_c
 }
 
 
+vector<Point2f> get_one_sample_point() {
+	vector<Point2f> points = vector<Point2f>();
+	points.push_back(Point2f(500, 20));
+	return points;
+}
+
 vector<Point2f> get_small_sample_points() {
 	vector<Point2f> points = vector<Point2f>();
 	points.push_back(Point2f(528, 390));
@@ -267,6 +273,9 @@ int main(int argc, char** argv)
 	else if (pointSample == "m") {
 		points = get_sample_points();
 	}
+	else if (pointSample == "o") {
+		points = get_one_sample_point();
+	}
 	else {
 		cout << "Exception: No point sample matches this input.\n";
 		cin.get();
@@ -295,6 +304,13 @@ int main(int argc, char** argv)
 
 	cout << "Completed triangulation on source image.\n";
 	cout << "Program will now propagate triangulation to target image.\n";
+
+	// maybe modify the subdiv to eliminate edges and vertrtices before making trianges???
+
+	vector<Vec6f> triangles = vector<Vec6f>();
+	subdiv.getTriangleList(triangles);
+
+	// eliminate unecessary vertices (no, above step is better)
 
 	cin.get();
 
