@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <ctime>
+#include <stdio.h>
 
 using namespace cv;
 using namespace std;
@@ -80,6 +81,17 @@ static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_c
 	draw_subdiv_point(img, fp, active_color);
 }
 
+
+vector<Point2f> get_small_sample_points() {
+	vector<Point2f> points = vector<Point2f>();
+	points.push_back(Point2f(528, 390));
+	points.push_back(Point2f(551, 209));
+	points.push_back(Point2f(289, 355));
+	points.push_back(Point2f(569, 105));
+	points.push_back(Point2f(155, 551));
+	return points;
+}
+
 vector<Point2f> get_sample_points() {
 	vector<Point2f> points = vector<Point2f>();
 	points.push_back(Point2f(528, 390));
@@ -135,15 +147,8 @@ vector<Point2f> get_sample_points() {
 	return points;
 }
 
-int main(int argc, char** argv)
-{
-	cv::CommandLineParser parser(argc, argv, "{help h||}");
-	if (parser.has("help"))
-	{
-		help();
-		return 0;
-	}
 
+void visual_triangulation() {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 	Rect rect(0, 0, 600, 600);
 
@@ -152,7 +157,7 @@ int main(int argc, char** argv)
 
 	img = Scalar::all(0);
 	string win = "Delaunay Demo";
-	//imshow(win, img);
+	imshow(win, img);
 
 	std::clock_t start;
 	double duration;
@@ -165,7 +170,6 @@ int main(int argc, char** argv)
 	for (int i = 0; i < numPoints; i++) {
 		locate_point(img, subdiv, points[i], active_facet_color);
 		imshow(win, img);
-
 		waitKey(1);
 
 		subdiv.insert(points[i]);
@@ -173,39 +177,102 @@ int main(int argc, char** argv)
 		img = Scalar::all(0);
 		draw_subdiv(img, subdiv, delaunay_color);
 		imshow(win, img);
-
 		waitKey(1);
+	}
+
+	img = Scalar::all(0);
+
+	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+	std::cout << "printf: " << duration << '\n';
+
+	subdiv;
+
+	cin.get();
+}
+
+Subdiv2D raw_triangulation() {
+	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
+	Rect rect(0, 0, 600, 600);
+
+	Subdiv2D subdiv(rect);
+	//Mat img(rect.size(), CV_8UC3);
+
+	//img = Scalar::all(0);
+	string win = "Delaunay Demo";
+	//imshow(win, img);
+
+	std::clock_t start;
+	double duration;
+	start = std::clock();
+
+
+	vector<Point2f> points = get_sample_points();
+	int numPoints = points.size();
+
+	for (int i = 0; i < numPoints; i++) {
+		//locate_point(img, subdiv, points[i], active_facet_color);
+		//imshow(win, img);
+		//waitKey(1);
+
+		subdiv.insert(points[i]);
+
+		//img = Scalar::all(0);
+		//draw_subdiv(img, subdiv, delaunay_color);
+		//imshow(win, img);
+		//waitKey(1);
 	}
 
 	/*
 	for (int i = 0; i < 200; i++)
 	{
-		Point2f fp((float)(rand() % (rect.width - 10) + 5),
-			(float)(rand() % (rect.height - 10) + 5));
+	Point2f fp((float)(rand() % (rect.width - 10) + 5),
+	(float)(rand() % (rect.height - 10) + 5));
 
-		locate_point(img, subdiv, fp, active_facet_color);
-		imshow(win, img);
+	locate_point(img, subdiv, fp, active_facet_color);
+	imshow(win, img);
 
-		waitKey(1);
+	waitKey(1);
 
-		subdiv.insert(fp);
+	subdiv.insert(fp);
 
-		img = Scalar::all(0);
-		draw_subdiv(img, subdiv, delaunay_color);
-		imshow(win, img);
+	img = Scalar::all(0);
+	draw_subdiv(img, subdiv, delaunay_color);
+	imshow(win, img);
 
-		waitKey(1);
+	waitKey(1);
 	}
 	*/
 
-	img = Scalar::all(0);
+	//img = Scalar::all(0);
 	//paint_voronoi(img, subdiv);
-	imshow(win, img);
+	//imshow(win, img);
 
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	std::cout << "printf: " << duration << '\n';
 
-	cin.get();
+	return subdiv;
+}
+
+int main(int argc, char** argv)
+{
+	cv::CommandLineParser parser(argc, argv, "{help h||}");
+	if (parser.has("help"))
+	{
+		help();
+		return 0;
+	}
+
+	bool graphicalView = false;
+
+	Subdiv2D subdiv;
+	if (graphicalView) {
+		visual_triangulation();
+	}
+	else {
+		subdiv = raw_triangulation();
+	}
+
+
 
 	return 0;
 }
