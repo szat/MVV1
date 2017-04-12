@@ -11,3 +11,4 @@ TODO Friday, April 7th
 
 TODO Wednesday, April 12th
 -Make the Harris corner detector work
+-Organize files
