@@ -237,6 +237,33 @@ Subdiv2D raw_triangulation(vector<Point2f> points) {
 	return subdiv;
 }
 
+class MatchedFeature {
+public:
+	MatchedFeature(float sourceX, float sourceY, float targetX, float targetY) {
+		srcX = sourceX;
+		srcY = sourceY;
+		tarX = targetX;
+		tarY = targetY;
+		
+	}
+protected:
+	float srcX;
+	float srcY;
+	float tarX;
+	float tarY;
+
+	/*
+	Need getters for the matched features. 
+	No setters though!! The values don't change once initialized.
+	*/
+
+};
+
+
+void construct_geometries(vector<MatchedFeature> matchedFeatures, Rect sourceImageBounds, Rect destImageBounds) {
+	cout << "Not presently implemented";
+}
+
 int main(int argc, char** argv)
 {
 	// Secure input arguments in main
@@ -247,7 +274,7 @@ int main(int argc, char** argv)
 
 
 	bool graphics = true;
-	string pointSample = "s";
+	string pointSample = "m";
 
 	vector<Point2f> points;
 	if (pointSample == "s") {

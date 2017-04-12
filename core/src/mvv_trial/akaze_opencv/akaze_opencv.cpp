@@ -18,6 +18,7 @@ const float inlier_threshold = 2.5f; // Distance threshold to identify inliers
 const float nn_match_ratio = 0.8f;   // Nearest neighbor matching ratio
 const double akaze_thresh = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 
+
 int main(void)
 {
 	Mat img1 = imread("..\\data_store\\mona_lisa_1.jpg", IMREAD_GRAYSCALE);
