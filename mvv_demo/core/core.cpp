@@ -6,16 +6,21 @@
 #include <iostream>
 
 #define VERSION "1.0.0"
-#define APPLICATION_NAME "ff"
+#define APPLICATION_NAME "MVV"
+#define COMPANY_NAME "NDim Inc."
+#define COPYRIGHT_YEAR 2017
 
 using namespace std;
 
 int main()
 {
 
+	cout << APPLICATION_NAME << " version " << VERSION << endl;
+	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
+	cout << "Beginning startup process..." << endl;
 
-	cout << "";
 
+	cin.get();
 
     return 0;
 }

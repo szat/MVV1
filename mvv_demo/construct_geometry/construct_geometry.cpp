@@ -57,6 +57,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include <vector>
 #include <ctime>
 #include <stdio.h>
+#include "generate_test_points.h"
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
 using namespace cv;
@@ -121,85 +122,11 @@ static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_c
 	draw_subdiv_point(img, fp, active_color);
 }
 
-
-vector<Point2f> get_one_sample_point() {
-	vector<Point2f> points = vector<Point2f>();
-	points.push_back(Point2f(500, 20));
-	return points;
-}
-
-vector<Point2f> get_small_sample_points() {
-	vector<Point2f> points = vector<Point2f>();
-	points.push_back(Point2f(528, 390));
-	points.push_back(Point2f(551, 209));
-	points.push_back(Point2f(289, 355));
-	points.push_back(Point2f(569, 105));
-	points.push_back(Point2f(155, 551));
-	return points;
-}
-
-vector<Point2f> get_sample_points() {
-	vector<Point2f> points = vector<Point2f>();
-	points.push_back(Point2f(528, 390));
-	points.push_back(Point2f(551, 209));
-	points.push_back(Point2f(289, 355));
-	points.push_back(Point2f(569, 105));
-	points.push_back(Point2f(155, 551));
-	points.push_back(Point2f(335, 319));
-	points.push_back(Point2f(273, 331));
-	points.push_back(Point2f(353, 505));
-	points.push_back(Point2f(590, 287));
-	points.push_back(Point2f(305, 31));
-	points.push_back(Point2f(25, 313));
-	points.push_back(Point2f(16, 374));
-	points.push_back(Point2f(44, 57));
-	points.push_back(Point2f(517, 335));
-	points.push_back(Point2f(564, 475));
-	points.push_back(Point2f(508, 548));
-	points.push_back(Point2f(126, 494));
-	points.push_back(Point2f(553, 267));
-	points.push_back(Point2f(52, 565));
-	points.push_back(Point2f(91, 589));
-	points.push_back(Point2f(234, 478));
-	points.push_back(Point2f(179, 211));
-	points.push_back(Point2f(261, 324));
-	points.push_back(Point2f(392, 91));
-	points.push_back(Point2f(560, 592));
-	points.push_back(Point2f(578, 383));
-	points.push_back(Point2f(260, 316));
-	points.push_back(Point2f(529, 14));
-	points.push_back(Point2f(70, 507));
-	points.push_back(Point2f(264, 477));
-	points.push_back(Point2f(188, 119));
-	points.push_back(Point2f(156, 125));
-	points.push_back(Point2f(207, 251));
-	points.push_back(Point2f(162, 214));
-	points.push_back(Point2f(218, 592));
-	points.push_back(Point2f(504, 38));
-	points.push_back(Point2f(319, 267));
-	points.push_back(Point2f(21, 31));
-	points.push_back(Point2f(106, 88));
-	points.push_back(Point2f(508, 158));
-	points.push_back(Point2f(482, 158));
-	points.push_back(Point2f(419, 335));
-	points.push_back(Point2f(332, 554));
-	points.push_back(Point2f(538, 589));
-	points.push_back(Point2f(133, 198));
-	points.push_back(Point2f(160, 9));
-	points.push_back(Point2f(436, 462));
-	points.push_back(Point2f(256, 442));
-	points.push_back(Point2f(159, 130));
-	points.push_back(Point2f(97, 150));
-	return points;
-}
-
-
-Subdiv2D graphical_triangulation(vector<Point2f> points) {
+Subdiv2D graphical_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
-	Rect rect(0, 0, 600, 600);
 
-	Subdiv2D subdiv(rect);
-	Mat img(rect.size(), CV_8UC3);
+	Subdiv2D subdiv(sourceImageBoundingBox);
+	Mat img(sourceImageBoundingBox.size(), CV_8UC3);
 
 	img = Scalar::all(0);
 	string win = "Delaunay Demo";
@@ -224,10 +151,9 @@ Subdiv2D graphical_triangulation(vector<Point2f> points) {
 	return subdiv;
 }
 
-Subdiv2D raw_triangulation(vector<Point2f> points) {
+Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
-	Rect rect(0, 0, 600, 600);
-	Subdiv2D subdiv(rect);
+	Subdiv2D subdiv(sourceImageBoundingBox);
 	int numPoints = points.size();
 
 	for (int i = 0; i < numPoints; i++) {
@@ -246,51 +172,82 @@ public:
 		tarY = targetY;
 		
 	}
-protected:
+
+public:
 	float srcX;
 	float srcY;
 	float tarX;
 	float tarY;
 
-	/*
-	Need getters for the matched features. 
-	No setters though!! The values don't change once initialized.
-	*/
-
+	// should probably be protected, since modifying the matchings post facto will cause data corruption
 };
 
 
-void construct_geometries(vector<MatchedFeature> matchedFeatures, Rect sourceImageBounds, Rect destImageBounds) {
-	cout << "Not presently implemented";
+vector<Vec6f> construct_triangles(vector<MatchedFeature> matchedFeatures, Rect sourceImageBounds, Rect destImageBounds) {
+	// Constructing triangulation of first image
+
+	vector<Point2f> points = vector<Point2f>();
+	size_t numberMatchedFeatures = matchedFeatures.size();
+
+	for (size_t i = 0; i < numberMatchedFeatures; i++) {
+		points.push_back(Point2f(matchedFeatures[i].srcX, matchedFeatures[i].srcY));
+	}
+
+	Subdiv2D subdiv;
+	subdiv = graphical_triangulation(points, sourceImageBounds);
+	vector<Vec6f> triangles = vector<Vec6f>();
+	subdiv.getTriangleList(triangles);
+
+	// eliminate unecessary vertices (no, above step is better)
+
+	// should be press any key to continue...
+	cout << "Enter any text and press enter to exit program." << endl;
+	cin.get();
+
+	return triangles;
 }
 
-int main(int argc, char** argv)
+int test_interface()
 {
-	// Secure input arguments in main
-	// Program parameters:
-	// vector<Point2f> points
-	// Rect (cv type) boundingBox
-	// bool indicating graphical or not
+	string input = "";
+	int numberPoints = 0;
 
+	while (true) {
+		cout << "Please enter the number of feature points you wish to test: ";
+		getline(cin, input);
 
-	bool graphics = true;
-	string pointSample = "m";
+		stringstream myStream(input);
+		if (myStream >> numberPoints)
+			break;
+		cout << "Invalid number, please try again." << endl;
+	}
 
-	vector<Point2f> points;
-	if (pointSample == "s") {
-		points = get_small_sample_points();
+	char graphics = { 0 };
+	bool graphicsMode = false;
+
+	while (true) {
+		cout << "Graphical mode? (y/n)" << endl;
+		getline(cin, input);
+
+		if (input.length() == 1) {
+			graphics = input[0];
+			if (graphics == 'y' || graphics == 'Y') {
+				graphicsMode = true;
+				break;
+			}
+			else if (graphics == 'n' || graphics == 'N') {
+				graphicsMode = false;
+				break;
+			}
+		}
+
+		cout << "Invalid character, please try again." << endl;
 	}
-	else if (pointSample == "m") {
-		points = get_sample_points();
-	}
-	else if (pointSample == "o") {
-		points = get_one_sample_point();
-	}
-	else {
-		cout << "Exception: No point sample matches this input.\n";
-		cin.get();
-		return -1;
-	}
+
+	cout << "Running delaunay triangulation on " << numberPoints << " vertices." << endl;
+
+	Rect rect(0, 0, 600, 600);
+	vector<Point2f> points = get_n_random_points(rect, numberPoints);
 
 	Subdiv2D subdiv;
 	string processMessage;
@@ -300,17 +257,17 @@ int main(int argc, char** argv)
 	double duration;
 	start = clock();
 
-	if (graphics) {
+	if (graphicsMode) {
 		processMessage = "Graphical triangulation time: ";
-		subdiv = graphical_triangulation(points);
+		subdiv = graphical_triangulation(points, rect);
 	}
 	else {
 		processMessage = "Raw triangulation time: ";
-		subdiv = raw_triangulation(points);
+		subdiv = raw_triangulation(points, rect);
 	}
 	// duration of raw or visual triangulation.
 	duration = (clock() - start) / (double)CLOCKS_PER_MS;
-	cout << processMessage << duration << "ms" << "\n" ;
+	cout << processMessage << duration << "ms" << "\n";
 
 	cout << "Completed triangulation on source image.\n";
 	cout << "Program will now propagate triangulation to target image.\n";
@@ -321,8 +278,32 @@ int main(int argc, char** argv)
 	subdiv.getTriangleList(triangles);
 
 	// eliminate unecessary vertices (no, above step is better)
-
+	
+	// should be press any key to continue...
+	cout << "Enter any text and press enter to exit program." << endl;
 	cin.get();
 
 	return 0;
+}
+
+void test_matched_features() {
+	Rect box1 = Rect(0, 0, 600, 600);
+	Rect box2 = Rect(0, 0, 600, 600);
+	vector<MatchedFeature> matchedFeatures = vector<MatchedFeature>();
+	int num_points = matchedFeatures.size();
+	vector<Point2f> points = get_n_random_points(box1, 700);
+	for (int i = 0; i < num_points; i++) {
+		matchedFeatures.push_back(MatchedFeature(points[i].x, points[i].y, 0, 0));
+	}
+	vector<Vec6f> triangles = construct_triangles(matchedFeatures, box1, box2);
+}
+
+int main(int argc, char** argv)
+{
+	cout << "Testing construct_geometry.csproj in DEBUG" << endl;
+	cout << "In test mode, a sample triangulation is shown on N vertices." << endl;
+
+	test_interface();
+	//test_matched_features();
+
 }
