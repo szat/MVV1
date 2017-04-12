@@ -51,13 +51,19 @@ or tort(including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
 #include "stdafx.h"
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <vector>
 #include <ctime>
 #include <stdio.h>
+
+
+#include "construct_geometry.h"
 #include "generate_test_points.h"
+#include "MatchedFeature.h"
+
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
 using namespace cv;
@@ -163,26 +169,6 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) 
 	return subdiv;
 }
 
-class MatchedFeature {
-public:
-	MatchedFeature(float sourceX, float sourceY, float targetX, float targetY) {
-		srcX = sourceX;
-		srcY = sourceY;
-		tarX = targetX;
-		tarY = targetY;
-		
-	}
-
-public:
-	float srcX;
-	float srcY;
-	float tarX;
-	float tarY;
-
-	// should probably be protected, since modifying the matchings post facto will cause data corruption
-};
-
-
 vector<Vec6f> construct_triangles(vector<MatchedFeature> matchedFeatures, Rect sourceImageBounds, Rect destImageBounds) {
 	// Constructing triangulation of first image
 
@@ -194,20 +180,14 @@ vector<Vec6f> construct_triangles(vector<MatchedFeature> matchedFeatures, Rect s
 	}
 
 	Subdiv2D subdiv;
-	subdiv = graphical_triangulation(points, sourceImageBounds);
+	subdiv = raw_triangulation(points, sourceImageBounds);
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
-
-	// eliminate unecessary vertices (no, above step is better)
-
-	// should be press any key to continue...
-	cout << "Enter any text and press enter to exit program." << endl;
-	cin.get();
 
 	return triangles;
 }
 
-int test_interface()
+vector<Vec6f> test_interface()
 {
 	string input = "";
 	int numberPoints = 0;
@@ -270,32 +250,25 @@ int test_interface()
 	cout << processMessage << duration << "ms" << "\n";
 
 	cout << "Completed triangulation on source image.\n";
-	cout << "Program will now propagate triangulation to target image.\n";
 
 	// maybe modify the subdiv to eliminate edges and vertrtices before making trianges???
 
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
-
-	// eliminate unecessary vertices (no, above step is better)
-	
-	// should be press any key to continue...
-	cout << "Enter any text and press enter to exit program." << endl;
-	cin.get();
-
-	return 0;
+	return triangles;
 }
 
-void test_matched_features() {
+vector<Vec6f> test_matched_features() {
 	Rect box1 = Rect(0, 0, 600, 600);
 	Rect box2 = Rect(0, 0, 600, 600);
 	vector<MatchedFeature> matchedFeatures = vector<MatchedFeature>();
-	int num_points = matchedFeatures.size();
-	vector<Point2f> points = get_n_random_points(box1, 700);
+	vector<Point2f> points = get_sample_points();
+	int num_points = points.size();
 	for (int i = 0; i < num_points; i++) {
 		matchedFeatures.push_back(MatchedFeature(points[i].x, points[i].y, 0, 0));
 	}
 	vector<Vec6f> triangles = construct_triangles(matchedFeatures, box1, box2);
+	return triangles;
 }
 
 int main(int argc, char** argv)
@@ -303,7 +276,9 @@ int main(int argc, char** argv)
 	cout << "Testing construct_geometry.csproj in DEBUG" << endl;
 	cout << "In test mode, a sample triangulation is shown on N vertices." << endl;
 
-	test_interface();
-	//test_matched_features();
+	vector<Vec6f> triangleSet1 = test_interface();
+	//vector<Vec6f> triangleSet2 = test_matched_features();
+
+	cout << "Finished.";
 
 }
