@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "akaze_opencv", "akaze_openc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "harris_corners_opencv", "harris_corners_opencv\harris_corners_opencv.vcxproj", "{8DB389AA-FD28-4806-9E0C-618F698CC832}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "affine_akaze", "affine_akaze\affine_akaze.vcxproj", "{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{8DB389AA-FD28-4806-9E0C-618F698CC832}.Release|x64.Build.0 = Release|x64
 		{8DB389AA-FD28-4806-9E0C-618F698CC832}.Release|x86.ActiveCfg = Release|Win32
 		{8DB389AA-FD28-4806-9E0C-618F698CC832}.Release|x86.Build.0 = Release|Win32
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Debug|x64.ActiveCfg = Debug|x64
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Debug|x64.Build.0 = Debug|x64
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Debug|x86.ActiveCfg = Debug|Win32
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Debug|x86.Build.0 = Debug|Win32
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Release|x64.ActiveCfg = Release|x64
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Release|x64.Build.0 = Release|x64
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Release|x86.ActiveCfg = Release|Win32
+		{B837BF1E-7034-4022-B2AE-2BD2EC608EA2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
