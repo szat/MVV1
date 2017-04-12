@@ -36,7 +36,7 @@ int main(void)
 	Mat warped_image;
 	warpPerspective(img1, warped_image, homography, img1.size());
 	img2 = warped_image;
-
+	
 	vector<KeyPoint> kpts1, kpts2;
 	Mat desc1, desc2;
 	Ptr<AKAZE> akaze = AKAZE::create();
