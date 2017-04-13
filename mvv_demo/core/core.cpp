@@ -26,31 +26,16 @@ int main()
 
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
-	cout << "Beginning startup process..." << endl;
 
-	std::vector<cv::Point2f> samplePoints;
-	//= get_sample_points();
-	//samplePoints = get_sample_points();
-	
-	//std::vector<cv::Point2f> thingy = get_sample_points();
-
-	vector<Point2f> result = get_sample_points();
-
-	Rect sampleRect = Rect(0, 0, 600, 600);
-	//vector<Vec6f> triangles = construct_triangles(samplePoints, sampleRect);
-
-
-	cout << "Testing construct_geometry.csproj in DEBUG" << endl;
-	cout << "In test mode, a sample triangulation is shown on N vertices." << endl;
+	// Danny current test
 
 	vector<Vec6f> triangleSet1 = test_interface();
-	//vector<Vec6f> triangleSet2 = test_matched_features();
 
-	cout << "Finished.";
+	// Simon current test
 
+
+	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
-
-
 
     return 0;
 }
