@@ -101,7 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\construct_geometry;..\build_geometry;..\match_points;..\interpolate_images;C:\opencv\build\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\build_geometry;..\match_points;..\interpolate_images;C:\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

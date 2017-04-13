@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
@@ -20,5 +20,7 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox);
 vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect sourceImageBounds);
 
 vector<Vec6f> test_interface();
+*/
+
 
 
