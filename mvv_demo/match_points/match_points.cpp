@@ -42,15 +42,9 @@ bool has_image_suffix(const std::string &str) {
 	return (has_suffix(str, ".jpg") || has_suffix(str, ".jpeg") || has_suffix(str, ".png") || has_suffix(str, ".bmp") || has_suffix(str, ".svg") || has_suffix(str, ".tiff") || has_suffix(str, ".ppm"));
 }
 
-void akaze_wrapper(const Mat& img1_in, vector<KeyPoint> features_out, Mat descriptors_out) {}
-
-void matcher_wrapper(const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat desc1_in, const Mat desc2_in, vector<KeyPoint> kpts1_out, vector<KeyPoint> kpts2_out) {}
-
-void ransac_wrapper(const vector<KeyPoint>& features_in, Mat homography_out, vector<KeyPoint>& features_out) {}
-
 int main(void)
 {
-	time_t tstart, tend;
+	time_t ststart, tend;
 
 	cout << "Welcome to match_points testing unit! This unit allows:" << endl;
 	cout << "\t-drawing correspondances between different images," << endl;
@@ -111,6 +105,7 @@ int main(void)
 	Ptr<AKAZE> akaze = AKAZE::create();
 	akaze->setThreshold(akaze_thresh);
 	
+	time_t tstart;
 	cout << endl << "akaze->detectAndCompute(img1, noArray(), pts1, desc1)" << endl;
 	tstart = time(0);
 	akaze->detectAndCompute(img1, noArray(), kpts1, desc1);
@@ -241,30 +236,27 @@ void akaze_wrapper(const Mat& img_in, const float akaze_thresh, vector<KeyPoint>
 	cout << "\tFound " << features_out.size() << "features" << endl;
 }
 
-void matcher_wrapper(const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat desc1_in, const Mat desc2_in, vector<KeyPoint> kpts1_out, vector<KeyPoint> kpts2_out) {
-	vector<KeyPoint> matchedSrc, matchedDst, inliers1, inliers2;
-
+void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat desc1_in, const Mat desc2_in, vector<KeyPoint> kpts1_out, vector<KeyPoint> kpts2_out) {
+	time_t tstart, tend;
 	vector<vector<DMatch>> matchesLoweRatio;
-	if (extractionType == "2") { //Lowe's ratio
-		BFMatcher matcher2(NORM_HAMMING);
-		tstart = time(0);
-		matcher2.knnMatch(desc1, desc2, matchesLoweRatio, 2);
-		int nbMatches = matchesLoweRatio.size();
-		for (int i = 0; i < nbMatches; i++) {
-			DMatch first = matchesLoweRatio[i][0];
-			float dist1 = matchesLoweRatio[i][0].distance;
-			float dist2 = matchesLoweRatio[i][1].distance;
-			if (dist1 < nn_match_ratio * dist2) {
-				matchedSrc.push_back(kpts1[first.queryIdx]);
-				matchedDst.push_back(kpts2[first.trainIdx]);
-			}
+	BFMatcher matcher(NORM_HAMMING);
+	tstart = time(0);
+	matcher.knnMatch(desc1_in, desc2_in, matchesLoweRatio, 2);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < ratio * dist2) {
+			kpts1_out.push_back(kpts1_in[first.queryIdx]);
+			kpts2_out.push_back(kpts2_in[first.trainIdx]);
 		}
-		tend = time(0);
-		cout << "BF(NORM_HAMMING, crossCheck = true):" << endl;
-		cout << "\tTime taken: " << difftime(tend, tstart) << "s." << endl;
-		cout << "\tRatio used: " << nn_match_ratio << endl;
-		cout << "\tNumber of matches: " << matchedSrc.size() << endl;
 	}
+	tend = time(0);
+	cout << "BF(NORM_HAMMING, crossCheck = true):" << endl;
+	cout << "\tTime taken: " << difftime(tend, tstart) << "s." << endl;
+	cout << "\tRatio used: " << nn_match_ratio << endl;
+	cout << "\tNumber of matches: " << kpts1_out.size() << endl;
 }
 
 void ransac_wrapper(const vector<KeyPoint>& features_in, Mat homography_out, vector<KeyPoint>& features_out) {}
