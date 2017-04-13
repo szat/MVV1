@@ -27,105 +27,200 @@ This software is provided by the copyright holders and contributors “as is” and 
 
 using namespace std;
 using namespace cv;
-const float inlier_threshold = 2.5f; // Distance threshold to identify inliers
+
+const float inlier_threshold = 20.0f; // Distance threshold to identify inliers
 const float nn_match_ratio = 0.8f;   // Nearest neighbor matching ratio
 const double akaze_thresh = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 
+bool has_suffix(const std::string &str, const std::string &suffix)
+{
+	return str.size() >= suffix.size() &&
+		str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool has_image_suffix(const std::string &str) {
+	return (has_suffix(str, ".jpg") || has_suffix(str, ".jpeg") || has_suffix(str, ".png") || has_suffix(str, ".bmp") || has_suffix(str, ".svg") || has_suffix(str, ".tiff") || has_suffix(str, ".ppm"));
+}
+
+void akaze_wrapper(const Mat& img1_in, vector<KeyPoint> features_out, Mat descriptors_out) {}
+
+void matcher_wrapper(const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat desc1_in, const Mat desc2_in, vector<KeyPoint> kpts1_out, vector<KeyPoint> kpts2_out) {}
+
+void ransac_wrapper(const vector<KeyPoint>& features_in, Mat homography_out, vector<KeyPoint>& features_out) {}
+
 int main(void)
 {
-	Mat img1 = imread("..\\data_store\\mona_lisa_1.jpg", IMREAD_GRAYSCALE);
-	Mat img2 = imread("..\\data_store\\mona_lisa_4.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\mona_lisa_3.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\mona_lisa_2.jpg", IMREAD_GRAYSCALE);
-	//Mat img1 = imread("..\\data_store\\david_1.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\david_2.jpg", IMREAD_GRAYSCALE);
-	//Mat img1 = imread("..\\data_store\\arc_de_triomphe_1.png", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\arc_de_triomphe_2.png", IMREAD_GRAYSCALE);
+	time_t tstart, tend;
 
-	float homography_entries[9] = { 7.6285898e-01, -2.9922929e-01,   2.2567123e+02,
-		3.3443473e-01,  1.0143901e+00, -7.6999973e+01,
-		3.4663091e-04, -1.4364524e-05,  1.0000000e+00 };
-	Mat homography = Mat(3, 3, CV_32F, homography_entries);
-	Mat warped_image;
-	warpPerspective(img1, warped_image, homography, img1.size());
-	img2 = warped_image;
+	cout << "Welcome to match_points testing unit! This unit allows:" << endl;
+	cout << "\t-drawing correspondances between different images," << endl;
+	cout << "\t-trying different feature extraction strategies and parameters," << endl;
+	cout << "\t-trying different descriptor matcher strategies and parameters," << endl;
+	cout << "\t-tryint different RANSAC parameters." << endl << endl;
+	
+	string address = "..\\data_store\\";
+	string input = "";
+	ifstream infile1;
+	while (true) {
+		cout << "Please enter the name of the first image in folder data_store:";
+		getline(cin, input);
+		address += input;
+		cout << "The address you entered is " << address << endl;
+		if (has_image_suffix(address)) {
+			infile1.open(address.c_str());
+			if (infile1) break;
+			cout << "Invalid file." << endl;
+			address = "..\\data_store\\";
+			input = "";
+		}
+	}
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+
+	address = "..\\data_store\\";
+	input = "";
+	ifstream infile2;
+	while (true) {
+		cout << "Please enter the name of the second image in folder data_store:";
+		getline(cin, input);
+		address += input;
+		cout << "The address you entered is " << address << endl;
+		if (has_image_suffix(address)) {
+			infile2.open(address.c_str());
+			if (infile2) break;
+			cout << "Invalid file." << endl;
+			address = "..\\data_store\\";
+			input = "";
+		}
+	}
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+
+	string extractionType = "";
+	while (true) {
+		cout << endl << "Please select the feature extraction method:" << endl;
+		cout << "\t1: AKAZE (approx 10 sec)" << endl;
+		getline(cin, input);
+		if (input == "1") {
+			extractionType = input;
+			break;
+		}
+	}
 
 	vector<KeyPoint> kpts1, kpts2;
 	Mat desc1, desc2;
+
 	Ptr<AKAZE> akaze = AKAZE::create();
 	akaze->setThreshold(akaze_thresh);
-
-	time_t tstart, tend;
-	tstart = time(0);
-
-	akaze->detectAndCompute(img1, noArray(), kpts1, desc1);
-	akaze->detectAndCompute(img2, noArray(), kpts2, desc2);
-
-	//Test different matching methods
-	vector<DMatch> matches1;
-	BFMatcher matcher1(NORM_HAMMING, true); //crossCheck = true
-	tstart = time(0);
-	matcher1.match(desc1, desc2, matches1);
-	tend = time(0);
-	cout << "Brute force matching with cross-check took " << difftime(tend, tstart) << " second(s)." << endl;
-	cout << "Number of initial matches (outliers and inliers) " << matches1.size() << endl;
-
-	vector<vector<DMatch>> matches2;
-	vector<KeyPoint> matched1, matched2, inliers1, inliers2;
-	vector<DMatch> good_matches;
 	
-	BFMatcher matcher2(NORM_HAMMING);
+	cout << endl << "akaze->detectAndCompute(img1, noArray(), pts1, desc1)" << endl;
 	tstart = time(0);
-	matcher2.knnMatch(desc1, desc2, matches2, 2);
-	int nbMatches = matches2.size();
-	for (size_t i = 0; i < nbMatches; i++) {
-		DMatch first = matches2[i][0];
-		float dist1 = matches2[i][0].distance;
-		float dist2 = matches2[i][1].distance;
-		if (dist1 < nn_match_ratio * dist2) {
-			matched1.push_back(kpts1[first.queryIdx]);
-			matched2.push_back(kpts2[first.trainIdx]);
+	akaze->detectAndCompute(img1, noArray(), kpts1, desc1);
+	tend = time(0);
+	cout << "... took " << difftime(tend, tstart) << " s and found " << kpts1.size() << " keypoints in image 1." << endl;
+	
+	cout << endl << "akaze->detectAndCompute(img2, noArray(), kpts2, desc2);" << endl;
+	tstart = time(0);
+	akaze->detectAndCompute(img2, noArray(), kpts2, desc2);
+	tend = time(0);
+	cout << "... took " << difftime(tend, tstart) << " s and found " << kpts2.size() << " keypoints in image 2." << endl;
+
+	string matcherType = "";
+	while (true) {
+		cout << endl << "Please select the descriptor matching method:" << endl;
+		cout << "\t1: BF(Hamming Norm) with cross-check" << endl;
+		cout << "\t2: BF(Hamming Norm) with Lowe's ratio test" << endl;
+		getline(cin, input);
+		if (input == "1" || input == "2") {
+			extractionType = input;
+			break;
 		}
 	}
-	tend = time(0);
-	cout << "Brute force matching with Lowe's ratio test took " << difftime(tend, tstart) << " second(s)." << endl;
-	cout << "Number of initial matches (outliers and inliers) " << matched2.size() << endl;
+
+	vector<KeyPoint> matchedSrc, matchedDst, inliers1, inliers2;
+
+	vector<DMatch> matchesCrossCheck;
+	if (extractionType == "1") { //cross-check
+		BFMatcher matcher1(NORM_HAMMING, true); //crossCheck = true
+		tstart = time(0);
+		matcher1.match(desc1, desc2, matchesCrossCheck);
+		int nbMatches = matchesCrossCheck.size();
+		for (int i = 0; i < nbMatches; i++) {
+			DMatch first = matchesCrossCheck[i];
+			matchedSrc.push_back(kpts1[first.queryIdx]);
+			matchedDst.push_back(kpts2[first.trainIdx]);		
+		}
+		tend = time(0);
+		cout << "BF(NORM_HAMMING, crossCheck = true) took " << difftime(tend, tstart) << "s, " << matchesCrossCheck.size() << " matches found." << endl;
+	}
+
+	vector<vector<DMatch>> matchesLoweRatio;
+	if (extractionType == "2") { //Lowe's ratio
+		BFMatcher matcher2(NORM_HAMMING);
+		tstart = time(0);
+		matcher2.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+		int nbMatches = matchesLoweRatio.size();
+		for (int i = 0; i < nbMatches; i++) {
+			DMatch first = matchesLoweRatio[i][0];
+			float dist1 = matchesLoweRatio[i][0].distance;
+			float dist2 = matchesLoweRatio[i][1].distance;
+			if (dist1 < nn_match_ratio * dist2) {
+				matchedSrc.push_back(kpts1[first.queryIdx]);
+				matchedDst.push_back(kpts2[first.trainIdx]);
+			}
+		}
+		tend = time(0);
+		cout << "BF(NORM_HAMMING, crossCheck = true):" << endl;
+		cout << "\tTime taken: " << difftime(tend, tstart) << "s." << endl;
+		cout << "\tRatio used: " << nn_match_ratio << endl;
+		cout << "\tNumber of matches: " << matchedSrc.size() << endl;
+	}
+
+	cout << endl << "Now applying RANSAC to estimate global homography and clean up some matches." << endl;
+	cout << "The RANSAC radius (max deviating distance) is " << 10 << endl;
 
 	vector<Point2f> keysImage1;
 	vector<Point2f> keysImage2;
-	for (auto & element : matched1) keysImage1.push_back(element.pt);
-	for (auto & element : matched2) keysImage2.push_back(element.pt);
-	Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC);
+	vector<DMatch> good_matches;
 
-	for (size_t i = 0; i < matched1.size(); i++) {
+	int nbMatches = matchedSrc.size();
+	for (int i = 0; i < nbMatches; i++) {
+		keysImage1.push_back(matchedSrc.at(i).pt);
+		keysImage2.push_back(matchedDst.at(i).pt);
+	}
+	float radius = 10;
+	Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC, radius);
+	cout << "RANSAC found the homography." << endl;
+
+	nbMatches = matchedSrc.size();
+	for (int i = 0; i < nbMatches; i++) {
 		Mat col = Mat::ones(3, 1, CV_64F);// , CV_32F);
-		cout << matched1[i].pt.x << endl;
-		col.at<double>(0) = matched1[i].pt.x;
-		col.at<double>(1) = matched1[i].pt.y;
+		col.at<double>(0) = matchedSrc[i].pt.x;
+		col.at<double>(1) = matchedSrc[i].pt.y;
 
 		col = H * col;
 		col /= col.at<double>(2); //because you are in projective space
-		double dist = sqrt(pow(col.at<double>(0) - matched2[i].pt.x, 2) +
-			pow(col.at<double>(1) - matched2[i].pt.y, 2));
+		double dist = sqrt(pow(col.at<double>(0) - matchedDst[i].pt.x, 2) +
+			pow(col.at<double>(1) - matchedDst[i].pt.y, 2));
 
 		if (dist < inlier_threshold) {
 			int new_i = static_cast<int>(inliers1.size());
-			inliers1.push_back(matched1[i]);
-			inliers2.push_back(matched2[i]);
+			inliers1.push_back(matchedSrc[i]);
+			inliers2.push_back(matchedDst[i]);
 			good_matches.push_back(DMatch(new_i, new_i, 0));
 		}
 	}
+
+	cout << "Filtered further the matches with the found homography with an inlier distance threshhold of " << inlier_threshold << endl;
 
 	Mat res;
 	drawMatches(img1, inliers1, img2, inliers2, good_matches, res);
 	imwrite("res.png", res);
 
-	double inlier_ratio = inliers1.size() * 1.0 / matched1.size();
+	double inlier_ratio = inliers1.size() * 1.0 / matchedSrc.size();
 	cout << "A-KAZE Matching Results" << endl;
 	cout << "*******************************" << endl;
 	cout << "# Keypoints 1:                        \t" << kpts1.size() << endl;
 	cout << "# Keypoints 2:                        \t" << kpts2.size() << endl;
-	cout << "# Matches:                            \t" << matched1.size() << endl;
+	cout << "# Matches:                            \t" << matchedSrc.size() << endl;
 	cout << "# Inliers:                            \t" << inliers1.size() << endl;
 	cout << "# Inliers Ratio:                      \t" << inlier_ratio << endl;
 	cout << endl;
@@ -133,3 +228,43 @@ int main(void)
 	cin.ignore();
 	return 0;
 }
+
+void akaze_wrapper(const Mat& img_in, const float akaze_thresh, vector<KeyPoint> features_out, Mat descriptors_out) {
+	Ptr<AKAZE> akaze = AKAZE::create();
+	akaze->setThreshold(akaze_thresh);
+	time_t tstart, tend;
+	tstart = time(0);
+	akaze->detectAndCompute(img_in, noArray(), features_out, descriptors_out);
+	tend = time(0);
+	cout << "akaze_wrapper finished:" << endl;
+	cout << "\tTime = " << difftime(tstart, tend) << "s" << endl;
+	cout << "\tFound " << features_out.size() << "features" << endl;
+}
+
+void matcher_wrapper(const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat desc1_in, const Mat desc2_in, vector<KeyPoint> kpts1_out, vector<KeyPoint> kpts2_out) {
+	vector<KeyPoint> matchedSrc, matchedDst, inliers1, inliers2;
+
+	vector<vector<DMatch>> matchesLoweRatio;
+	if (extractionType == "2") { //Lowe's ratio
+		BFMatcher matcher2(NORM_HAMMING);
+		tstart = time(0);
+		matcher2.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+		int nbMatches = matchesLoweRatio.size();
+		for (int i = 0; i < nbMatches; i++) {
+			DMatch first = matchesLoweRatio[i][0];
+			float dist1 = matchesLoweRatio[i][0].distance;
+			float dist2 = matchesLoweRatio[i][1].distance;
+			if (dist1 < nn_match_ratio * dist2) {
+				matchedSrc.push_back(kpts1[first.queryIdx]);
+				matchedDst.push_back(kpts2[first.trainIdx]);
+			}
+		}
+		tend = time(0);
+		cout << "BF(NORM_HAMMING, crossCheck = true):" << endl;
+		cout << "\tTime taken: " << difftime(tend, tstart) << "s." << endl;
+		cout << "\tRatio used: " << nn_match_ratio << endl;
+		cout << "\tNumber of matches: " << matchedSrc.size() << endl;
+	}
+}
+
+void ransac_wrapper(const vector<KeyPoint>& features_in, Mat homography_out, vector<KeyPoint>& features_out) {}
