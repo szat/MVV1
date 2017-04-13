@@ -1,5 +1,5 @@
 #pragma once
-/*
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
@@ -7,20 +7,20 @@
 #include <ctime>
 #include <stdio.h>
 
-static void draw_subdiv_point(Mat& img, Point2f fp, Scalar color);
+static void draw_subdiv_point(cv::Mat& img, cv::Point2f fp, cv::Scalar color);
 
-static void draw_subdiv(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color);
+static void draw_subdiv(cv::Mat& img, cv::Subdiv2D& subdiv, cv::Scalar delaunay_color);
 
-static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_color);
+static void locate_point(cv::Mat& img, cv::Subdiv2D& subdiv, cv::Point2f fp, cv::Scalar active_color);
 
-Subdiv2D graphical_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox);
+cv::Subdiv2D graphical_triangulation(std::vector<cv::Point2f> points, cv::Rect sourceImageBoundingBox);
 
-Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox);
+cv::Subdiv2D raw_triangulation(std::vector<cv::Point2f> points, cv::Rect sourceImageBoundingBox);
 
-vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect sourceImageBounds);
+std::vector<cv::Vec6f> construct_triangles(std::vector<cv::Point2f> sourceImagePoints, cv::Rect sourceImageBounds);
 
-vector<Vec6f> test_interface();
-*/
+std::vector<cv::Vec6f> test_interface();
+
 
 
 

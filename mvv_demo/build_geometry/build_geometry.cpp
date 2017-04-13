@@ -51,7 +51,7 @@ or tort(including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
 
-/*
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
@@ -248,4 +248,3 @@ vector<Vec6f> test_interface()
 	subdiv.getTriangleList(triangles);
 	return triangles;
 }
-*/
