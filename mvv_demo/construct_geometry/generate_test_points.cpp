@@ -12,13 +12,13 @@ using namespace cv;
 // get_one_sample_point and get_small_sample_points and get_sample_points
 // are good static test cases. Please leave them in the code.
 
-vector<Point2f> get_one_sample_point() {
+std::vector<Point2f> get_one_sample_point() {
 	vector<Point2f> points = vector<Point2f>();
 	points.push_back(Point2f(500, 20));
 	return points;
 }
 
-vector<Point2f> get_small_sample_points() {
+std::vector<Point2f> get_small_sample_points() {
 	vector<Point2f> points = vector<Point2f>();
 	points.push_back(Point2f(528, 390));
 	points.push_back(Point2f(551, 209));
@@ -28,7 +28,7 @@ vector<Point2f> get_small_sample_points() {
 	return points;
 }
 
-vector<Point2f> get_sample_points() {
+std::vector<Point2f> get_sample_points() {
 	vector<Point2f> points = vector<Point2f>();
 	points.push_back(Point2f(528, 390));
 	points.push_back(Point2f(551, 209));
@@ -83,7 +83,7 @@ vector<Point2f> get_sample_points() {
 	return points;
 }
 
-vector<Point2f> get_n_random_points(Rect boundingBox, int n) {
+std::vector<Point2f> get_n_random_points(Rect boundingBox, int n) {
 	vector<Point2f> random_points = vector<Point2f>();
 
 	if (n < 0) {

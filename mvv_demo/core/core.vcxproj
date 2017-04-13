@@ -148,14 +148,23 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MatchedFeature.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core.cpp" />
-    <ClCompile Include="MatchedFeature.cpp" />
     <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\construct_geometry\construct_geometry.vcxproj">
+      <Project>{c2fd0547-70bf-4a60-b26c-8f47d224525d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\interpolate_images\interpolate_images.vcxproj">
+      <Project>{2f7168be-75c9-4992-9db6-86de7575189e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\match_points\match_points.vcxproj">
+      <Project>{ce143e47-8ed8-4c68-ac3e-21dae4b1c0e4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

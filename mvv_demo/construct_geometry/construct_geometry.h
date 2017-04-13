@@ -7,4 +7,4 @@
 using namespace std;
 using namespace cv;
 
-vector<Vec6f> test_matched_features();
+vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect sourceImageBounds);

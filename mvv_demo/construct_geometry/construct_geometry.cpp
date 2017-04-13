@@ -62,7 +62,6 @@ the use of this software, even if advised of the possibility of such damage.
 
 #include "construct_geometry.h"
 #include "generate_test_points.h"
-#include "MatchedFeature.h"
 
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
@@ -169,18 +168,11 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) 
 	return subdiv;
 }
 
-vector<Vec6f> construct_triangles(vector<MatchedFeature> matchedFeatures, Rect sourceImageBounds, Rect destImageBounds) {
+vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect sourceImageBounds) {
 	// Constructing triangulation of first image
 
-	vector<Point2f> points = vector<Point2f>();
-	size_t numberMatchedFeatures = matchedFeatures.size();
-
-	for (size_t i = 0; i < numberMatchedFeatures; i++) {
-		points.push_back(Point2f(matchedFeatures[i].srcX, matchedFeatures[i].srcY));
-	}
-
 	Subdiv2D subdiv;
-	subdiv = raw_triangulation(points, sourceImageBounds);
+	subdiv = raw_triangulation(sourceImagePoints, sourceImageBounds);
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
 
@@ -255,19 +247,6 @@ vector<Vec6f> test_interface()
 
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
-	return triangles;
-}
-
-vector<Vec6f> test_matched_features() {
-	Rect box1 = Rect(0, 0, 600, 600);
-	Rect box2 = Rect(0, 0, 600, 600);
-	vector<MatchedFeature> matchedFeatures = vector<MatchedFeature>();
-	vector<Point2f> points = get_sample_points();
-	int num_points = points.size();
-	for (int i = 0; i < num_points; i++) {
-		matchedFeatures.push_back(MatchedFeature(points[i].x, points[i].y, 0, 0));
-	}
-	vector<Vec6f> triangles = construct_triangles(matchedFeatures, box1, box2);
 	return triangles;
 }
 
