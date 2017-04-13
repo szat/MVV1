@@ -50,7 +50,6 @@ and on any theory of liability, whether in contract, strict liability,
 or tort(including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
-#include "stdafx.h"
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -59,8 +58,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include <ctime>
 #include <stdio.h>
 
-
-#include "construct_geometry.h"
+#include "build_geometry.h"
 #include "generate_test_points.h"
 
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
@@ -248,18 +246,4 @@ vector<Vec6f> test_interface()
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
 	return triangles;
-}
-
-int main(int argc, char** argv)
-{
-	cout << "Testing construct_geometry.csproj in DEBUG" << endl;
-	cout << "In test mode, a sample triangulation is shown on N vertices." << endl;
-
-	vector<Vec6f> triangleSet1 = test_interface();
-	//vector<Vec6f> triangleSet2 = test_matched_features();
-
-	cout << "Finished.";
-
-	cin.get();
-
 }

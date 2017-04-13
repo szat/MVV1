@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "construct_geometry", "construct_geometry\construct_geometry.vcxproj", "{C2FD0547-70BF-4A60-B26C-8F47D224525D}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcxproj", "{AF93F136-825A-4FBE-8412-A36786115D34}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "interpolate_images", "interpolate_images\interpolate_images.vcxproj", "{2F7168BE-75C9-4992-9DB6-86DE7575189E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build_geometry", "build_geometry\build_geometry.vcxproj", "{5AE4532F-1F3B-46E8-981D-33329695F27C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,14 @@ Global
 		{2F7168BE-75C9-4992-9DB6-86DE7575189E}.Release|x64.Build.0 = Release|x64
 		{2F7168BE-75C9-4992-9DB6-86DE7575189E}.Release|x86.ActiveCfg = Release|Win32
 		{2F7168BE-75C9-4992-9DB6-86DE7575189E}.Release|x86.Build.0 = Release|Win32
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Debug|x64.ActiveCfg = Debug|x64
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Debug|x64.Build.0 = Debug|x64
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Debug|x86.ActiveCfg = Debug|Win32
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Debug|x86.Build.0 = Debug|Win32
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x64.ActiveCfg = Release|x64
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x64.Build.0 = Release|x64
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x86.ActiveCfg = Release|Win32
+		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

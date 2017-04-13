@@ -10,8 +10,8 @@
 #include <ctime>
 #include <stdio.h>
 
-#include "construct_geometry.h"
 #include "generate_test_points.h"
+#include "build_geometry.h"
 
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
@@ -39,15 +39,27 @@ int main()
 	//= get_sample_points();
 	//samplePoints = get_sample_points();
 	
-	std::vector<cv::Point2f> thingy = get_sample_points();
+	//std::vector<cv::Point2f> thingy = get_sample_points();
 
-
+	vector<Point2f> result = get_sample_points();
 
 	Rect sampleRect = Rect(0, 0, 600, 600);
 	//vector<Vec6f> triangles = construct_triangles(samplePoints, sampleRect);
-	
+
 
 	cin.get();
+
+	cout << "Testing construct_geometry.csproj in DEBUG" << endl;
+	cout << "In test mode, a sample triangulation is shown on N vertices." << endl;
+
+	vector<Vec6f> triangleSet1 = test_interface();
+	//vector<Vec6f> triangleSet2 = test_matched_features();
+
+	cout << "Finished.";
+
+	cin.get();
+
+
 
     return 0;
 }
