@@ -2,8 +2,16 @@
 //
 
 #include "stdafx.h"
-#include <stdio.h>
+
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <iostream>
+#include <vector>
+#include <ctime>
+#include <stdio.h>
+
+#include "build_geometry.h"
+#include "generate_test_points.h"
 
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
@@ -11,15 +19,22 @@
 #define COPYRIGHT_YEAR 2017
 
 using namespace std;
+using namespace cv;
 
 int main()
 {
 
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
-	cout << "Beginning startup process..." << endl;
+
+	// Danny current test
+
+	vector<Vec6f> triangleSet1 = test_interface();
+
+	// Simon current test
 
 
+	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
 
     return 0;

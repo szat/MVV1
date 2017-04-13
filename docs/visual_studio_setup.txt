@@ -21,6 +21,16 @@ Steps for creating a first OpenCV solution (.sln) and project (.csproj) for the 
 11. In the Property Pages, click "OK".
 12. Finally navigate in a normal window browser to "C:\opencv\build\x64\vc14\bin;" and copy the files "opencv_world320.dll" and "opencv_world320d.dll", navigate to the folder containing the solution, and copy the two files into "...\x64\Debug".
 
+======================================================================
+******** IMPORTANT NOTIFICATION REGARDING THE NEXT STEP **************
+======================================================================
+
+We quickly realized that this is NOT the correct way to go about it. Each project should NOT be a separate .exe.
+It is very difficult to incorporate different .exe's into one program. What we actually want (and what we have started doing)
+is to have one main project created in the way described below, and the rest should be libraries referenced by the main project.
+
+======================================================================
+
 Steps for creating a new project (.csproj) in the solution, once you have a project that is already working:
 1. Open the solution (.sln) in which the team is working.
 2. In the Solution Explorer select the solution, right click and go to Add --> New Project...
