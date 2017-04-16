@@ -49,7 +49,7 @@ void akaze_wrapper(const float akaze_thresh, const Mat& img_in, vector<KeyPoint>
 	tstart = time(0);
 	akaze->detectAndCompute(img_in, noArray(), kpts_out, desc_out);
 	tend = time(0);
-	cout << "akaze_wrapper(thr="<< akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "])  finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
+	cout << "akaze_wrapper(thr="<< akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
 void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out, bool verbose = false) {
@@ -105,15 +105,18 @@ void ransac_wrapper(const float ball_radius, const float inlier_thresh, const ve
 		}
 	}
 
-	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has mathced " << kpts1_out.size() << " features." << endl;
+	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
 int main(void)
 {
-	time_t ststart, tend;
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
 
+	time_t ststart, tend;
 	cout << "Welcome to match_points testing unit!" << endl;
-	
 	string address = "..\\data_store\\";
 	string input = "";
 	ifstream infile1;
@@ -150,33 +153,52 @@ int main(void)
 	}
 	Mat img2 = imread(address, IMREAD_GRAYSCALE);
 
-	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
-	const float ratio = 0.8f;   // Nearest neighbor matching ratio
-	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
-	const float ball_radius = 5;
+
+	const char* source_window = "Image";
+	Mat src, src_gray;
+	src_gray = img1;
+
+	vector<Point2f> corners;
+	double qualityLevel = 0.01; //the higher, the less points
+	double minDistance = 10;
+	int maxCorners = 1000;
+	RNG rng(12345);
+	int blockSize = 3; //not sure of this effect
+	double k = 0.04; //not sure of this effect
+	bool useHarrisDetector = false;
+	Mat copy;
+	copy = img1.clone();
+	goodFeaturesToTrack(src_gray, corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k);
+	cout << "Number of good corners detected: " << corners.size() << "." << endl;
+	int r = 4;
+	for (size_t i = 0; i < corners.size(); i++) circle(copy, corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	namedWindow(source_window, WINDOW_AUTOSIZE);
+	imshow(source_window, copy);
+	waitKey(0);
+
+	///////////////////////////////////////////////////////
+
 	vector<KeyPoint> kpts1_step1;
 	vector<KeyPoint> kpts2_step1;
 	Mat desc1_step1;
 	Mat desc2_step1;
 	akaze_wrapper(akaze_thr, img1, kpts1_step1, desc1_step1);
 	akaze_wrapper(akaze_thr, img2, kpts2_step1, desc2_step1);
+
 	vector<KeyPoint> kpts1_step2;
 	vector<KeyPoint> kpts2_step2;
 	ratio_matcher_wrapper(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+	
 	Mat homography;
 	vector<KeyPoint> kpts1_step3;
 	vector<KeyPoint> kpts2_step3;
 	ransac_wrapper(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
 
 	vector<DMatch> good_matches2;
-
-	for(int i = 0; i < kpts1_step3.size(); i++) {
-		good_matches2.push_back(DMatch(i, i, 0));
-	}
-
-	Mat res2;
-	drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res2);
-	imwrite("res.png", res2);
+	Mat res;
+	for(int i = 0; i < kpts1_step3.size(); i++) good_matches2.push_back(DMatch(i, i, 0));
+	drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res);
+	imwrite("res.png", res);
 
 	cout << endl << "A-KAZE Matching Results" << endl;
 	cout << "*******************************" << endl;
@@ -188,7 +210,6 @@ int main(void)
 	cout << "# Inliers 2:                          \t" << kpts2_step3.size() << endl;
 	cout << "# Inliers Ratio:                      \t" << (float) kpts1_step3.size() / (float) kpts1_step2.size() << endl;
 	cout << endl;
-	
 
 	cin.ignore();
 	return 0;

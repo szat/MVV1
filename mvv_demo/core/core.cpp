@@ -23,7 +23,6 @@ using namespace cv;
 
 int main()
 {
-
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
 
