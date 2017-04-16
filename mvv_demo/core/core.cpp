@@ -31,7 +31,7 @@ int main()
 
 	vector<Vec6f> triangleSet1 = test_interface();
 
-	// Simon current test
+	// Adrian current test
 
 
 	cout << "Finished. Press enter twice to terminate program.";
