@@ -21,7 +21,6 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include "goodPointsTrackbar.h"
 #include <vector>
 #include <iostream>
 #include <ctime>
@@ -111,14 +110,6 @@ void ransac_wrapper(const float ball_radius, const float inlier_thresh, const ve
 
 int main(void)
 {
-	int something = 0;
-	//test_trackbar(something);
-
-	//test_trackbar2(something);
-	vector<Point2f> corners_track;
-	trackbarCorners(corners_track);
-	cout << "corner_track.size() = " << corners_track.size() << endl;
-
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 	const float ratio = 0.8f;   // Nearest neighbor matching ratio
 	const float inlier_thr = 20.0f; // Distance threshold to identify inliers

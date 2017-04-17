@@ -35,8 +35,8 @@ int main()
 	//vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
-
-	affine_akaze();
+	//affine_akaze();
+	test_match_points();
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
