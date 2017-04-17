@@ -36,7 +36,8 @@ int main()
 
 	// Adrian current test
 	//affine_akaze();
-	test_match_points();
+	//test_match_points();
+	test_trackbar2(0);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();

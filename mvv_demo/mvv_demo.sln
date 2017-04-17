@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "match_points", "match_points\match_points.vcxproj", "{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcxproj", "{AF93F136-825A-4FBE-8412-A36786115D34}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build_geometry", "build_geometry\build_geometry.vcxproj", "{5AE4532F-1F3B-46E8-981D-33329695F27C}"
@@ -19,14 +17,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Debug|x64.ActiveCfg = Debug|x64
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Debug|x64.Build.0 = Debug|x64
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Debug|x86.ActiveCfg = Debug|Win32
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Debug|x86.Build.0 = Debug|Win32
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Release|x64.ActiveCfg = Release|x64
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Release|x64.Build.0 = Release|x64
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Release|x86.ActiveCfg = Release|Win32
-		{CE143E47-8ED8-4C68-AC3E-21DAE4B1C0E4}.Release|x86.Build.0 = Release|Win32
 		{AF93F136-825A-4FBE-8412-A36786115D34}.Debug|x64.ActiveCfg = Debug|x64
 		{AF93F136-825A-4FBE-8412-A36786115D34}.Debug|x64.Build.0 = Debug|x64
 		{AF93F136-825A-4FBE-8412-A36786115D34}.Debug|x86.ActiveCfg = Debug|Win32
