@@ -25,6 +25,21 @@
 using namespace std;
 using namespace cv;
 
+int corner_points_test() {
+	cout << "Begin integration test of match_features and build_geometry" << endl;
+
+	//this is the image used in trackbarCorners
+	Mat src1 = imread("..\\data_store\\david_1.jpg", IMREAD_GRAYSCALE); 
+	vector<Point2f> corners;
+	trackbarCorners(corners);
+
+
+	Rect testRect = Rect(0, 0, src1.size().width, src1.size().height);
+	graphical_triangulation(corners, testRect);
+
+	return 0;
+}
+
 int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
@@ -32,12 +47,14 @@ int main()
 
 	// Danny current test
 
+	corner_points_test();
+
 	//vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
 	//affine_akaze();
 	//test_match_points();
-	test_trackbar2(0);
+	//test_trackbar2(0);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();

@@ -43,7 +43,7 @@ bool has_image_suffix(const std::string &str) {
 	return (has_suffix(str, ".jpg") || has_suffix(str, ".jpeg") || has_suffix(str, ".png") || has_suffix(str, ".bmp") || has_suffix(str, ".svg") || has_suffix(str, ".tiff") || has_suffix(str, ".ppm"));
 }
 
-void akaze_wrapper(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out, bool verbose = false) {
+void akaze_wrapper(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
 	Ptr<AKAZE> akaze = AKAZE::create();
 	akaze->setThreshold(akaze_thresh);
 	time_t tstart, tend;
@@ -53,7 +53,7 @@ void akaze_wrapper(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
-void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out, bool verbose = false) {
+void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	time_t tstart, tend;
 	vector<vector<DMatch>> matchesLoweRatio;
 	BFMatcher matcher(NORM_HAMMING);
@@ -73,7 +73,7 @@ void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, 
 	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kpts1_out.size() << " features." << endl;
 }
 
-void ransac_wrapper(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out, bool verbose = false) {
+void ransac_wrapper(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
 
 	vector<Point2f> keysImage1;
