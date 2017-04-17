@@ -20,4 +20,4 @@ void ratio_matcher_wrapper(const float ratio, const std::vector<cv::KeyPoint>& k
 
 void ransac_wrapper(const float ball_radius, const float inlier_thresh, const std::vector<cv::KeyPoint>& kpts1_in, const std::vector<cv::KeyPoint>& kpts2_in, cv::Mat& homography_out, std::vector<cv::KeyPoint>& kpts1_out, std::vector<cv::KeyPoint>& kpts2_out);
 
-int test_match_points(void);
+std::vector<std::vector<cv::KeyPoint>> test_match_points(std::string imagePathA, std::string imagePathB);

@@ -109,7 +109,47 @@ void ransac_wrapper(const float ball_radius, const float inlier_thresh, const ve
 	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
-int test_match_points(void)
+/*
+Sample file input code:
+
+while (true) {
+cout << "Please enter the name of the second image in folder data_store:";
+getline(cin, input);
+address += input;
+cout << "The address you entered is " << address << endl;
+if (has_image_suffix(address)) {
+infile2.open(address.c_str());
+if (infile2) break;
+cout << "Invalid file." << endl;
+address = "..\\data_store\\";
+input = "";
+}
+}
+
+*/
+
+/*
+DMATCHES
+
+vector<DMatch> good_matches2;
+Mat res;
+for (int i = 0; i < kpts1_step3.size(); i++) good_matches2.push_back(DMatch(i, i, 0));
+drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res);
+imwrite("res.png", res);
+
+cout << endl << "A-KAZE Matching Results" << endl;
+cout << "*******************************" << endl;
+cout << "# Keypoints 1:                        \t" << kpts1_step1.size() << endl;
+cout << "# Keypoints 2:                        \t" << kpts2_step1.size() << endl;
+cout << "# Matches 1:                          \t" << kpts1_step2.size() << endl;
+cout << "# Matches 2:                          \t" << kpts2_step2.size() << endl;
+cout << "# Inliers 1:                          \t" << kpts1_step3.size() << endl;
+cout << "# Inliers 2:                          \t" << kpts2_step3.size() << endl;
+cout << "# Inliers Ratio:                      \t" << (float)kpts1_step3.size() / (float)kpts1_step2.size() << endl;
+cout << endl;
+*/
+
+vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 	const float ratio = 0.8f;   // Nearest neighbor matching ratio
@@ -118,66 +158,19 @@ int test_match_points(void)
 
 	time_t ststart, tend;
 	cout << "Welcome to match_points testing unit!" << endl;
-	string address = "..\\data_store\\";
+	string address = "..\\data_store\\" + imagePathA;
 	string input = "";
 	ifstream infile1;
-	while (true) {
-		cout << "Please enter the name of the first image in folder data_store:";
-		getline(cin, input);
-		address += input;
-		cout << "The address you entered is " << address << endl;
-		if (has_image_suffix(address)) {
-			infile1.open(address.c_str());
-			if (infile1) break;
-			cout << "Invalid file." << endl;
-			address = "..\\data_store\\";
-			input = "";
-		}
-	}
+	infile1.open(address.c_str());
+
 	Mat img1 = imread(address, IMREAD_GRAYSCALE);
 
-	address = "..\\data_store\\";
+	address = "..\\data_store\\" + imagePathB;
 	input = "";
 	ifstream infile2;
-	while (true) {
-		cout << "Please enter the name of the second image in folder data_store:";
-		getline(cin, input);
-		address += input;
-		cout << "The address you entered is " << address << endl;
-		if (has_image_suffix(address)) {
-			infile2.open(address.c_str());
-			if (infile2) break;
-			cout << "Invalid file." << endl;
-			address = "..\\data_store\\";
-			input = "";
-		}
-	}
+	infile2.open(address.c_str());
+
 	Mat img2 = imread(address, IMREAD_GRAYSCALE);
-
-
-	const char* source_window = "Image";
-	Mat src, src_gray;
-	src_gray = img1;
-
-	vector<Point2f> corners;
-	double qualityLevel = 0.01; //the higher, the less points
-	double minDistance = 10;
-	int maxCorners = 1000;
-	RNG rng(12345);
-	int blockSize = 3; //not sure of this effect
-	double k = 0.04; //not sure of this effect
-	bool useHarrisDetector = false;
-	Mat copy;
-	copy = img1.clone();
-	goodFeaturesToTrack(src_gray, corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k);
-	cout << "Number of good corners detected: " << corners.size() << "." << endl;
-	int r = 4;
-	for (size_t i = 0; i < corners.size(); i++) circle(copy, corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
-	namedWindow(source_window, WINDOW_AUTOSIZE);
-	imshow(source_window, copy);
-	waitKey(0);
-
-	///////////////////////////////////////////////////////
 
 	vector<KeyPoint> kpts1_step1;
 	vector<KeyPoint> kpts2_step1;
@@ -195,23 +188,6 @@ int test_match_points(void)
 	vector<KeyPoint> kpts2_step3;
 	ransac_wrapper(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
 
-	vector<DMatch> good_matches2;
-	Mat res;
-	for (int i = 0; i < kpts1_step3.size(); i++) good_matches2.push_back(DMatch(i, i, 0));
-	drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res);
-	imwrite("res.png", res);
-
-	cout << endl << "A-KAZE Matching Results" << endl;
-	cout << "*******************************" << endl;
-	cout << "# Keypoints 1:                        \t" << kpts1_step1.size() << endl;
-	cout << "# Keypoints 2:                        \t" << kpts2_step1.size() << endl;
-	cout << "# Matches 1:                          \t" << kpts1_step2.size() << endl;
-	cout << "# Matches 2:                          \t" << kpts2_step2.size() << endl;
-	cout << "# Inliers 1:                          \t" << kpts1_step3.size() << endl;
-	cout << "# Inliers 2:                          \t" << kpts2_step3.size() << endl;
-	cout << "# Inliers Ratio:                      \t" << (float)kpts1_step3.size() / (float)kpts1_step2.size() << endl;
-	cout << endl;
-
-	cin.ignore();
-	return 0;
+	vector<vector<KeyPoint>> pointMatches = { kpts1_step3, kpts2_step3 };
+	return pointMatches;
 }

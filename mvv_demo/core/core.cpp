@@ -40,6 +40,47 @@ int corner_points_test() {
 	return 0;
 }
 
+Rect getImageSize(string imagePath) {
+	string address = "..\\data_store\\" + imagePath;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+
+	float height = img1.size().height;
+	float width = img1.size().width;
+
+	Rect imageSize = Rect(0, 0, width, height);
+	return imageSize;
+}
+
+int test_matching() {
+
+	string imageA = "david_1.jpg";
+	string imageB = "david_2.jpg";
+
+	Rect imageSizeA = getImageSize(imageA);
+	Rect imageSizeB = getImageSize(imageB);
+
+	vector<vector<KeyPoint>> pointMatches = test_match_points(imageA, imageB);
+
+	vector<KeyPoint> imageMatchesA = pointMatches.at(0);
+	vector<KeyPoint> imageMatchesB = pointMatches.at(1);
+
+	vector<Point2f> imagePointsA = vector<Point2f>();
+
+	int vecSize = imageMatchesA.size();
+
+	for (int i = 0; i < vecSize; i++) {
+		imagePointsA.push_back(imageMatchesA.at(i).pt);
+	}
+
+	graphical_triangulation(imagePointsA, imageSizeA);
+
+	return 0;
+}
+
 int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
@@ -47,7 +88,8 @@ int main()
 
 	// Danny current test
 
-	corner_points_test();
+	test_matching();
+	//corner_points_test();
 
 	//vector<Vec6f> triangleSet1 = test_interface();
 
