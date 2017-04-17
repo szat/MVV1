@@ -13,6 +13,10 @@
 #include "build_geometry.h"
 #include "generate_test_points.h"
 
+#include "match_points.h"
+#include "good_features.h"
+#include "affine_akaze.h"
+
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
 #define COMPANY_NAME "NDim Inc."
@@ -28,10 +32,11 @@ int main()
 
 	// Danny current test
 
-	vector<Vec6f> triangleSet1 = test_interface();
+	//vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
 
+	affine_akaze();
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
