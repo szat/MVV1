@@ -88,15 +88,18 @@ int main()
 
 	// Danny current test
 
-	test_matching();
+	//test_matching();
 	//corner_points_test();
 
 	//vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
+	
+	//vector<KeyPoint> kpts1, kpts2; 
+	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", kpts1, kpts2);
 	//affine_akaze();
 	//test_match_points();
-	//test_trackbar2(0);
+	test_trackbar2(0);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();

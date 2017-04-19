@@ -128,17 +128,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="bestiary.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="affine_akaze.h" />
     <ClInclude Include="good_features.h" />
     <ClInclude Include="match_points.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="affine_akaze.cpp" />
     <ClCompile Include="good_features.cpp" />
     <ClCompile Include="match_points.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="match_features.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,138 @@
+	//To make homographies
+	
+	float homography_entries[9] = { 7.6285898e-01, -2.9922929e-01,   2.2567123e+02,
+		3.3443473e-01,  1.0143901e+00, -7.6999973e+01,
+		3.4663091e-04, -1.4364524e-05,  1.0000000e+00 };
+	Mat homography = Mat(3, 3, CV_32F, homography_entries);
+	Mat warped_image;
+	warpPerspective(img1, warped_image, homography, img1.size());
+	img2 = warped_image;
+
+
+	Mat res;
+	drawMatches(img1, inliers1, img2, inliers2, good_matches, res);
+	imwrite("res.png", res);
+
+	/*
+	double inlier_ratio = inliers1.size() * 1.0 / matched1.size();
+	cout << "A-KAZE Matching Results" << endl;
+	cout << "*******************************" << endl;
+	cout << "# Keypoints 1:                        \t" << kptsImg1.size() << endl;
+	cout << "# Keypoints 2:                        \t" << kptsImg2.size() << endl;
+	cout << "# Matches:                            \t" << matched1.size() << endl;
+	cout << "# Inliers:                            \t" << inliers1.size() << endl;
+	cout << "# Inliers Ratio:                      \t" << inlier_ratio << endl;
+	cout << endl;
+	*/
+
+
+	
+/*
+Sample file input code:
+
+while (true) {
+cout << "Please enter the name of the second image in folder data_store:";
+getline(cin, input);
+address += input;
+cout << "The address you entered is " << address << endl;
+if (has_image_suffix(address)) {
+infile2.open(address.c_str());
+if (infile2) break;
+cout << "Invalid file." << endl;
+address = "..\\data_store\\";
+input = "";
+}
+}
+
+*/
+
+/*
+DMATCHES
+
+vector<DMatch> good_matches2;
+Mat res;
+for (int i = 0; i < kpts1_step3.size(); i++) good_matches2.push_back(DMatch(i, i, 0));
+drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res);
+imwrite("res.png", res);
+
+cout << endl << "A-KAZE Matching Results" << endl;
+cout << "*******************************" << endl;
+cout << "# Keypoints 1:                        \t" << kpts1_step1.size() << endl;
+cout << "# Keypoints 2:                        \t" << kpts2_step1.size() << endl;
+cout << "# Matches 1:                          \t" << kpts1_step2.size() << endl;
+cout << "# Matches 2:                          \t" << kpts2_step2.size() << endl;
+cout << "# Inliers 1:                          \t" << kpts1_step3.size() << endl;
+cout << "# Inliers 2:                          \t" << kpts2_step3.size() << endl;
+cout << "# Inliers Ratio:                      \t" << (float)kpts1_step3.size() / (float)kpts1_step2.size() << endl;
+cout << endl;
+*/
+
+
+//Global Variables
+Mat image;
+int alpha = 1, beta = 0;
+int alpha_MAX = 3; //Contrast limit
+int beta_MAX = 100; //Brightness limit
+
+void onTrackbar(int, void* = NULL)
+{
+	Mat new_image;
+	//Adjust the Gain/Contrast & Bias/Brightness parameters using the obtaines Trackbar values
+	image.convertTo(new_image, -1, alpha, beta);
+
+	imshow("image", new_image); //Update the image
+}
+
+int main(int argc, char** argv)
+{
+	//Load Image
+	image = imread("C:\\Users\\Friedrich\\Pictures\\lena.png", CV_LOAD_IMAGE_COLOR);
+
+	if (image.empty())
+	{
+		cout << "ERROR: Image File missing!" << endl;
+		return -1;
+	}
+
+	namedWindow("image", CV_WINDOW_AUTOSIZE);
+
+	//Create 'Contrast' & 'Brightness' trackbars
+	createTrackbar("Contrast", "image", &alpha, alpha_MAX, onTrackbar);
+	createTrackbar("Brightness", "image", &beta, beta_MAX, onTrackbar);
+
+	onTrackbar(0); //Callback Function
+	waitKey(0);
+
+	return 0;
+}
+
+static void onChange(int trackpos, void *userdata) 
+{
+	string path = "..\\data_store\\david_";
+	path = path + to_string(trackpos);
+	path = path + ".jpg";
+	Mat img = imread(path);
+	if (!img.data) {
+		cout << "Error loading image, address " << path << endl;
+		return;
+	}
+	imshow("Selection Window", img);
+	(*((Mat*)userdata)) = img;
+}
+
+static void voitureAngleOnChange(int trackpos, void *userdata)
+{
+
+}
+
+int selectTrackbar(cv::Mat& selectImage)
+{
+	//This method is designed to select two images from the fodler data_store, using the trackbar and then hitting enter.
+	int imageId = 1; // blur value
+	namedWindow("Selection Window");
+	cout << "Please select a valid image and press ENTER to use." << endl;
+	cvCreateTrackbar2("Select", "Selection Window", &imageId, 2, imageSelectOnChange, (void*) &selectImage);
+	waitKey(0);
+	cvDestroyWindow("Select");
+	return 0;
+}
