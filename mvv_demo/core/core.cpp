@@ -76,9 +76,19 @@ int test_matching() {
 		imagePointsA.push_back(imageMatchesA.at(i).pt);
 	}
 
-	graphical_triangulation(imagePointsA, imageSizeA);
+	//graphical_triangulation(imagePointsA, imageSizeA);
+	Subdiv2D subdiv = raw_triangulation(imagePointsA, imageSizeA);
+	display_triangulation(subdiv, imageSizeA);
+
 
 	return 0;
+}
+
+int triangulation_diagnostic() {
+	// This function takes two input images from two angles (rescaled to the same size)
+	// There will be a slider that controls the parameter t (0,1), so we can see the discrete triangulation shifts
+
+	return -1;
 }
 
 int main()
@@ -88,10 +98,10 @@ int main()
 
 	// Danny current test
 
-	test_matching();
+	//test_matching();
 	//corner_points_test();
 
-	//vector<Vec6f> triangleSet1 = test_interface();
+	vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
 	//affine_akaze();

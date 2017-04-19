@@ -178,6 +178,21 @@ vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect source
 	return triangles;
 }
 
+void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
+	// the graphical_triangulation function is far too slow
+
+	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
+	Mat img(imageBounds.size(), CV_8UC3);
+
+	img = Scalar::all(0);
+	string win = "Delaunay Demo";
+	imshow(win, img);
+
+	draw_subdiv(img, subdiv, delaunay_color);
+	imshow(win, img);
+	waitKey(1);
+}
+
 vector<Vec6f> test_interface()
 {
 	string input = "";
@@ -227,14 +242,14 @@ vector<Vec6f> test_interface()
 	std::clock_t start;
 	double duration;
 	start = clock();
+	subdiv = raw_triangulation(points, rect);
 
 	if (graphicsMode) {
+		display_triangulation(subdiv, rect);
 		processMessage = "Graphical triangulation time: ";
-		subdiv = graphical_triangulation(points, rect);
 	}
 	else {
 		processMessage = "Raw triangulation time: ";
-		subdiv = raw_triangulation(points, rect);
 	}
 	// duration of raw or visual triangulation.
 	duration = (clock() - start) / (double)CLOCKS_PER_MS;

@@ -17,6 +17,8 @@ cv::Subdiv2D graphical_triangulation(std::vector<cv::Point2f> points, cv::Rect s
 
 cv::Subdiv2D raw_triangulation(std::vector<cv::Point2f> points, cv::Rect sourceImageBoundingBox);
 
+void display_triangulation(cv::Subdiv2D subdiv, cv::Rect imageBounds);
+
 std::vector<cv::Vec6f> construct_triangles(std::vector<cv::Point2f> sourceImagePoints, cv::Rect sourceImageBounds);
 
 std::vector<cv::Vec6f> test_interface();
