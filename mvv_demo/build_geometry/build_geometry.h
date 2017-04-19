@@ -23,6 +23,12 @@ std::vector<cv::Vec6f> construct_triangles(std::vector<cv::Point2f> sourceImageP
 
 std::vector<cv::Vec6f> test_interface();
 
+std::vector<cv::Point2f> construct_intermediate_points(std::vector<cv::Point2f> sourcePoints, std::vector<cv::Point2f> targetPoints, int morph);
+
+static void onChangeTriangleMorph(int morph, void *userdata);
+
+int triangulation_trackbar(std::vector<cv::KeyPoint> sourcePoints, std::vector<cv::KeyPoint> targetPoints, cv::Rect imgSize);
+
 
 
 

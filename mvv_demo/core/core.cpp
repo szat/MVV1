@@ -84,9 +84,35 @@ int test_matching() {
 	return 0;
 }
 
+void image_diagnostics(Mat img) {
+	Size size = img.size();
+	cout << "Image width: " << size.width << endl;
+	cout << "Image height: " << size.height << endl;
+}
+
 int triangulation_diagnostic() {
 	// This function takes two input images from two angles (rescaled to the same size)
 	// There will be a slider that controls the parameter t (0,1), so we can see the discrete triangulation shifts
+	string imagePathA = "david_1.jpg";
+	string imagePathB = "david_2.jpg";
+	string rootPath = "../data_store";
+
+	//Rect imageSizeA = getImageSize(imageA);
+	//Rect imageSizeB = getImageSize(imageB);
+
+	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
+	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
+
+	// Resize imageB so that is has the same size as imgA
+	cv::resize(imgB, imgB, imgA.size());
+
+	Rect imgSizeRectA = Rect(0, 0, imgA.size().width, imgA.size().height);
+	vector<vector<KeyPoint>> pointMatches = match_points_mat(imgA, imgB);
+	
+	vector<KeyPoint> imgPointsA = pointMatches[0];
+	vector<KeyPoint> imgPointsB = pointMatches[1];
+
+	triangulation_trackbar(imgPointsA, imgPointsB, imgSizeRectA);
 
 	return -1;
 }
@@ -98,10 +124,12 @@ int main()
 
 	// Danny current test
 
+	triangulation_diagnostic();
+
 	//test_matching();
 	//corner_points_test();
 
-	vector<Vec6f> triangleSet1 = test_interface();
+	//vector<Vec6f> triangleSet1 = test_interface();
 
 	// Adrian current test
 	
@@ -109,7 +137,7 @@ int main()
 	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", kpts1, kpts2);
 	//affine_akaze();
 	//test_match_points();
-	test_trackbar2(0);
+	//test_trackbar2(0);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
