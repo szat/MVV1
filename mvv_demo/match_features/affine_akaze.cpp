@@ -19,6 +19,8 @@ const double akaze_thresh = 3e-4;    // AKAZE detection threshold set to locate 
 
 void affine_skew(double tilt, double phi, Mat& img, Mat& mask, Mat& Ai)
 {
+	cout << "Applying affine_skew(tilt = " << tilt << ", phi = " << phi << ") ..." << endl;
+
 	int h = img.rows;
 	int w = img.cols;
 
@@ -67,6 +69,8 @@ void affine_skew(double tilt, double phi, Mat& img, Mat& mask, Mat& Ai)
 
 void detect_and_compute(const Mat& img, std::vector< KeyPoint >& keypoints, Mat& descriptors)
 {
+	cout << "Applying detect_and_compute(img, keypoints, descriptors)..." << endl;
+
 	keypoints.clear();
 	descriptors = Mat(0, 128, CV_32F);
 	for (int tl = 1; tl < 6; tl++)
@@ -110,32 +114,27 @@ void detect_and_compute(const Mat& img, std::vector< KeyPoint >& keypoints, Mat&
 	}
 }
 
-int affine_akaze() {
-	Mat img1 = imread("..\\data_store\\mona_lisa_1.jpg", IMREAD_GRAYSCALE);
-	Mat img2 = imread("..\\data_store\\mona_lisa_4.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\mona_lisa_3.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\mona_lisa_2.jpg", IMREAD_GRAYSCALE);
-	//Mat img1 = imread("..\\data_store\\david_1.jpg", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\david_2.jpg", IMREAD_GRAYSCALE);
-	//Mat img1 = imread("..\\data_store\\arc_de_triomphe_1.png", IMREAD_GRAYSCALE);
-	//Mat img2 = imread("..\\data_store\\arc_de_triomphe_2.png", IMREAD_GRAYSCALE);
+void affine_akaze_test(string imagePathA_in, string imagePathB_in, vector<KeyPoint>& keysImgA_out, vector<KeyPoint>& keysImgB_out) {
+	Mat img1 = imread(imagePathA_in, IMREAD_GRAYSCALE);
+	if (!img1.data) { 
+		cout << "Error loading " << imagePathA_in << endl;
+		return; }
+	Mat img2 = imread(imagePathB_in, IMREAD_GRAYSCALE);
+	if (!img2.data) {
+		cout << "Error loading " << imagePathB_in << endl;
+		return;
+	}
+	
+	cout << "Starting affine_akaze(" << imagePathA_in <<" , " << imagePathB_in << ") ..." << endl;
 
-	float homography_entries[9] = { 7.6285898e-01, -2.9922929e-01,   2.2567123e+02,
-		3.3443473e-01,  1.0143901e+00, -7.6999973e+01,
-		3.4663091e-04, -1.4364524e-05,  1.0000000e+00 };
-	Mat homography = Mat(3, 3, CV_32F, homography_entries);
-	Mat warped_image;
-	warpPerspective(img1, warped_image, homography, img1.size());
-	img2 = warped_image;
-
-	vector<KeyPoint> kpts1, kpts2;
-	Mat desc1, desc2;
-	detect_and_compute(img1, kpts1, desc1);
-	detect_and_compute(img2, kpts2, desc2);
+	vector<KeyPoint> kptsImg1, kptsImg2;
+	Mat descImg1, descImg2;
+	detect_and_compute(img1, kptsImg1, descImg1);
+	detect_and_compute(img2, kptsImg2, descImg2);
 
 	BFMatcher matcher(NORM_HAMMING);
 	vector< vector<DMatch> > nn_matches;
-	matcher.knnMatch(desc1, desc2, nn_matches, 2);
+	matcher.knnMatch(descImg1, descImg2, nn_matches, 2);
 
 	vector<KeyPoint> matched1, matched2, inliers1, inliers2;
 	vector<DMatch> good_matches;
@@ -144,8 +143,8 @@ int affine_akaze() {
 		float dist1 = nn_matches[i][0].distance;
 		float dist2 = nn_matches[i][1].distance;
 		if (dist1 < nn_match_ratio * dist2) {
-			matched1.push_back(kpts1[first.queryIdx]);
-			matched2.push_back(kpts2[first.trainIdx]);
+			matched1.push_back(kptsImg1[first.queryIdx]);
+			matched2.push_back(kptsImg2[first.trainIdx]);
 		}
 	}
 
@@ -156,22 +155,7 @@ int affine_akaze() {
 		good_matches.push_back(DMatch(new_i, new_i, 0));
 	}
 
-	Mat res;
-	drawMatches(img1, inliers1, img2, inliers2, good_matches, res);
-	imwrite("res.png", res);
+	keysImgA_out = inliers1;
+	keysImgB_out = inliers2;
 
-	double inlier_ratio = inliers1.size() * 1.0 / matched1.size();
-	cout << "A-KAZE Matching Results" << endl;
-	cout << "*******************************" << endl;
-	cout << "# Keypoints 1:                        \t" << kpts1.size() << endl;
-	cout << "# Keypoints 2:                        \t" << kpts2.size() << endl;
-	cout << "# Matches:                            \t" << matched1.size() << endl;
-	cout << "# Inliers (fake):                            \t" << inliers1.size() << endl;
-	cout << "# Inliers Ratio (fake):                      \t" << inlier_ratio << endl;
-	cout << endl;
-
-
-	cout << M_PI;
-	cin.ignore();
-	return 0;
 }

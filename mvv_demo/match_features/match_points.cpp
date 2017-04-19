@@ -43,7 +43,7 @@ bool has_image_suffix(const std::string &str) {
 	return (has_suffix(str, ".jpg") || has_suffix(str, ".jpeg") || has_suffix(str, ".png") || has_suffix(str, ".bmp") || has_suffix(str, ".svg") || has_suffix(str, ".tiff") || has_suffix(str, ".ppm"));
 }
 
-void akaze_wrapper(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
+void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
 	Ptr<AKAZE> akaze = AKAZE::create();
 	akaze->setThreshold(akaze_thresh);
 	time_t tstart, tend;
@@ -53,7 +53,7 @@ void akaze_wrapper(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
-void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
+void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	time_t tstart, tend;
 	vector<vector<DMatch>> matchesLoweRatio;
 	BFMatcher matcher(NORM_HAMMING);
@@ -73,7 +73,7 @@ void ratio_matcher_wrapper(const float ratio, const vector<KeyPoint>& kpts1_in, 
 	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kpts1_out.size() << " features." << endl;
 }
 
-void ransac_wrapper(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
+void ransac_script(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
 
 	vector<Point2f> keysImage1;
@@ -109,46 +109,6 @@ void ransac_wrapper(const float ball_radius, const float inlier_thresh, const ve
 	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
-/*
-Sample file input code:
-
-while (true) {
-cout << "Please enter the name of the second image in folder data_store:";
-getline(cin, input);
-address += input;
-cout << "The address you entered is " << address << endl;
-if (has_image_suffix(address)) {
-infile2.open(address.c_str());
-if (infile2) break;
-cout << "Invalid file." << endl;
-address = "..\\data_store\\";
-input = "";
-}
-}
-
-*/
-
-/*
-DMATCHES
-
-vector<DMatch> good_matches2;
-Mat res;
-for (int i = 0; i < kpts1_step3.size(); i++) good_matches2.push_back(DMatch(i, i, 0));
-drawMatches(img1, kpts1_step3, img2, kpts2_step3, good_matches2, res);
-imwrite("res.png", res);
-
-cout << endl << "A-KAZE Matching Results" << endl;
-cout << "*******************************" << endl;
-cout << "# Keypoints 1:                        \t" << kpts1_step1.size() << endl;
-cout << "# Keypoints 2:                        \t" << kpts2_step1.size() << endl;
-cout << "# Matches 1:                          \t" << kpts1_step2.size() << endl;
-cout << "# Matches 2:                          \t" << kpts2_step2.size() << endl;
-cout << "# Inliers 1:                          \t" << kpts1_step3.size() << endl;
-cout << "# Inliers 2:                          \t" << kpts2_step3.size() << endl;
-cout << "# Inliers Ratio:                      \t" << (float)kpts1_step3.size() / (float)kpts1_step2.size() << endl;
-cout << endl;
-*/
-
 vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
@@ -176,17 +136,17 @@ vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 	vector<KeyPoint> kpts2_step1;
 	Mat desc1_step1;
 	Mat desc2_step1;
-	akaze_wrapper(akaze_thresh, img1, kpts1_step1, desc1_step1);
-	akaze_wrapper(akaze_thresh, img2, kpts2_step1, desc2_step1);
+	akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
 
 	vector<KeyPoint> kpts1_step2;
 	vector<KeyPoint> kpts2_step2;
-	ratio_matcher_wrapper(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
 
 	Mat homography;
 	vector<KeyPoint> kpts1_step3;
 	vector<KeyPoint> kpts2_step3;
-	ransac_wrapper(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
 
 	vector<vector<KeyPoint>> pointMatches = { kpts1_step3, kpts2_step3 };
 	return pointMatches;

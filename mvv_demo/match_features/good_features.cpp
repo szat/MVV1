@@ -86,36 +86,56 @@ int trackbarCorners(vector<Point2f>& corners)
 	corners = holder.corners;
 }
 
-struct myData {
-	Mat variable1;
-	Mat variable2;
+struct trackbarDataExample {
+	Mat src;
+	Mat dst;
+	int brightness;
+	int contrast;
 };
 
-static void onChange(int trackpos, void *userdata) //void* mean that it is a pointer of unknown type
+static void onChangeBrightness(int brightness, void *userdata) //void* mean that it is a pointer of unknown type
 {
-	Mat img = (*((myData*)userdata)).variable1; //first we say that userdata is a pointer of Mat type, then we dereference to get the value of the actual type
-	Mat b2;
-	blur(img, b2, Size(trackpos, trackpos));
-	imshow("Blur Window", b2);
-	(*(myData*)userdata).variable2 = b2;
+	Mat img = (*((trackbarDataExample*)userdata)).src; //first we say that userdata is a pointer of Mat type, then we dereference to get the value of the actual type
+	Mat dst;
+	(*((trackbarDataExample*)userdata)).brightness = brightness;
+	//(*((trackbarDataExample*)userdata)).constrast = contrast;
+	img.convertTo(dst, -1, (*((trackbarDataExample*)userdata)).contrast, (*((trackbarDataExample*)userdata)).brightness);
+	imshow("Adjust Window", dst);
+	(*(trackbarDataExample*)userdata).dst = dst;
+}
+
+static void onChangeContrast(int contrast, void *userdata) //void* mean that it is a pointer of unknown type
+{
+	Mat img = (*((trackbarDataExample*)userdata)).src; //first we say that userdata is a pointer of Mat type, then we dereference to get the value of the actual type
+	Mat dst;
+	//(*((trackbarDataExample*)userdata)).brightness = brightness;
+	(*((trackbarDataExample*)userdata)).contrast = contrast;
+	img.convertTo(dst, -1, (*((trackbarDataExample*)userdata)).contrast, (*((trackbarDataExample*)userdata)).brightness);
+	imshow("Adjust Window", dst);
+	(*(trackbarDataExample*)userdata).dst = dst;
 }
 
 int test_trackbar2(int something)
 {
-	Mat src1 = imread("..\\data_store\\david_1.jpg");
-	Mat src2 = imread("..\\data_store\\david_2.jpg");
-	resize(src2, src2, src1.size());
-	if (!src1.data) { printf("Error loading src1 \n"); return -1; }
-	if (!src2.data) { printf("Error loading src2 \n"); return -1; }
-	myData holder;
-	holder.variable1 = src1;
-	holder.variable2 = src2;
-	int b = 3; // blur value
-	namedWindow("Blur Window");
-	createTrackbar("blur", "Blur Window", &b, 100, onChange, (void*)(&holder));
+	Mat src = imread("..\\data_store\\david_1.jpg");  
+	if (!src.data) { printf("Error loading src \n"); return -1; }
+	Mat dst;
+
+	trackbarDataExample holder;
+	holder.src = src;
+	holder.dst = dst;
+	holder.brightness = 1;
+	holder.contrast = 0;
+
+	int brightness = 1;
+	int contrast = 0;
+
+	namedWindow("Adjust Window");
+	cvCreateTrackbar2("Brightness", "Adjust Window", &brightness, 100, onChangeBrightness, (void*)(&holder));
+	cvCreateTrackbar2("Contrast", "Adjust Window", &contrast, 100, onChangeContrast, (void*)(&holder));
 	waitKey(0);
 
 	namedWindow("Updated Image");
-	imshow("Updated Image", holder.variable2);
+	imshow("Updated Image", holder.dst);
 	waitKey(0);
 }

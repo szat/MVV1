@@ -19,7 +19,6 @@ int alpha_slider;
 double alpha;
 double beta;
 
-
 struct dataTrackbarCorners {
 	Mat image;
 	vector<Point2f> corners;
@@ -82,6 +81,7 @@ int trackbarCorners(vector<Point2f>& corners)
 	int passMinDistance = 1;
 	namedWindow("Corners");
 	createTrackbar("minDistance", "Corners", &passMinDistance, 100, onChangeTrackbarCorners, (void*)(&holder)); 
+	
 	cout << "Outside of trackbar, number of corners is: " << holder.corners.size() << endl;
 	waitKey(0);
 

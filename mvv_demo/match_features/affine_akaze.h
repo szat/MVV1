@@ -13,4 +13,4 @@ void affine_skew(double tilt, double phi, cv::Mat& img, cv::Mat& mask, cv::Mat& 
 
 void detect_and_compute(const cv::Mat& img, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors);
 
-int affine_akaze();
+void affine_akaze_test(std::string imagePathA_in, std::string imagePathB_in, std::vector<cv::KeyPoint>& keysImgA_out, std::vector<cv::KeyPoint>& keysImgB_out);
