@@ -99,8 +99,9 @@ int main()
 	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", kpts1, kpts2);
 	//affine_akaze();
 	//test_match_points();
-	test_trackbar2(0);
-
+	//test_trackbar2(0);
+	vector<Point2f> corners;
+	trackbarCorners(corners);
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
 
