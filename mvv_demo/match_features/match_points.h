@@ -20,4 +20,6 @@ void ratio_matcher_script(const float ratio, const std::vector<cv::KeyPoint>& kp
 
 void ransac_script(const float ball_radius, const float inlier_thresh, const std::vector<cv::KeyPoint>& kpts1_in, const std::vector<cv::KeyPoint>& kpts2_in, cv::Mat& homography_out, std::vector<cv::KeyPoint>& kpts1_out, std::vector<cv::KeyPoint>& kpts2_out);
 
+std::vector<std::vector<cv::KeyPoint>> match_points_mat(cv::Mat img1, cv::Mat img2);
+
 std::vector<std::vector<cv::KeyPoint>> test_match_points(std::string imagePathA, std::string imagePathB);

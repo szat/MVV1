@@ -109,6 +109,34 @@ void ransac_script(const float ball_radius, const float inlier_thresh, const vec
 	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
+vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
+{
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
+
+	vector<KeyPoint> kpts1_step1;
+	vector<KeyPoint> kpts2_step1;
+	Mat desc1_step1;
+	Mat desc2_step1;
+	akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
+
+	vector<KeyPoint> kpts1_step2;
+	vector<KeyPoint> kpts2_step2;
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+
+	Mat homography;
+	vector<KeyPoint> kpts1_step3;
+	vector<KeyPoint> kpts2_step3;
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+
+	vector<vector<KeyPoint>> pointMatches = { kpts1_step3, kpts2_step3 };
+	return pointMatches;
+}
+
+
 vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
