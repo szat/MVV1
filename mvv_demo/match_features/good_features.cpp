@@ -21,16 +21,20 @@ double beta;
 struct dataTrackbarCorners {
 	Mat image;
 	vector<Point2f> corners;
+
 	int maxCorners = 1000;
-	double qualityLevel = 0.01;
-	int MAXQUALITYLEVEL = 1000;
-	double minDistance = 10;
-	int MAXMINDISTANCE = 10;
 	int blockSize = 3;
-	double k = 0.04;
-	int MAXK = 1000;
+	double qualityLevel = 0.001;
+	double minDistance = 0.001;
+	double k = 0.001;
+
+	double qualityPrecision = 0.001;
+	double minDistancePrecision = 0.001;
+	double kPrecision = 0.001;
+
 	bool useHarrisDetector = false;
 };
+
 
 void changeCornersMaxCorners(int maxCornersSlider, void *userdata) {
 	goodFeaturesToTrack(
@@ -53,15 +57,43 @@ void changeCornersMaxCorners(int maxCornersSlider, void *userdata) {
 		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
 	}
 	imshow("Display", copy_rbg);
-	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
+	cout << "With maxCorners = " << maxCornersSlider << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
-void changeCornersQualityLevel(int qualityLevelInt, void *userdata) {
-	int MAXQUALITYLEVEL = (*((dataTrackbarCorners*)userdata)).MAXQUALITYLEVEL;
+
+void changeCornersBlockSize(int blockSizeSlider, void *userdata) {
 	goodFeaturesToTrack(
 		(*((dataTrackbarCorners*)userdata)).image,
 		(*((dataTrackbarCorners*)userdata)).corners,
 		(*((dataTrackbarCorners*)userdata)).maxCorners,
-		(*((dataTrackbarCorners*)userdata)).qualityLevel = 0.000000001 + ((double) qualityLevelInt) / MAXQUALITYLEVEL,
+		(*((dataTrackbarCorners*)userdata)).qualityLevel,
+		(*((dataTrackbarCorners*)userdata)).minDistance,
+		Mat(),
+		//We don't want to have blockSize == 0, however I don't see how I can tell the trackbar not to touch 0
+		(blockSizeSlider > 0) ? (*((dataTrackbarCorners*)userdata)).blockSize = blockSizeSlider : (*((dataTrackbarCorners*)userdata)).blockSize,
+		(*((dataTrackbarCorners*)userdata)).useHarrisDetector,
+		(*((dataTrackbarCorners*)userdata)).k
+	);
+	int r = 3;
+
+	Mat copy_rbg((*((dataTrackbarCorners*)userdata)).image.size(), CV_8UC3);
+	cvtColor((*((dataTrackbarCorners*)userdata)).image, copy_rbg, CV_GRAY2RGB);
+	RNG rng(12345); //random number generator
+	for (size_t i = 0; i < (*((dataTrackbarCorners*)userdata)).corners.size(); i++) {
+		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Display", copy_rbg);
+	cout << "With blockSize = " << blockSizeSlider << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
+
+}
+
+
+void changeCornersQualityLevel(int qualityLevelInt, void *userdata) {
+	
+	goodFeaturesToTrack(
+		(*((dataTrackbarCorners*)userdata)).image,
+		(*((dataTrackbarCorners*)userdata)).corners,
+		(*((dataTrackbarCorners*)userdata)).maxCorners,
+		(*((dataTrackbarCorners*)userdata)).qualityLevel = 0.000000001 + (*((dataTrackbarCorners*)userdata)).qualityPrecision * qualityLevelInt,
 		(*((dataTrackbarCorners*)userdata)).minDistance,
 		Mat(),
 		(*((dataTrackbarCorners*)userdata)).blockSize,
@@ -78,14 +110,15 @@ void changeCornersQualityLevel(int qualityLevelInt, void *userdata) {
 	imshow("Display", copy_rbg);
 	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
+
 void changeCornersMinDistance(int minDistanceInt, void *userdata) {
-	int MAXMINDISTANCE = (*((dataTrackbarCorners*)userdata)).MAXMINDISTANCE;
+	
 	goodFeaturesToTrack(
 		(*((dataTrackbarCorners*)userdata)).image,
 		(*((dataTrackbarCorners*)userdata)).corners,
 		(*((dataTrackbarCorners*)userdata)).maxCorners,
 		(*((dataTrackbarCorners*)userdata)).qualityLevel,
-		(*((dataTrackbarCorners*)userdata)).minDistance = 0.000000001 + (double) ((double) minDistanceInt / MAXMINDISTANCE),
+		(*((dataTrackbarCorners*)userdata)).minDistance = 0.000000001 + (*((dataTrackbarCorners*)userdata)).minDistancePrecision * minDistanceInt,
 		Mat(),
 		(*((dataTrackbarCorners*)userdata)).blockSize,
 		(*((dataTrackbarCorners*)userdata)).useHarrisDetector,
@@ -93,7 +126,7 @@ void changeCornersMinDistance(int minDistanceInt, void *userdata) {
 	);
 	int r = 3;
 	//Mat copy = (*((dataTrackbarCorners*)userdata)).image.clone();
-	
+
 	Mat copy_rbg((*((dataTrackbarCorners*)userdata)).image.size(), CV_8UC3);
 	cvtColor((*((dataTrackbarCorners*)userdata)).image, copy_rbg, CV_GRAY2RGB);
 	RNG rng(12345); //random number generator
@@ -103,31 +136,31 @@ void changeCornersMinDistance(int minDistanceInt, void *userdata) {
 	imshow("Display", copy_rbg);
 	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
-void changeCornersBlockSize(int blockSizeSlider, void *userdata) {
-		goodFeaturesToTrack(
-			(*((dataTrackbarCorners*)userdata)).image,
-			(*((dataTrackbarCorners*)userdata)).corners,
-			(*((dataTrackbarCorners*)userdata)).maxCorners,
-			(*((dataTrackbarCorners*)userdata)).qualityLevel,
-			(*((dataTrackbarCorners*)userdata)).minDistance,
-			Mat(),
-			(*((dataTrackbarCorners*)userdata)).blockSize = blockSizeSlider,
-			(*((dataTrackbarCorners*)userdata)).useHarrisDetector,
-			(*((dataTrackbarCorners*)userdata)).k
-		);
-		int r = 3;
 
-		Mat copy_rbg((*((dataTrackbarCorners*)userdata)).image.size(), CV_8UC3);
-		cvtColor((*((dataTrackbarCorners*)userdata)).image, copy_rbg, CV_GRAY2RGB);
-		RNG rng(12345); //random number generator
-		for (size_t i = 0; i < (*((dataTrackbarCorners*)userdata)).corners.size(); i++) {
-			circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
-		}
-		imshow("Display", copy_rbg);
-		cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
-	
+void changeCornersKInt(int kInt, void *userdata) {
+	goodFeaturesToTrack(
+		(*((dataTrackbarCorners*)userdata)).image,
+		(*((dataTrackbarCorners*)userdata)).corners,
+		(*((dataTrackbarCorners*)userdata)).maxCorners,
+		(*((dataTrackbarCorners*)userdata)).qualityLevel,
+		(*((dataTrackbarCorners*)userdata)).minDistance,
+		Mat(),
+		(*((dataTrackbarCorners*)userdata)).blockSize,
+		(*((dataTrackbarCorners*)userdata)).useHarrisDetector,
+		(*((dataTrackbarCorners*)userdata)).k = 0.000000001 + (*((dataTrackbarCorners*)userdata)).kPrecision * kInt
+	);
+	int r = 3;
+	//Mat copy = (*((dataTrackbarCorners*)userdata)).image.clone();
+
+	Mat copy_rbg((*((dataTrackbarCorners*)userdata)).image.size(), CV_8UC3);
+	cvtColor((*((dataTrackbarCorners*)userdata)).image, copy_rbg, CV_GRAY2RGB);
+	RNG rng(12345); //random number generator
+	for (size_t i = 0; i < (*((dataTrackbarCorners*)userdata)).corners.size(); i++) {
+		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Display", copy_rbg);
+	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
-void changeCornersKInt(int kInt, void *userdata) {}
 
 
 
@@ -146,27 +179,30 @@ int trackbarCorners(vector<Point2f>& corners)
 	dataTrackbarCorners holder;
 	holder.image = src1;
 	holder.corners = corners;
-	holder.qualityLevel = qualityLevel;
-	holder.minDistance = minDistance;
-	holder.maxCorners = maxCorners;
-	holder.blockSize = blockSize;
-	holder.k = k;
-	holder.useHarrisDetector = useHarrisDetector;
+//	holder.qualityLevel = qualityLevel;
+//	holder.minDistance = minDistance;
+//	holder.maxCorners = maxCorners;
+//	holder.blockSize = blockSize;
+//	holder.k = k;
+//	holder.useHarrisDetector = useHarrisDetector;
 	
 	namedWindow("Controls");
 	namedWindow("Display");
 
-	int passQualityLevel = 1;
-	cvCreateTrackbar2("qualityLevel(Scaled)", "Controls", &passQualityLevel, holder.MAXQUALITYLEVEL, changeCornersQualityLevel, (void*)(&holder));
+	int passQualityLevel = 0;
+	cvCreateTrackbar2("qual(S)", "Controls", &passQualityLevel, 1000, changeCornersQualityLevel, (void*)(&holder));
 
-	int passMinDistance = 1;
-	cvCreateTrackbar2("minDistance(Scaled)", "Controls", &passMinDistance, 1000, changeCornersMinDistance, (void*)(&holder));
+	int passMinDistance = 0;
+	cvCreateTrackbar2("minD(S)", "Controls", &passMinDistance, 1000, changeCornersMinDistance, (void*)(&holder));
 
-	int passMaxCorners = 1;
-	cvCreateTrackbar2("maxCorners", "Controls", &passMaxCorners, 1000, changeCornersMaxCorners, (void*)(&holder));
+	int passMaxCorners = 0;
+	cvCreateTrackbar2("maxCrns", "Controls", &passMaxCorners, 1000, changeCornersMaxCorners, (void*)(&holder));
 
 	int passBlockSize = 1;
-	cvCreateTrackbar2("blockSize", "Controls", &passBlockSize, 10, changeCornersBlockSize, (void*)(&holder));
+	cvCreateTrackbar2("block", "Controls", &passBlockSize, 10, changeCornersBlockSize, (void*)(&holder));
+
+	int passK = 0;
+	cvCreateTrackbar2("k(S)", "Controls", &passK, 1000, changeCornersKInt, (void*)(&holder));
 
 	cout << "Outside of trackbar, number of corners is: " << holder.corners.size() << endl;
 	waitKey(0);

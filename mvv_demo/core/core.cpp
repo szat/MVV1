@@ -124,7 +124,7 @@ int main()
 
 	// Danny current test
 
-	triangulation_diagnostic();
+	//triangulation_diagnostic();
 
 	//test_matching();
 	//corner_points_test();
@@ -139,12 +139,11 @@ int main()
 	//test_match_points();
 	//test_trackbar2(0);
 
-	//vector<Point2f> corners;
-	//trackbarCorners(corners);
+	vector<Point2f> corners;
+	trackbarCorners(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
 
     return 0;
 }
-
