@@ -117,12 +117,77 @@ int triangulation_diagnostic() {
 	return -1;
 }
 
+class GeometricSlice {
+public:
+	Rect img;
+	vector<Vec6f> triangles;
+	vector<pair<Vec4f, Vec4f>> trapezoidSource;
+};
+
+class MatchedGeometry {
+	public:
+		GeometricSlice sourceGeometry;
+		GeometricSlice targetGeometry;
+		vector<int> trianglePriority;
+		vector<int> trapezoidPriority;
+};
+
+
+
+MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
+	// Please note that:
+	// A: source image
+	// B: target image
+	// I use this shorthand so that the variable names are shorter.
+
+	cout << "Initializing matched geometry routine" << endl;
+
+	string imagePathA = sourcePath;
+	string imagePathB = targetPath;
+	string rootPath = "../data_store";
+	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
+	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
+
+	Rect imgSizeRectA = Rect(0, 0, imgA.size().width, imgA.size().height);
+	Rect imgSizeRectB = Rect(0, 0, imgB.size().width, imgB.size().height);
+
+	vector<vector<KeyPoint>> pointMatches = match_points_mat(imgA, imgB);
+
+	vector<KeyPoint> imgKeyPointsA = pointMatches[0];
+	vector<KeyPoint> imgKeyPointsB = pointMatches[1];
+	vector<Point2f> imgPointsA = convert_key_points(imgKeyPointsA);
+	vector<Point2f> imgPointsB = convert_key_points(imgKeyPointsB);
+
+	if (imgPointsA.size() != imgPointsB.size()) {
+		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
+	}
+
+	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
+
+
+
+	// triangulate source interior
+	// triangulate target interior (corresponding)
+	// detect edges of source (hull)
+	// construct source exterior trapezoids
+	// construct target exterior (corresponding)
+	// calculate priority (triangles)
+	// calculate priority (trapezoids)
+	// return MatchedGeometry
+
+	MatchedGeometry matchedResult = MatchedGeometry();
+}
+
 int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
 
 	// Danny current test
+
+
+	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
+
 
 	//triangulation_diagnostic();
 
@@ -139,8 +204,8 @@ int main()
 	//test_match_points();
 	//test_trackbar2(0);
 
-	vector<Point2f> corners;
-	trackbarCorners(corners);
+	//vector<Point2f> corners;
+	//trackbarCorners(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
