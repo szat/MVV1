@@ -193,7 +193,9 @@ int main()
 
 	// Danny current test
 
-	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
+
+	//MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
+
 
 	//triangulation_diagnostic();
 
@@ -210,12 +212,11 @@ int main()
 	//test_match_points();
 	//test_trackbar2(0);
 
-	//vector<Point2f> corners;
-	//trackbarCorners(corners);
+	vector<Point2f> corners;
+	trackbarCorners(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
 
     return 0;
 }
-
