@@ -117,22 +117,18 @@ int triangulation_diagnostic() {
 	return -1;
 }
 
-class GeometricSlice {
-public:
+struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
 	vector<pair<Vec4f, Vec4f>> trapezoidSource;
 };
 
-class MatchedGeometry {
-	public:
-		GeometricSlice sourceGeometry;
-		GeometricSlice targetGeometry;
-		vector<int> trianglePriority;
-		vector<int> trapezoidPriority;
+struct MatchedGeometry {
+	GeometricSlice sourceGeometry;
+	GeometricSlice targetGeometry;
+	vector<int> trianglePriority;
+	vector<int> trapezoidPriority;
 };
-
-
 
 MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 	// Please note that:
@@ -176,6 +172,7 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 	// return MatchedGeometry
 
 	MatchedGeometry matchedResult = MatchedGeometry();
+	return matchedResult;
 }
 
 int main()
