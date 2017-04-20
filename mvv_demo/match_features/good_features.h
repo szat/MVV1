@@ -1,19 +1,22 @@
 #pragma once
 
-#include <opencv2/features2d.hpp>
-#include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
-#include <opencv2/calib3d.hpp>
+#include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+
 #include <vector>
 #include <iostream>
 #include <ctime>
 
-static void onChangeTrackbarCorners(int slider, void *userdata);
+void changeCornersMaxCorners(int maxCornersSlider, void *userdata);
+
+void changeCornersBlockSize(int blockSizeSlider, void *userdata);
+
+void changeCornersQualityLevel(int qualityLevelInt, void *userdata);
+
+void changeCornersMinDistance(int minDistanceInt, void *userdata);
+
+//Useless method unless useHarrisDetector == true
+void changeCornersKInt(int kInt, void *userdata);
 
 int trackbarCorners(std::vector<cv::Point2f>& corners);
-
-static void onChange(int trackpos, void *userdata);
-
-int test_trackbar2(int something);

@@ -1,22 +1,7 @@
 #include "good_features.h"
 
-#include <opencv2/features2d.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/opencv.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <vector>
-#include <iostream>
-#include <ctime>
-
 using namespace std;
 using namespace cv;
-
-const int alpha_slider_max = 100;
-int alpha_slider;
-double alpha;
-double beta;
 
 struct dataTrackbarCorners {
 	Mat image;
@@ -25,16 +10,15 @@ struct dataTrackbarCorners {
 	int maxCorners = 1000;
 	int blockSize = 3;
 	double qualityLevel = 0.001;
-	double minDistance = 0.001;
-	double k = 0.001;
+	double minDistance = 0.01;
+	double k = 0.01;
 
 	double qualityPrecision = 0.001;
-	double minDistancePrecision = 0.001;
-	double kPrecision = 0.001;
+	double minDistancePrecision = 0.01;
+	double kPrecision = 0.01;
 
 	bool useHarrisDetector = false;
 };
-
 
 void changeCornersMaxCorners(int maxCornersSlider, void *userdata) {
 	goodFeaturesToTrack(
@@ -86,7 +70,6 @@ void changeCornersBlockSize(int blockSizeSlider, void *userdata) {
 
 }
 
-
 void changeCornersQualityLevel(int qualityLevelInt, void *userdata) {
 	
 	goodFeaturesToTrack(
@@ -108,7 +91,7 @@ void changeCornersQualityLevel(int qualityLevelInt, void *userdata) {
 		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
 	}
 	imshow("Display", copy_rbg);
-	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
+	cout << "With qualityLevel = " << (*((dataTrackbarCorners*)userdata)).qualityLevel << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
 
 void changeCornersMinDistance(int minDistanceInt, void *userdata) {
@@ -134,9 +117,10 @@ void changeCornersMinDistance(int minDistanceInt, void *userdata) {
 		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
 	}
 	imshow("Display", copy_rbg);
-	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
+	cout << "With minDistance = " << (*((dataTrackbarCorners*)userdata)).minDistance << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
 
+//Useless method unless useHarrisDetector == true
 void changeCornersKInt(int kInt, void *userdata) {
 	goodFeaturesToTrack(
 		(*((dataTrackbarCorners*)userdata)).image,
@@ -159,10 +143,8 @@ void changeCornersKInt(int kInt, void *userdata) {
 		circle(copy_rbg, (*((dataTrackbarCorners*)userdata)).corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
 	}
 	imshow("Display", copy_rbg);
-	cout << "number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
+	cout << "With k = " << (*((dataTrackbarCorners*)userdata)).k << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
-
-
 
 int trackbarCorners(vector<Point2f>& corners)
 {
@@ -179,30 +161,28 @@ int trackbarCorners(vector<Point2f>& corners)
 	dataTrackbarCorners holder;
 	holder.image = src1;
 	holder.corners = corners;
-//	holder.qualityLevel = qualityLevel;
-//	holder.minDistance = minDistance;
-//	holder.maxCorners = maxCorners;
-//	holder.blockSize = blockSize;
-//	holder.k = k;
-//	holder.useHarrisDetector = useHarrisDetector;
 	
 	namedWindow("Controls");
 	namedWindow("Display");
 
+	//The quality level has to be between 0 and 1
 	int passQualityLevel = 0;
-	cvCreateTrackbar2("qual(S)", "Controls", &passQualityLevel, 1000, changeCornersQualityLevel, (void*)(&holder));
+	cvCreateTrackbar2("qual(S)", "Controls", &passQualityLevel, 300, changeCornersQualityLevel, (void*)(&holder));
 
 	int passMinDistance = 0;
-	cvCreateTrackbar2("minD(S)", "Controls", &passMinDistance, 1000, changeCornersMinDistance, (void*)(&holder));
+	cvCreateTrackbar2("minD(S)", "Controls", &passMinDistance, 5000, changeCornersMinDistance, (void*)(&holder));
 
 	int passMaxCorners = 0;
-	cvCreateTrackbar2("maxCrns", "Controls", &passMaxCorners, 1000, changeCornersMaxCorners, (void*)(&holder));
+	cvCreateTrackbar2("maxCrns", "Controls", &passMaxCorners, 5000, changeCornersMaxCorners, (void*)(&holder));
 
 	int passBlockSize = 1;
-	cvCreateTrackbar2("block", "Controls", &passBlockSize, 10, changeCornersBlockSize, (void*)(&holder));
+	cvCreateTrackbar2("block", "Controls", &passBlockSize, 50, changeCornersBlockSize, (void*)(&holder));
 
+	/*
+	//K is the free parameter in the Harris detector, but we will use useHarrisDetector = false
 	int passK = 0;
-	cvCreateTrackbar2("k(S)", "Controls", &passK, 1000, changeCornersKInt, (void*)(&holder));
+	cvCreateTrackbar2("k(S)", "Controls", &passK, 2000, changeCornersKInt, (void*)(&holder));
+	*/
 
 	cout << "Outside of trackbar, number of corners is: " << holder.corners.size() << endl;
 	waitKey(0);
