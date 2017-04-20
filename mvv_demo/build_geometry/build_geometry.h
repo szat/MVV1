@@ -29,6 +29,6 @@ static void onChangeTriangleMorph(int morph, void *userdata);
 
 int triangulation_trackbar(std::vector<cv::KeyPoint> sourcePoints, std::vector<cv::KeyPoint> targetPoints, cv::Rect imgSize);
 
-
+std::vector<cv::Point2f> convert_key_points(std::vector<cv::KeyPoint> keyPoints);
 
 

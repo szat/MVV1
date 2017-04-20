@@ -175,7 +175,33 @@ vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect source
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
 
-	return triangles;
+	int numExteriorPoints = 4;
+	vector<Point2f> excludedVertices = vector<Point2f>();
+	for (int i = 0; i < numExteriorPoints; i++) {
+		excludedVertices.push_back(subdiv.getVertex(i));
+	}
+
+	vector<Vec6f> filteredTriangles = vector<Vec6f>();
+	// Is there an alternative to a 3-deep nested loop?
+
+	int numTriangles = triangles.size();
+	for (int i = 0; i < numTriangles; i++) {
+		bool exclude = false;
+		for (int j = 0; j < numExteriorPoints; j++) {
+			Point2f excludedVertex = excludedVertices[j];
+			for (int k = 0; k < 3; k++) {
+				float x_0 = triangles[i][k * 2];
+				float y_0 = triangles[i][k * 2 + 1];
+				if (x_0 == excludedVertex.x && y_0 == excludedVertex.y) {
+					exclude = true;
+				}
+			}
+		}
+		if (!exclude) {
+			filteredTriangles.push_back(triangles[i]);
+		}
+	}
+	return filteredTriangles;
 }
 
 void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
@@ -299,13 +325,7 @@ vector<Point2f> construct_intermediate_points(vector<KeyPoint> sourcePoints, vec
 
 static void onChangeTriangleMorph(int morph, void *userdata) //void* mean that it is a pointer of unknown type
 {
-
 	(*((trackbarTriangleMorph*)userdata)).morph = morph;
-	//(*((trackbarDataExample*)userdata)).constrast = contrast;
-
-	//Mat img =
-
-	// assuming the morphing goes from 0 - 100!
 
 	vector<KeyPoint> srcPoints = (*((trackbarTriangleMorph*)userdata)).sourcePoints;
 	vector<KeyPoint> tarPoints = (*((trackbarTriangleMorph*)userdata)).targetPoints;
@@ -328,12 +348,15 @@ int triangulation_trackbar(vector<KeyPoint> sourcePoints, vector<KeyPoint> targe
 	namedWindow("Adjust Window");
 	cvCreateTrackbar2("Morph", "Adjust Window", &morph, 100, onChangeTriangleMorph, (void*)(&holder));
 	waitKey(0);
-	/*
-	namedWindow("Updated Image");
-	imshow("Updated Image", holder.dst);
-	waitKey(0);
-	*/
 
 	return 0;
-	
+}
+
+vector<Point2f> convert_key_points(vector<KeyPoint> keyPoints) {
+	int len = keyPoints.size();
+	vector<Point2f> result = vector<Point2f>();
+	for (int i = 0; i < len; i++) {
+		result.push_back(keyPoints[i].pt);
+	}
+	return result;
 }
