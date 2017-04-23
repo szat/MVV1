@@ -384,18 +384,19 @@ vector<Vec6f> triangulate_target(vector<Point2f> imgPointsA, vector<Point2f> img
 	// build up correspondence hashtable
 	std::unordered_map<long long, Point2f> pointDict;
 	
-	int len = imgPointsA.size();
-	for (int i = 0; i < len; i++) {
+	int numTriangles = trianglesA.size();
+	int numPoints = imgPointsA.size();
+
+	for (int i = 0; i < numPoints; i++) {
 		long long hash = pair_hash(imgPointsA[i]);
 		pointDict.insert(make_pair(hash, imgPointsB[i]));
 	}
 	Point2f testPoint = pointDict[pair_hash(imgPointsA[0])];
-	int len2 = pointDict.size();
 
 	duration = (clock() - start) / (double)CLOCKS_PER_MS;
 	cout << "built dictionary in " << duration << " ms" << endl;
 
-	for (int i = 0; i < len; i++) {
+	for (int i = 0; i < numTriangles; i++) {
 		Vec6f currentTriangleA = trianglesA[i];
 		Point2f vertex1 = Point2f(currentTriangleA[0], currentTriangleA[1]);
 		Point2f vertex2 = Point2f(currentTriangleA[2], currentTriangleA[3]);

@@ -166,12 +166,18 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 
 	// Need a function to render triangles output
 
+
+
+
 	// detect edges of source (convex hull)
 	vector<Point2f> convexHullA = get_source_convex_hull(imgPointsA);
 
 	// detect edges of target (convex hull)
 	// needs to be corresponding to hull of A
 	vector<Point2f> convexHullB = get_target_convex_hull(imgPointsA, imgPointsB, convexHullA);
+
+
+
 
 	// construct target and source trapezoids  
 	// use the same Key/Value mapping from triangulate_target
@@ -194,26 +200,11 @@ int main()
 	// Danny current test
 
 
-	//MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
-
-
-	//triangulation_diagnostic();
-
-	//test_matching();
-	//corner_points_test();
-
-	//vector<Vec6f> triangleSet1 = test_interface();
+	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
 
 	// Adrian current test
 	
-	//vector<KeyPoint> kpts1, kpts2; 
-	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", kpts1, kpts2);
-	//affine_akaze();
-	//test_match_points();
-	//test_trackbar2(0);
-
-	vector<Point2f> corners;
-	trackbarCorners(corners);
+	//trackbarCorners(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
