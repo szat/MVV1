@@ -39,4 +39,6 @@ std::vector<int> get_source_convex_hull(std::vector<cv::Point2f> sourcePoints);
 
 std::vector<cv::Point2f> hull_indices_to_points(std::vector<int> indices, std::vector<cv::Point2f> points);
 
-std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point> convexHull, cv::Rect imgBounds);
+std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point2f> convexHull, cv::Rect imgBounds, cv::Point2f centerOfMass);
+
+cv::Point2f get_center_of_mass(std::vector<cv::Point2f> points);

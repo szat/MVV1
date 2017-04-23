@@ -449,7 +449,62 @@ vector<Point2f> hull_indices_to_points(vector<int> indices, vector<Point2f> poin
 	return resultPoints;
 }
 
-vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point> convexHull, Rect imgBounds) {
-	vector<pair<Vec4f,Vec4f>> result = vector<pair<Vec4f, Vec4f>>();
+Point2f get_center_of_mass(vector<Point2f> points) {
+	// Using 2D center of mass formula with equal masses (M=1)
+	int numPoints = points.size();
+	float reciprocal = 1 / ((float)numPoints);
+	float xTotal = 0;
+	float yTotal = 0;
+
+	for (int i = 0; i < numPoints; i++) {
+		xTotal += points[i].x;
+		yTotal += points[i].y;
+	}
+
+	float xMass = reciprocal * xTotal;
+	float yMass = reciprocal * yTotal;
+
+	return Point2f(xMass, yMass);
+}
+
+// Finds the intersection of two lines, or returns false.
+// The lines are defined by (p1, q1) and (p2, q2).
+bool intersection(Point2f p1, Point2f q1, Point2f p2, Point2f q2,
+	Point2f &r)
+{
+	Point2f x = p2 - p1;
+	Point2f d1 = q1 - p1;
+	Point2f d2 = q2 - p2;
+
+	float cross = d1.x*d2.y - d1.y*d2.x;
+	if (abs(cross) < /*EPS*/1e-8)
+		return false;
+
+	double t1 = (x.x * d2.y - x.y * d2.x) / cross;
+	r = p1 + d1 * t1;
+	return true;
+}
+
+pair<Vec4f, Vec4f> create_trapezoid(Point2f a, Point2f b, Rect imgBounds, Point2f com) {
+	pair<Vec4f, Vec4f> result = pair<Vec4f, Vec4f>();
+
+	float xMin = 0;
+	float xMax = imgBounds.width;
+	float yMin = 0;
+	float yMax = imgBounds.height;
+
+
 	return result;
+}
+
+vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHull, Rect imgBounds, Point2f centerOfMass) {
+
+	vector<pair<Vec4f, Vec4f>> trapezoids = vector<pair<Vec4f,Vec4f>>();
+	int hullPoints = convexHull.size();
+	for (int i = 0; i < hullPoints - 1; i++) {
+		pair<Vec4f, Vec4f> trapezoid = create_trapezoid(convexHull[i], convexHull[i + 1], imgBounds, centerOfMass);
+		trapezoids.push_back(trapezoid);
+	}
+	return trapezoids;
 };
+

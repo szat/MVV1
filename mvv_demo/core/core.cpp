@@ -131,7 +131,41 @@ struct MatchedGeometry {
 	vector<int> trapezoidPriority;
 };
 
-MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
+MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, Rect imgSizeRectA, Rect imgSizeRectB) {
+	if (imgPointsA.size() != imgPointsB.size()) {
+		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
+	}
+
+	// triangulate source interior
+	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
+
+	// triangulate target interior
+	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
+
+	// Need a function to render triangles output
+	// detect edges of source (convex hull)
+	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
+
+	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
+	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
+
+	Point2f centerOfMassA = get_center_of_mass(imgPointsA);
+	Point2f centerOfMassB = get_center_of_mass(imgPointsB);
+
+	// construct target and source trapezoids  
+	// use the same Key/Value mapping from triangulate_target
+	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA, centerOfMassA);
+	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB, centerOfMassB);
+
+	// calculate priority (triangles)
+	// calculate priority (trapezoids)
+	// return MatchedGeometry
+
+	MatchedGeometry matchedResult = MatchedGeometry();
+	return matchedResult;
+}
+
+MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPath) {
 	// Please note that:
 	// A: source image
 	// B: target image
@@ -155,41 +189,27 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 	vector<Point2f> imgPointsA = convert_key_points(imgKeyPointsA);
 	vector<Point2f> imgPointsB = convert_key_points(imgKeyPointsB);
 
-	if (imgPointsA.size() != imgPointsB.size()) {
-		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
-	}
+	MatchedGeometry geometry = create_matched_geometry(imgPointsA, imgPointsB, imgSizeRectA, imgSizeRectB);
+	return geometry;
+}
 
-	// triangulate source interior
-	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
+int test_5_points() {
+	Rect imgRectA = Rect(0, 0, 500, 600);
+	Rect imgRectB = Rect(0, 0, 500, 600);
 
-	// triangulate target interior
-	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
+	vector<Point2f> pointsA = vector<Point2f>();
+	vector<Point2f> pointsB = vector<Point2f>();
 
-	// Need a function to render triangles output
-	// detect edges of source (convex hull)
-	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
+	pointsA.push_back(Point2f(200, 300));
+	pointsA.push_back(Point2f(400, 300));
+	pointsA.push_back(Point2f(300, 500));
 
-	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
-	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
+	pointsB.push_back(Point2f(190.213, 313.219));
+	pointsB.push_back(Point2f(412.092, 290.012));
+	pointsB.push_back(Point2f(329, 523.3234));
 
-	// detect edges of target (convex hull)
-	// needs to be corresponding to hull of A
-	//vector<Point> convexHullB = get_target_convex_hull(imgPointsA, imgPointsB, convexHullA);
-
-
-
-
-	// construct target and source trapezoids  
-	// use the same Key/Value mapping from triangulate_target
-	//vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA);
-	//vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB);
-
-	// calculate priority (triangles)
-	// calculate priority (trapezoids)
-	// return MatchedGeometry
-
-	MatchedGeometry matchedResult = MatchedGeometry();
-	return matchedResult;
+	MatchedGeometry m = create_matched_geometry(pointsA, pointsB, imgRectA, imgRectB);
+	return -1;
 }
 
 int main()
@@ -199,8 +219,8 @@ int main()
 
 	// Danny current test
 
-
-	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
+	test_5_points();
+	
 
 	// Adrian current test
 	
