@@ -41,4 +41,10 @@ std::vector<cv::Point2f> hull_indices_to_points(std::vector<int> indices, std::v
 
 std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point2f> convexHull, cv::Rect imgBounds, cv::Point2f centerOfMass);
 
+bool intersection(cv::Point2f p1, cv::Point2f q1, cv::Point2f p2, cv::Point2f q2, cv::Point2f &r);
+
+bool validate_edge_point(cv::Point2f edgePoint, cv::Point2f hullPoint, cv::Point2f com);
+
+cv::Point2f find_edge_intersect(cv::Point2f hullPoint, cv::Point2f com, cv::Rect imgBounds);
+
 cv::Point2f get_center_of_mass(std::vector<cv::Point2f> points);

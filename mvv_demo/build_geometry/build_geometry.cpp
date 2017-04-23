@@ -485,26 +485,92 @@ bool intersection(Point2f p1, Point2f q1, Point2f p2, Point2f q2,
 	return true;
 }
 
-pair<Vec4f, Vec4f> create_trapezoid(Point2f a, Point2f b, Rect imgBounds, Point2f com) {
-	pair<Vec4f, Vec4f> result = pair<Vec4f, Vec4f>();
+bool validate_edge_point(Point2f edgePoint, Point2f hullPoint, Point2f com, float xMin, float xMax, float yMin, float yMax) {
+	if (edgePoint.x < xMin || edgePoint.x > xMax) {
+		return false;
+	}
+	if (edgePoint.y < yMin || edgePoint.y > yMax) {
+		return false;
+	}
+
+	float xDiff = com.x - hullPoint.x;
+	float yDiff = com.y - hullPoint.y;
+	float xEdgeDiff = com.x - edgePoint.x;
+	float yEdgeDiff = com.y - edgePoint.y;
+	bool xDiffSign = xDiff < 0 ? false : true;
+	bool yDiffSign = yDiff < 0 ? false : true;
+	bool xEdgeDiffSign = xEdgeDiff < 0 ? false : true;
+	bool yEdgeDiffSign = yEdgeDiff < 0 ? false : true;
+
+	if (xDiffSign == xEdgeDiffSign && yDiffSign == yEdgeDiffSign) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+Point2f find_edge_intersect(Point2f hullPoint, Point2f com, Rect imgBounds) {
 
 	float xMin = 0;
-	float xMax = imgBounds.width;
+	float xMax = imgBounds.size().width;
 	float yMin = 0;
-	float yMax = imgBounds.height;
+	float yMax = imgBounds.size().height;
 
+	// 4 lines form the box
+	// what a useless comment
+	Point2f pointA, pointB, pointC, pointD;
+	bool pointIntersectA, pointIntersectB, pointIntersectC, pointIntersectD;
 
-	return result;
+	pointIntersectA = intersection(com, hullPoint, Point2f(xMin, yMin), Point2f(xMin, yMax), pointA);
+	pointIntersectB = intersection(com, hullPoint, Point2f(xMin, yMax), Point2f(xMax, yMax), pointB);
+	pointIntersectC = intersection(com, hullPoint, Point2f(xMax, yMax), Point2f(xMax, yMin), pointC);
+	pointIntersectD = intersection(com, hullPoint, Point2f(xMax, yMin), Point2f(xMin, yMin), pointD);
+
+	vector<Point2f> validEdgePoints = vector<Point2f>();
+
+	if (pointIntersectA && validate_edge_point(pointA, hullPoint, com, xMin, xMax, yMin, yMax)) {
+		validEdgePoints.push_back(pointA);
+	}
+	if (pointIntersectB && validate_edge_point(pointB, hullPoint, com, xMin, xMax, yMin, yMax)) {
+		validEdgePoints.push_back(pointB);
+	}
+	if (pointIntersectC && validate_edge_point(pointC, hullPoint, com, xMin, xMax, yMin, yMax)) {
+		validEdgePoints.push_back(pointC);
+	}
+	if (pointIntersectD && validate_edge_point(pointD, hullPoint, com, xMin, xMax, yMin, yMax)) {
+		validEdgePoints.push_back(pointD);
+	}
+
+	if (validEdgePoints.size() != 1) {
+		throw "Error! Edge intersects != 1!";
+	}
+	else {
+		return validEdgePoints[0];
+	}
+
 }
 
 vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHull, Rect imgBounds, Point2f centerOfMass) {
-
+	vector<Point2f> exteriorProjection = vector<Point2f>();
 	vector<pair<Vec4f, Vec4f>> trapezoids = vector<pair<Vec4f,Vec4f>>();
 	int hullPoints = convexHull.size();
-	for (int i = 0; i < hullPoints - 1; i++) {
-		pair<Vec4f, Vec4f> trapezoid = create_trapezoid(convexHull[i], convexHull[i + 1], imgBounds, centerOfMass);
+	for (int i = 0; i < hullPoints; i++) {
+		Point2f poi = find_edge_intersect(convexHull[i], centerOfMass, imgBounds);
+		exteriorProjection.push_back(poi);
+	}
+
+	for (int i = 0; i < hullPoints; i++) {
+		int firstIndex = i;
+		int secondIndex = (i + 1) % hullPoints;
+
+		Vec4f xCoords = Vec4f(convexHull[firstIndex].x, exteriorProjection[firstIndex].x, exteriorProjection[secondIndex].x, convexHull[secondIndex].x);
+		Vec4f yCoords = Vec4f(convexHull[firstIndex].y, exteriorProjection[firstIndex].y, exteriorProjection[secondIndex].y, convexHull[secondIndex].y);
+		pair<Vec4f, Vec4f> trapezoid = pair<Vec4f, Vec4f>(xCoords, yCoords);
 		trapezoids.push_back(trapezoid);
 	}
+
+
 	return trapezoids;
 };
 
