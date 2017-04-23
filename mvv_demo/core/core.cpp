@@ -215,12 +215,41 @@ int test_5_points() {
 	return -1;
 }
 
+int danny_test() {
+	test_5_points();
+
+	return 0;
+}
+
+int adrian_test() {
+	return 0;
+}
+
+
 int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
 
+	ifstream file("user_debug.txt");
+	string str;
+	getline(file, str);
+
+	// Horrible hackish way of avoiding merge conflicts while we do testing
+
+	if (str == "danny") {
+		danny_test();
+	}
+	else if (str == "adrian") {
+		adrian_test();
+	}
+	else {
+		cout << "Invalid user";
+	}
+
+
 	cout << "Finished. Press enter twice to terminate program.";
+
 	cin.get();
 
     return 0;
