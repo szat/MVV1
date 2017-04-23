@@ -133,7 +133,41 @@ struct MatchedGeometry {
 	vector<int> trapezoidPriority;
 };
 
-MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
+MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, Rect imgSizeRectA, Rect imgSizeRectB) {
+	if (imgPointsA.size() != imgPointsB.size()) {
+		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
+	}
+
+	// triangulate source interior
+	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
+
+	// triangulate target interior
+	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
+
+	// Need a function to render triangles output
+	// detect edges of source (convex hull)
+	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
+
+	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
+	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
+
+	Point2f centerOfMassA = get_center_of_mass(imgPointsA);
+	Point2f centerOfMassB = get_center_of_mass(imgPointsB);
+
+	// construct target and source trapezoids  
+	// use the same Key/Value mapping from triangulate_target
+	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA, centerOfMassA);
+	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB, centerOfMassB);
+
+	// calculate priority (triangles)
+	// calculate priority (trapezoids)
+	// return MatchedGeometry
+
+	MatchedGeometry matchedResult = MatchedGeometry();
+	return matchedResult;
+}
+
+MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPath) {
 	// Please note that:
 	// A: source image
 	// B: target image
@@ -157,27 +191,11 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 	vector<Point2f> imgPointsA = convert_key_points(imgKeyPointsA);
 	vector<Point2f> imgPointsB = convert_key_points(imgKeyPointsB);
 
-	if (imgPointsA.size() != imgPointsB.size()) {
-		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
-	}
+	MatchedGeometry geometry = create_matched_geometry(imgPointsA, imgPointsB, imgSizeRectA, imgSizeRectB);
+	return geometry;
+}
 
-	// triangulate source interior
-	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
-
-	// triangulate target interior
-	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
-
-	// Need a function to render triangles output
-	// detect edges of source (convex hull)
-	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
-
-	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
-	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
-
-	// detect edges of target (convex hull)
-	// needs to be corresponding to hull of A
-	//vector<Point> convexHullB = get_target_convex_hull(imgPointsA, imgPointsB, convexHullA);
-
+<<<<<<< HEAD
 	// construct target and source trapezoids  
 	// use the same Key/Value mapping from triangulate_target
 	//vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA);
@@ -186,33 +204,31 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 	// calculate priority (triangles)
 	// calculate priority (trapezoids)
 	// return MatchedGeometry
+=======
+int test_5_points() {
+	Rect imgRectA = Rect(0, 0, 500, 600);
+	Rect imgRectB = Rect(0, 0, 500, 600);
 
-	MatchedGeometry matchedResult = MatchedGeometry();
-	return matchedResult;
+	vector<Point2f> pointsA = vector<Point2f>();
+	vector<Point2f> pointsB = vector<Point2f>();
+
+	pointsA.push_back(Point2f(200, 300));
+	pointsA.push_back(Point2f(400, 300));
+	pointsA.push_back(Point2f(300, 500));
+
+	pointsB.push_back(Point2f(190.213, 313.219));
+	pointsB.push_back(Point2f(412.092, 290.012));
+	pointsB.push_back(Point2f(329, 523.3234));
+>>>>>>> 39759f4230d956b07ff48e450e362c220edbceeb
+
+	MatchedGeometry m = create_matched_geometry(pointsA, pointsB, imgRectA, imgRectB);
+	return -1;
 }
 
 int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
-
-	// Danny current test
-
-	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
-
-	// Adrian current test
-	
-	//vector<KeyPoint> kpts1, kpts2; 
-	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", kpts1, kpts2);
-	//affine_akaze();
-	//test_match_points();
-	//test_trackbar2(0);
-
-	vector<Point2f> corners;
-	string imagePath = "..\\data_store\\david_1.jpg";
-	trackbarCorners(imagePath, corners);
-
-	knn_test(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
