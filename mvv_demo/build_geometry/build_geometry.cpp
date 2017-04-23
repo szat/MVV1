@@ -58,6 +58,9 @@ the use of this software, even if advised of the possibility of such damage.
 #include <vector>
 #include <ctime>
 #include <stdio.h>
+#include <unordered_map>
+#include <limits>
+#include <stdlib.h>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -360,3 +363,93 @@ vector<Point2f> convert_key_points(vector<KeyPoint> keyPoints) {
 	}
 	return result;
 }
+
+long long pair_hash(Point2f pt) {
+	int imax = std::numeric_limits<int>::max();
+
+	pair<int, int> hash = pair<int, int>();
+	long long first = (long long) (pt.x * 1000);
+	long long second = (long long) (pt.y * 1000);
+
+	return first * (imax + 1) + second;
+}
+
+vector<Vec6f> triangulate_target(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, vector<Vec6f> trianglesA) {
+	std::clock_t start;
+	double duration;
+	start = clock();
+
+
+	vector<Vec6f> trianglesB = vector<Vec6f>();
+
+	// build up correspondence hashtable
+	std::unordered_map<long long, Point2f> pointDict;
+	
+	int numTriangles = trianglesA.size();
+	int numPoints = imgPointsA.size();
+
+	for (int i = 0; i < numPoints; i++) {
+		long long hash = pair_hash(imgPointsA[i]);
+		pointDict.insert(make_pair(hash, imgPointsB[i]));
+	}
+	Point2f testPoint = pointDict[pair_hash(imgPointsA[0])];
+
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	cout << "built dictionary in " << duration << " ms" << endl;
+
+	for (int i = 0; i < numTriangles; i++) {
+		Vec6f currentTriangleA = trianglesA[i];
+		Point2f vertex1 = Point2f(currentTriangleA[0], currentTriangleA[1]);
+		Point2f vertex2 = Point2f(currentTriangleA[2], currentTriangleA[3]);
+		Point2f vertex3 = Point2f(currentTriangleA[4], currentTriangleA[5]);
+	
+		Point2f newVertex1 = pointDict[pair_hash(vertex1)];
+		Point2f newVertex2 = pointDict[pair_hash(vertex2)];
+		Point2f newVertex3 = pointDict[pair_hash(vertex3)];
+
+		Vec6f triangleB = Vec6f(newVertex1.x, newVertex1.y, newVertex2.x, newVertex2.y, newVertex3.x, newVertex3.y);
+		trianglesB.push_back(triangleB);
+	}
+
+	return trianglesB;
+}
+
+void render_triangles(vector<Vec6f> triangles, Rect bounds) {
+
+	cout << "Rendering bounds";
+}
+
+vector<int> get_source_convex_hull(vector<Point2f> sourcePoints) {
+	vector<int> hull = vector<int>();
+	int numPoints = sourcePoints.size();
+	vector<Point> sourcePointsSimple = vector<Point>();
+	for (int i = 0; i < numPoints; i++) {
+		Point2f currentPoint = sourcePoints[i];
+		sourcePointsSimple.push_back(Point(currentPoint.x, currentPoint.y));
+	}
+
+	convexHull(sourcePointsSimple, hull, true);
+
+	return hull;
+}
+
+
+
+
+
+
+vector<Point2f> hull_indices_to_points(vector<int> indices, vector<Point2f> points) {
+	vector<Point2f> resultPoints = vector<Point2f>();
+	int numIndices = indices.size();
+
+	for (int i = 0; i < numIndices; i++) {
+		int currentIndex = indices[i];
+		resultPoints.push_back(points[currentIndex]);
+	}
+	return resultPoints;
+}
+
+vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point> convexHull, Rect imgBounds) {
+	vector<pair<Vec4f,Vec4f>> result = vector<pair<Vec4f, Vec4f>>();
+	return result;
+};

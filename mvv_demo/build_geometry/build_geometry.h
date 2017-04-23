@@ -31,4 +31,12 @@ int triangulation_trackbar(std::vector<cv::KeyPoint> sourcePoints, std::vector<c
 
 std::vector<cv::Point2f> convert_key_points(std::vector<cv::KeyPoint> keyPoints);
 
+std::vector<cv::Vec6f> triangulate_target(std::vector<cv::Point2f> imgPointsA, std::vector<cv::Point2f> imgPointsB, std::vector<cv::Vec6f> trianglesA);
 
+void render_triangles(std::vector<cv::Vec6f> triangles, cv::Rect bounds);
+
+std::vector<int> get_source_convex_hull(std::vector<cv::Point2f> sourcePoints);
+
+std::vector<cv::Point2f> hull_indices_to_points(std::vector<int> indices, std::vector<cv::Point2f> points);
+
+std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point> convexHull, cv::Rect imgBounds);

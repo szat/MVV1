@@ -9,6 +9,7 @@
 #include <vector>
 #include <ctime>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -160,15 +161,28 @@ MatchedGeometry create_matched_geometry(string sourcePath, string targetPath) {
 		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
 	}
 
+	// triangulate source interior
 	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
 
+	// triangulate target interior
+	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
 
+	// Need a function to render triangles output
+	// detect edges of source (convex hull)
+	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
 
-	// triangulate source interior
-	// triangulate target interior (corresponding)
-	// detect edges of source (hull)
-	// construct source exterior trapezoids
-	// construct target exterior (corresponding)
+	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
+	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
+
+	// detect edges of target (convex hull)
+	// needs to be corresponding to hull of A
+	//vector<Point> convexHullB = get_target_convex_hull(imgPointsA, imgPointsB, convexHullA);
+
+	// construct target and source trapezoids  
+	// use the same Key/Value mapping from triangulate_target
+	//vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA);
+	//vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB);
+
 	// calculate priority (triangles)
 	// calculate priority (trapezoids)
 	// return MatchedGeometry
@@ -184,16 +198,7 @@ int main()
 
 	// Danny current test
 
-
-	//MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
-
-
-	//triangulation_diagnostic();
-
-	//test_matching();
-	//corner_points_test();
-
-	//vector<Vec6f> triangleSet1 = test_interface();
+	MatchedGeometry result = create_matched_geometry("david_1.jpg", "david_2.jpg");
 
 	// Adrian current test
 	
@@ -209,10 +214,8 @@ int main()
 
 	knn_test(corners);
 
-
-
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
 
     return 0;
-}
+} 
