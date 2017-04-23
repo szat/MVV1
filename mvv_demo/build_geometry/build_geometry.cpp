@@ -60,6 +60,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include <stdio.h>
 #include <unordered_map>
 #include <limits>
+#include <stdlib.h>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -418,19 +419,37 @@ void render_triangles(vector<Vec6f> triangles, Rect bounds) {
 	cout << "Rendering bounds";
 }
 
-vector<Point2f> get_source_convex_hull(vector<Point2f> sourcePoints) {
-	vector<Point2f> hull = vector<Point2f>();
+vector<int> get_source_convex_hull(vector<Point2f> sourcePoints) {
+	vector<int> hull = vector<int>();
+	int numPoints = sourcePoints.size();
+	vector<Point> sourcePointsSimple = vector<Point>();
+	for (int i = 0; i < numPoints; i++) {
+		Point2f currentPoint = sourcePoints[i];
+		sourcePointsSimple.push_back(Point(currentPoint.x, currentPoint.y));
+	}
+
+	convexHull(sourcePointsSimple, hull, true);
 
 	return hull;
 }
 
-vector<Point2f> get_target_convex_hull(vector<Point2f> sourcePoints, vector<Point2f> targetPoints, vector<Point2f> sourceHull) {
-	vector<Point2f> hull = vector<Point2f>();
 
-	return hull;
+
+
+
+
+vector<Point2f> hull_indices_to_points(vector<int> indices, vector<Point2f> points) {
+	vector<Point2f> resultPoints = vector<Point2f>();
+	int numIndices = indices.size();
+
+	for (int i = 0; i < numIndices; i++) {
+		int currentIndex = indices[i];
+		resultPoints.push_back(points[currentIndex]);
+	}
+	return resultPoints;
 }
 
-vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHull, Rect imgBounds) {
+vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point> convexHull, Rect imgBounds) {
 	vector<pair<Vec4f,Vec4f>> result = vector<pair<Vec4f, Vec4f>>();
 	return result;
 };

@@ -35,8 +35,8 @@ std::vector<cv::Vec6f> triangulate_target(std::vector<cv::Point2f> imgPointsA, s
 
 void render_triangles(std::vector<cv::Vec6f> triangles, cv::Rect bounds);
 
-std::vector<cv::Point2f> get_source_convex_hull(std::vector<cv::Point2f> sourcePoints);
+std::vector<int> get_source_convex_hull(std::vector<cv::Point2f> sourcePoints);
 
-std::vector<cv::Point2f> get_target_convex_hull(std::vector<cv::Point2f> sourcePoints, std::vector<cv::Point2f> targetPoints, std::vector<cv::Point2f> sourceHull);
+std::vector<cv::Point2f> hull_indices_to_points(std::vector<int> indices, std::vector<cv::Point2f> points);
 
-std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point2f> convexHull, cv::Rect imgBounds);
+std::vector<std::pair<cv::Vec4f, cv::Vec4f>> project_trapezoids_from_hull(std::vector<cv::Point> convexHull, cv::Rect imgBounds);
