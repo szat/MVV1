@@ -17,6 +17,7 @@
 #include "match_points.h"
 #include "good_features.h"
 #include "affine_akaze.h"
+#include "knn_test.h"
 
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
@@ -30,9 +31,10 @@ int corner_points_test() {
 	cout << "Begin integration test of match_features and build_geometry" << endl;
 
 	//this is the image used in trackbarCorners
-	Mat src1 = imread("..\\data_store\\david_1.jpg", IMREAD_GRAYSCALE); 
+	string imagePath = "..\\data_store\\david_1.jpg";
+	Mat src1 = imread(imagePath, IMREAD_GRAYSCALE); 
 	vector<Point2f> corners;
-	trackbarCorners(corners);
+	trackbarCorners(imagePath, corners);
 
 
 	Rect testRect = Rect(0, 0, src1.size().width, src1.size().height);
@@ -193,7 +195,8 @@ MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPa
 	return geometry;
 }
 
-int test_3_points() {
+
+int test_5_points() {
 	Rect imgRectA = Rect(0, 0, 500, 600);
 	Rect imgRectB = Rect(0, 0, 500, 600);
 
@@ -221,4 +224,4 @@ int main()
 	cin.get();
 
     return 0;
-}
+} 
