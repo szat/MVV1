@@ -22,6 +22,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/ml/ml.hpp> //for knn
 #include <vector>
 #include <iostream>
 #include <ctime>
@@ -179,3 +180,4 @@ vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 	vector<vector<KeyPoint>> pointMatches = { kpts1_step3, kpts2_step3 };
 	return pointMatches;
 }
+

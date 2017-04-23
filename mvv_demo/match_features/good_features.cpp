@@ -15,9 +15,9 @@ struct dataTrackbarCorners {
 
 	double qualityPrecision = 0.001;
 	double minDistancePrecision = 0.01;
-	double kPrecision = 0.01;
+	double kPrecision = 0.001;
 
-	bool useHarrisDetector = false;
+	bool useHarrisDetector = true;
 };
 
 void changeCornersMaxCorners(int maxCornersSlider, void *userdata) {
@@ -146,9 +146,9 @@ void changeCornersKInt(int kInt, void *userdata) {
 	cout << "With k = " << (*((dataTrackbarCorners*)userdata)).k << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
 
-int trackbarCorners(vector<Point2f>& corners)
+int trackbarCorners(string imagePath, vector<Point2f>& corners)
 {
-	Mat src1 = imread("..\\data_store\\david_1.jpg", IMREAD_GRAYSCALE);
+	Mat src1 = imread(imagePath, IMREAD_GRAYSCALE);
 	if (!src1.data) { printf("Error loading src1 \n"); return -1; }
 
 	double qualityLevel = 0.01;
@@ -178,11 +178,9 @@ int trackbarCorners(vector<Point2f>& corners)
 	int passBlockSize = 1;
 	cvCreateTrackbar2("block", "Controls", &passBlockSize, 50, changeCornersBlockSize, (void*)(&holder));
 
-	/*
 	//K is the free parameter in the Harris detector, but we will use useHarrisDetector = false
 	int passK = 0;
-	cvCreateTrackbar2("k(S)", "Controls", &passK, 2000, changeCornersKInt, (void*)(&holder));
-	*/
+	cvCreateTrackbar2("k(S)", "Controls", &passK, 1000, changeCornersKInt, (void*)(&holder));
 
 	cout << "Outside of trackbar, number of corners is: " << holder.corners.size() << endl;
 	waitKey(0);

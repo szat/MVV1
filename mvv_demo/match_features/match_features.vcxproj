@@ -134,12 +134,14 @@
   <ItemGroup>
     <ClInclude Include="affine_akaze.h" />
     <ClInclude Include="good_features.h" />
+    <ClInclude Include="knn_test.h" />
     <ClInclude Include="match_points.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="affine_akaze.cpp" />
     <ClCompile Include="good_features.cpp" />
+    <ClCompile Include="knn_test.cpp" />
     <ClCompile Include="match_points.cpp" />
   </ItemGroup>
   <ItemGroup>
