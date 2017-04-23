@@ -193,7 +193,7 @@ MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPa
 	return geometry;
 }
 
-int test_5_points() {
+int test_3_points() {
 	Rect imgRectA = Rect(0, 0, 500, 600);
 	Rect imgRectB = Rect(0, 0, 500, 600);
 
@@ -216,15 +216,6 @@ int main()
 {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
-
-	// Danny current test
-
-	test_5_points();
-	
-
-	// Adrian current test
-	
-	//trackbarCorners(corners);
 
 	cout << "Finished. Press enter twice to terminate program.";
 	cin.get();
