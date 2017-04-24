@@ -49,6 +49,8 @@ cv::Point2f find_edge_intersect(cv::Point2f hullPoint, cv::Point2f com, cv::Rect
 
 cv::Point2f get_center_of_mass(std::vector<cv::Point2f> points);
 
+float get_triangle_area(cv::Vec6f t);
+
 std::vector<int> calculate_triangle_priority(std::vector<cv::Vec6f> triangles);
 
 std::vector<int> calculate_trapezoid_priority(std::vector<std::pair<cv::Vec4f, cv::Vec4f>> trapezoids);

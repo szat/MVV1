@@ -61,6 +61,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include <unordered_map>
 #include <limits>
 #include <stdlib.h>
+#include <math.h>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -486,6 +487,11 @@ bool intersection(Point2f p1, Point2f q1, Point2f p2, Point2f q2,
 }
 
 bool validate_edge_point(Point2f edgePoint, Point2f hullPoint, Point2f com, float xMin, float xMax, float yMin, float yMax) {
+	// With a tolerance this large, I think this will eventually cause problems via random chance
+	// Eventually, we will get a point that gets sent to the corner, and matches both lines.
+
+	// WAIT! We can fix this by (if we have more than two), checking which one has a lower tolerance to the zero line.
+
 	float tolerance = 1e-4;
 	if (edgePoint.x + tolerance < xMin || edgePoint.x - tolerance > xMax) {
 		return false;
@@ -572,20 +578,71 @@ vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHu
 	return trapezoids;
 };
 
+float get_triangle_area(Vec6f t) {
+	// Heron's formula
+
+	float a2 = (t[2] - t[0])*(t[2] - t[0]) + (t[3] - t[1])*(t[3] - t[1]);
+	float b2 = (t[4] - t[2])*(t[4] - t[2]) + (t[5] - t[3])*(t[5] - t[3]);
+	float c2 = (t[0] - t[4])*(t[0] - t[4]) + (t[1] - t[5])*(t[1] - t[5]);
+
+	return (0.25)*sqrt(4 * a2*b2 - (a2 + b2 - c2)*(a2 + b2 - c2));
+}
+
+float get_trapezoid_area(pair<Vec4f,Vec4f> t) {
+
+	// make two triangles, add them together.
+	Vec6f t1 = Vec6f(t.first[0], t.second[0], t.first[1], t.second[1], t.first[2], t.second[2]);
+	Vec6f t2 = Vec6f(t.first[0], t.second[0], t.first[2], t.second[2], t.first[3], t.second[3]);
+
+	float area1 = get_triangle_area(t1);
+	float area2 = get_triangle_area(t2);
+
+	return area1 + area2;
+}
+
+struct polygon_sort
+{
+	inline bool operator() (const pair<int, float>& pair1, const pair<int, float>& pair2) {
+		return (pair1.second < pair2.second);
+	}
+};
+
 vector<int> calculate_triangle_priority(vector<Vec6f> triangles) {
+	// Lower numbers indicate higher priority
+	// Larger triangles have lower priority
+
 	int len = triangles.size();
+	vector<pair<int,float>> triangleArea = vector<pair<int,float>>();
+	for (int i = 0; i < len; i++) {
+		pair<int, float> currentT = pair<int, float>();
+		currentT.first = i;
+		currentT.second = get_triangle_area(triangles[i]);
+		triangleArea.push_back(currentT);
+	}
+	sort(triangleArea.begin(), triangleArea.end(), polygon_sort());
 	vector<int> priority = vector<int>();
 	for (int i = 0; i < len; i++) {
-		priority.push_back(i);
+		priority.push_back(triangleArea[i].first);
 	}
 	return priority;
 }
 
 vector<int> calculate_trapezoid_priority(vector<pair<Vec4f, Vec4f>> trapezoids) {
+	// Lower numbers indicate higher priority
+	// Larger trapezoids have lower priority
+
 	int len = trapezoids.size();
+	vector<pair<int, float>> trapezoidArea = vector<pair<int, float>>();
+	for (int i = 0; i < len; i++) {
+		pair<int, float> currentT = pair<int, float>();
+		currentT.first = i;
+		currentT.second = get_trapezoid_area(trapezoids[i]);
+		trapezoidArea.push_back(currentT);
+	}
+	sort(trapezoidArea.begin(), trapezoidArea.end(), polygon_sort());
 	vector<int> priority = vector<int>();
 	for (int i = 0; i < len; i++) {
-		priority.push_back(i);
+		priority.push_back(trapezoidArea[i].first);
 	}
 	return priority;
 }
