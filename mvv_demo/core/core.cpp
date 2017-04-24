@@ -123,7 +123,7 @@ int triangulation_diagnostic() {
 struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
-	vector<pair<Vec4f, Vec4f>> trapezoidSource;
+	vector<pair<Vec4f, Vec4f>> trapezoids;
 };
 
 struct MatchedGeometry {
@@ -160,10 +160,24 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB, centerOfMassB);
 
 	// calculate priority (triangles)
+	vector<int> interiorPriority = calculate_triangle_priority(trianglesB);
 	// calculate priority (trapezoids)
-	// return MatchedGeometry
+	vector<int> exteriorPriority = calculate_trapezoid_priority(trapezoidsB);
 
+	// This could potentially be replaced by two constructors.
 	MatchedGeometry matchedResult = MatchedGeometry();
+	GeometricSlice source = GeometricSlice();
+	GeometricSlice target = GeometricSlice();
+	source.img = imgSizeRectA;
+	source.triangles = trianglesA;
+	source.trapezoids = trapezoidsA;
+	target.img = imgSizeRectB;
+	target.triangles = trianglesB;
+	target.trapezoids = trapezoidsB;
+	matchedResult.sourceGeometry = source;
+	matchedResult.targetGeometry = target;
+	matchedResult.trianglePriority = interiorPriority;
+	matchedResult.trapezoidPriority = exteriorPriority;
 	return matchedResult;
 }
 
@@ -216,7 +230,8 @@ int test_5_points() {
 }
 
 int danny_test() {
-	test_5_points();
+	//test_5_points();
+	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
 
 	return 0;
 }

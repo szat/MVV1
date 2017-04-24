@@ -486,10 +486,11 @@ bool intersection(Point2f p1, Point2f q1, Point2f p2, Point2f q2,
 }
 
 bool validate_edge_point(Point2f edgePoint, Point2f hullPoint, Point2f com, float xMin, float xMax, float yMin, float yMax) {
-	if (edgePoint.x < xMin || edgePoint.x > xMax) {
+	float tolerance = 1e-4;
+	if (edgePoint.x + tolerance < xMin || edgePoint.x - tolerance > xMax) {
 		return false;
 	}
-	if (edgePoint.y < yMin || edgePoint.y > yMax) {
+	if (edgePoint.y + tolerance < yMin || edgePoint.y - tolerance > yMax) {
 		return false;
 	}
 
@@ -548,7 +549,6 @@ Point2f find_edge_intersect(Point2f hullPoint, Point2f com, Rect imgBounds) {
 	else {
 		return validEdgePoints[0];
 	}
-
 }
 
 vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHull, Rect imgBounds, Point2f centerOfMass) {
@@ -569,8 +569,23 @@ vector<pair<Vec4f, Vec4f>> project_trapezoids_from_hull(vector<Point2f> convexHu
 		pair<Vec4f, Vec4f> trapezoid = pair<Vec4f, Vec4f>(xCoords, yCoords);
 		trapezoids.push_back(trapezoid);
 	}
-
-
 	return trapezoids;
 };
 
+vector<int> calculate_triangle_priority(vector<Vec6f> triangles) {
+	int len = triangles.size();
+	vector<int> priority = vector<int>();
+	for (int i = 0; i < len; i++) {
+		priority.push_back(i);
+	}
+	return priority;
+}
+
+vector<int> calculate_trapezoid_priority(vector<pair<Vec4f, Vec4f>> trapezoids) {
+	int len = trapezoids.size();
+	vector<int> priority = vector<int>();
+	for (int i = 0; i < len; i++) {
+		priority.push_back(i);
+	}
+	return priority;
+}
