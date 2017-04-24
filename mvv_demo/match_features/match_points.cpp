@@ -222,6 +222,24 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 
 	waitKey(0);
 
+	//-- Knn for balling
+
+	vector<Point2f> ptsKnn2;
+	vector<Point2f> ptsKnn1;
+
+	int nbPtsKnn1 = kptsRatio1.size();
+	for (int i = 0; i < nbPtsKnn1; i++) ptsKnn1.push_back(kptsRatio1.at(i).pt);
+
+	int nbPtsKnn2 = kptsRatio2.size();
+	for (int i = 0; i < nbPtsKnn2; i++) ptsKnn2.push_back(kptsRatio2.at(i).pt);
+
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+	vector<int> indicesKnn1;
+	vector<float> distsKnn1;
+	vector<float> query; query.push_back(ptsKnn1.at(0).x); query.push_back(ptsKnn2.at(0).y); 
+	kdtree.radiusSearch(query, indicesKnn1, distsKnn1, 30, 100, cv::flann::SearchParams(64));
+
 	//-- RANSAC homography estimation and keypoints filtering
 	float ballRadius = 5;
 	float inlierThresh = 50;
