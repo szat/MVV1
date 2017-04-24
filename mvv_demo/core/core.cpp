@@ -276,6 +276,9 @@ int danny_test() {
 	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
 	render_matched_geometry(geometry.sourceGeometry, "Test window 1");
 	render_matched_geometry(geometry.targetGeometry, "Test window 2");
+
+	//Vec6f testTri = Vec6f(0, 0, 100, 100, 0, 100);
+	//float result = get_triangle_area(testTri);
 	return 0;
 }
 
