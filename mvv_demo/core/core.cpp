@@ -222,6 +222,10 @@ int danny_test() {
 }
 
 int adrian_test() {
+
+	//test_match_points("david_1.jpg", "david_2.jpg");
+
+	test_match_points_2("david_1.jpg", "david_2.jpg");
 	return 0;
 }
 

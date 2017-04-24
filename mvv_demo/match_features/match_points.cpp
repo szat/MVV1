@@ -137,6 +137,80 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 	return pointMatches;
 }
 
+vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePathB)
+{
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+
+	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
+
+	//find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(100);
+	detectorGFTT->setQualityLevel(0.1);
+	detectorGFTT->setMinDistance(10);
+	detectorGFTT->setBlockSize(5);
+	detectorGFTT->setHarrisDetector(true);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> keyPoints1;
+	detectorGFTT->detect(img1, keyPoints1);
+	cout << "GFTT found " << keyPoints1.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1;
+	extractorORB->compute(img1, keyPoints1, desc1);
+
+	//Find features
+	vector<KeyPoint> keyPoints2;
+	detectorGFTT->detect(img2, keyPoints2);
+	cout << "GFTT found " << keyPoints2.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2;
+	extractorORB->compute(img2, keyPoints2, desc2);
+	
+	//Ratio Matching
+	float ratio = 0.8f;
+	vector<KeyPoint> keyPointsMatch1;
+	vector<KeyPoint> keyPointsMatch2;
+
+	time_t tstart, tend;
+	vector<vector<DMatch>> matchesLoweRatio;
+	BFMatcher matcher(NORM_HAMMING);
+	tstart = time(0);
+	matcher.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < ratio * dist2) {
+			keyPointsMatch1.push_back(keyPoints1[first.queryIdx]);
+			keyPointsMatch2.push_back(keyPoints2[first.trainIdx]);
+		}
+	}
+	tend = time(0);
+	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << keyPointsMatch1.size() << " features." << endl;
+
+
+
+	return{ keyPoints1, keyPoints2 };
+}
 
 vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 {
