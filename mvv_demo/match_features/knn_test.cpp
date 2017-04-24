@@ -36,7 +36,4 @@ void knn_test(vector<Point2f> points2D) {
 		float dist = (points2D.at(indices2.at(i)).x - points2D.at(0).x)*(points2D.at(indices2.at(i)).x - points2D.at(0).x) + (points2D.at(indices2.at(i)).y - points2D.at(0).y)*(points2D.at(indices2.at(i)).y - points2D.at(0).y);
 		cout << "The " << i << "th points is (" << points2D.at(indices2.at(i)).x << "," << points2D.at(indices2.at(i)).y << "), dist^2 = " << sqrt(dist) << endl;
 	}
-
-
-
 }

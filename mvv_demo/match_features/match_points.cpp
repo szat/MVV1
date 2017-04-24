@@ -54,6 +54,7 @@ void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
+
 void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	time_t tstart, tend;
 	vector<vector<DMatch>> matchesLoweRatio;
@@ -137,6 +138,145 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 	return pointMatches;
 }
 
+vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePathB)
+{
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+	Mat img1Display = imread(address);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+	Mat img2Display = imread(address);
+
+	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
+
+	//find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(100);
+	detectorGFTT->setQualityLevel(0.1);
+	detectorGFTT->setMinDistance(10);
+	detectorGFTT->setBlockSize(5);
+	detectorGFTT->setHarrisDetector(true);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> kpts1;
+	detectorGFTT->detect(img1, kpts1);
+	cout << "GFTT found " << kpts1.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1;
+	extractorORB->compute(img1, kpts1, desc1);
+
+	//Find features
+	vector<KeyPoint> kpts2;
+	detectorGFTT->detect(img2, kpts2);
+	cout << "GFTT found " << kpts2.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2;
+	extractorORB->compute(img2, kpts2, desc2);
+	
+	//Ratio Matching
+	float ratio = 0.8f;
+	vector<KeyPoint> kptsRatio1;
+	vector<KeyPoint> kptsRatio2;
+
+	time_t tstart, tend;
+	vector<vector<DMatch>> matchesLoweRatio;
+	BFMatcher matcher(NORM_HAMMING);
+	tstart = time(0);
+	matcher.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < ratio * dist2) {
+			kptsRatio1.push_back(kpts1[first.queryIdx]);
+			kptsRatio2.push_back(kpts2[first.trainIdx]);
+		}
+	}
+	tend = time(0);
+	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kptsRatio1.size() << " features." << endl;
+
+	//-- Draw matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kptsRatio1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+
+	drawMatches(img1Display, kptsRatio1, img2Display, kptsRatio2, matchesIndexTrivial, img1to2);
+
+	//-- Show detected matches
+	imshow("Matches", img1to2);
+
+	waitKey(0);
+
+	//-- RANSAC homography estimation and keypoints filtering
+	float ballRadius = 5;
+	float inlierThresh = 50;
+	cout << "RANSAC to estimate global homography with max deviating distance being " << ballRadius << "." << endl;
+
+	vector<Point2f> ptsRansac1;
+	vector<Point2f> ptsRansac2;
+	vector<DMatch> good_matches;
+	vector<KeyPoint> kptsRansac1;
+	vector<KeyPoint> kptsRansac2;
+
+	nbMatches = kptsRatio1.size();
+	for (int i = 0; i < nbMatches; i++) {
+		ptsRansac1.push_back(kptsRatio1.at(i).pt);
+		ptsRansac2.push_back(kptsRatio2.at(i).pt);
+	}
+
+	Mat H = findHomography(ptsRansac1, ptsRansac2, CV_RANSAC, ballRadius);
+	cout << "RANSAC found the homography." << endl;
+
+	nbMatches = ptsRansac1.size();
+	for (int i = 0; i < nbMatches; i++) {
+		Mat col = Mat::ones(3, 1, CV_64F);// , CV_32F);
+		col.at<double>(0) = kptsRatio1[i].pt.x;
+		col.at<double>(1) = kptsRatio2[i].pt.y;
+
+		col = H * col;
+		col /= col.at<double>(2); //because you are in projective space
+		double dist = sqrt(pow(col.at<double>(0) - kptsRatio2[i].pt.x, 2) + pow(col.at<double>(1) - kptsRatio2[i].pt.y, 2));
+
+		if (dist < inlierThresh) {
+			int new_i = static_cast<int>(kptsRansac1.size());
+			kptsRansac1.push_back(kptsRatio1[i]);
+			kptsRansac2.push_back(kptsRatio2[i]);
+		}
+	}
+
+	cout << "Homography filtering with inlier threshhold of " << inlierThresh << " has matched " << kptsRansac1.size() << " features." << endl;
+
+	//-- Draw matches
+	Mat img1to2Ransac;
+	vector<DMatch> matchesIndexTrivialRansac;
+	for (int i = 0; i < kptsRansac1.size(); i++) matchesIndexTrivialRansac.push_back(DMatch(i, i, 0));
+
+	drawMatches(img1Display, kptsRansac1, img2Display, kptsRansac2, matchesIndexTrivialRansac, img1to2Ransac);
+
+	//-- Show detected matches
+	imshow("Matches", img1to2Ransac);
+
+	waitKey(0);
+
+
+
+	return{ kptsRansac1, kptsRansac2 };
+}
 
 vector<vector<KeyPoint>> test_match_points(string imagePathA, string imagePathB)
 {
