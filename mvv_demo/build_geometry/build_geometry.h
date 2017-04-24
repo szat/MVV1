@@ -48,3 +48,7 @@ bool validate_edge_point(cv::Point2f edgePoint, cv::Point2f hullPoint, cv::Point
 cv::Point2f find_edge_intersect(cv::Point2f hullPoint, cv::Point2f com, cv::Rect imgBounds);
 
 cv::Point2f get_center_of_mass(std::vector<cv::Point2f> points);
+
+std::vector<int> calculate_triangle_priority(std::vector<cv::Vec6f> triangles);
+
+std::vector<int> calculate_trapezoid_priority(std::vector<std::pair<cv::Vec4f, cv::Vec4f>> trapezoids);

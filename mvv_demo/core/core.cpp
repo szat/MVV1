@@ -123,7 +123,7 @@ int triangulation_diagnostic() {
 struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
-	vector<pair<Vec4f, Vec4f>> trapezoidSource;
+	vector<pair<Vec4f, Vec4f>> trapezoids;
 };
 
 struct MatchedGeometry {
@@ -160,10 +160,24 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB, centerOfMassB);
 
 	// calculate priority (triangles)
+	vector<int> interiorPriority = calculate_triangle_priority(trianglesB);
 	// calculate priority (trapezoids)
-	// return MatchedGeometry
+	vector<int> exteriorPriority = calculate_trapezoid_priority(trapezoidsB);
 
+	// This could potentially be replaced by two constructors.
 	MatchedGeometry matchedResult = MatchedGeometry();
+	GeometricSlice source = GeometricSlice();
+	GeometricSlice target = GeometricSlice();
+	source.img = imgSizeRectA;
+	source.triangles = trianglesA;
+	source.trapezoids = trapezoidsA;
+	target.img = imgSizeRectB;
+	target.triangles = trianglesB;
+	target.trapezoids = trapezoidsB;
+	matchedResult.sourceGeometry = source;
+	matchedResult.targetGeometry = target;
+	matchedResult.trianglePriority = interiorPriority;
+	matchedResult.trapezoidPriority = exteriorPriority;
 	return matchedResult;
 }
 
@@ -215,9 +229,53 @@ int test_5_points() {
 	return -1;
 }
 
-int danny_test() {
-	test_5_points();
+void render_matched_geometry(GeometricSlice slice, string windowName) {
+	// Render both images.
 
+	// Trapezoids in red (first)
+	Mat img(slice.img.size(), CV_8UC3);
+	Scalar trapezoid_color(0, 0, 255), triangle_color(255, 255, 255), hull_color(255, 0, 0);
+	string win = windowName;
+
+	vector<Point> pt(3);
+	int numTriangles = slice.triangles.size();
+	for (int i = 0; i < numTriangles; i++) {
+		Vec6f t = slice.triangles[i];
+		pt[0] = Point(cvRound(t[0]), cvRound(t[1]));
+		pt[1] = Point(cvRound(t[2]), cvRound(t[3]));
+		pt[2] = Point(cvRound(t[4]), cvRound(t[5]));
+		line(img, pt[0], pt[1], triangle_color, 1, LINE_AA, 0);
+		line(img, pt[1], pt[2], triangle_color, 1, LINE_AA, 0);
+		line(img, pt[2], pt[0], triangle_color, 1, LINE_AA, 0);
+	}
+
+	vector<Point> ptr(4);
+	int numTrapezoids = slice.trapezoids.size();
+	for (int i = 0; i < numTrapezoids; i++) {
+		Vec4f xCoords = slice.trapezoids[i].first;
+		Vec4f yCoords = slice.trapezoids[i].second;
+		ptr[0] = Point(cvRound(xCoords[0]), cvRound(yCoords[0]));
+		ptr[1] = Point(cvRound(xCoords[1]), cvRound(yCoords[1]));
+		ptr[2] = Point(cvRound(xCoords[2]), cvRound(yCoords[2]));
+		ptr[3] = Point(cvRound(xCoords[3]), cvRound(yCoords[3]));
+		line(img, ptr[0], ptr[1], trapezoid_color, 1, LINE_AA, 0);
+		line(img, ptr[1], ptr[2], trapezoid_color, 1, LINE_AA, 0);
+		line(img, ptr[2], ptr[3], trapezoid_color, 1, LINE_AA, 0);
+		line(img, ptr[3], ptr[0], trapezoid_color, 1, LINE_AA, 0);
+	}
+
+	imshow(win, img);
+	waitKey(1);
+	// Triangles in white (second)
+	// Border (convex hull in blue) (last)
+
+}
+
+int danny_test() {
+	//test_5_points();
+	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
+	render_matched_geometry(geometry.sourceGeometry, "Test window 1");
+	render_matched_geometry(geometry.targetGeometry, "Test window 2");
 	return 0;
 }
 
