@@ -26,6 +26,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 
 using namespace std;
 using namespace cv;
@@ -157,9 +158,43 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	Mat img2 = imread(address, IMREAD_GRAYSCALE);
 	Mat img2Display = imread(address);
 
+	//-- Pseudo-code:
+	/*
+
+	CASE A: wrong match
+	CASE B: not enough points around it
+	CASE C: radical motion, tennis ball
+
+	Find features with various detectors
+	Find descriptors with ORB extractor
+	Do Lowe's ratio matching as initial filter, get vecKptsUnMatched1, vecKptsUnMatched2
+	Build Knn trees for vecKptsUMatched1, vecKptsUMatched2
+	
+	#we want to find local nbh homographies
+	For each point Kpt in vecKptsUnMatched1
+		Find all the features within a ball of radius r centered at Kpt in vecKptsUnMatched1
+		If there are more than a certain number of features the ball
+			Find all the corresponding matched features in vecKptsUnMatched2
+			Do RANSAC filtering with the ball of radius r in vecKptsUnMatched1 and the corresponding points in vecKptsUnMatched2, quite relaxed
+			If RANSAC does not fail
+				Put the matched points in vecKptsMatched1, remove then from vecKptsUnMatched1, same for image 2
+				Put the rejected feature points, what remains in vecKptsUnMatched1, TWO LEVELS BELOW, 
+			Else send the feature points ONE LEVEL BELOW, (RANSAC failed)
+		Else remove Kpt from vecKptsUnMatched1, same for image 2
+		
+	vecKptsMatched1 becomes vecKptsUnMatched1L2
+	vecKptsUnMatched1 becomes vecKptsUnMatched1L3
+	
+	Go down to a certain level and then keep vecKptsMatched1 and vecKptsMatched2
+	*/
+
 	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
 
-	//find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
+	//Set Detectors
+	//Find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
+	
+	
+	
 	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
 	detectorGFTT->setMaxFeatures(100);
 	detectorGFTT->setQualityLevel(0.1);
@@ -221,6 +256,39 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	imshow("Matches", img1to2);
 
 	waitKey(0);
+
+	//-- Knn for balling
+	//-- Image 1
+	vector<KeyPoint> kptsKnn1;
+	vector<Point2f> ptsKnn1;
+	for (int i = 0; i < kptsRatio1.size(); i++) ptsKnn1.push_back(kptsRatio1.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+	vector<int> indicesKnn1;
+	vector<float> distsKnn1;
+	vector<float> query1; query1.push_back(ptsKnn1.at(0).x); query1.push_back(ptsKnn1.at(0).y); 
+	kdtree1.radiusSearch(query1, indicesKnn1, distsKnn1, 100000000, 20, cv::flann::SearchParams(64));
+	while (!distsKnn1.empty() && (distsKnn1.back() == 0)) { //Guard against empty?
+		distsKnn1.pop_back();
+		indicesKnn1.pop_back();
+	}
+	for (int i = 0; i < distsKnn1.size(); i++)  kptsKnn1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
+
+	//-- Image 2
+	vector<KeyPoint> kptsKnn2;
+	vector<Point2f> ptsKnn2;
+	for (int i = 0; i < kptsRatio2.size(); i++) ptsKnn2.push_back(kptsRatio2.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams2;
+	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+	vector<int> indicesKnn2;
+	vector<float> distsKnn2;
+	vector<float> query2; query2.push_back(ptsKnn2.at(0).x); query2.push_back(ptsKnn2.at(0).y);
+	kdtree2.radiusSearch(query2, indicesKnn2, distsKnn2, 100000000, 20, cv::flann::SearchParams(64));
+	while (!distsKnn2.empty() && (distsKnn2.back() == 0)) { //Guard against empty?
+		distsKnn2.pop_back();
+		indicesKnn2.pop_back();
+	}
+	for (int i = 0; i < distsKnn2.size(); i++)  kptsKnn1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
 
 	//-- RANSAC homography estimation and keypoints filtering
 	float ballRadius = 5;

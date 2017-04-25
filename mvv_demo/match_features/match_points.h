@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 
 bool has_suffix(const std::string &str, const std::string &suffix);
 
