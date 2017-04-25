@@ -160,11 +160,6 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 
 	//-- Pseudo-code:
 	/*
-
-	CASE A: wrong match
-	CASE B: not enough points around it
-	CASE C: radical motion, tennis ball
-
 	Find features with various detectors
 	Find descriptors with ORB extractor
 	Do Lowe's ratio matching as initial filter, get vecKptsUnMatched1, vecKptsUnMatched2
@@ -188,19 +183,27 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	Go down to a certain level and then keep vecKptsMatched1 and vecKptsMatched2
 	*/
 
+
+	//////////////////////////////////////////////
+	/*
+	Find features with various detectors
+	Find descriptors with ORB extractor
+	Do Lowe's ratio matching as initial filter, get vecKptsUnMatched1, vecKptsUnMatched2
+	Build Knn trees for vecKptsUMatched1, vecKptsUMatched2
+	*/
+	//////////////////////////////////////////////
+
 	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
 
-	//Set Detectors
+	//Set Detector
 	//Find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
 	
-	
-	
 	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
-	detectorGFTT->setMaxFeatures(100);
-	detectorGFTT->setQualityLevel(0.1);
-	detectorGFTT->setMinDistance(10);
+	detectorGFTT->setMaxFeatures(5000);
+	detectorGFTT->setQualityLevel(0.00000001);
+	detectorGFTT->setMinDistance(0.1);
 	detectorGFTT->setBlockSize(5);
-	detectorGFTT->setHarrisDetector(true);
+	detectorGFTT->setHarrisDetector(false);
 	detectorGFTT->setK(0.2);
 
 	//Find features
@@ -264,6 +267,8 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	for (int i = 0; i < kptsRatio1.size(); i++) ptsKnn1.push_back(kptsRatio1.at(i).pt);
 	cv::flann::KDTreeIndexParams indexParams1;
 	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+
+	/*
 	vector<int> indicesKnn1;
 	vector<float> distsKnn1;
 	vector<float> query1; query1.push_back(ptsKnn1.at(0).x); query1.push_back(ptsKnn1.at(0).y); 
@@ -273,6 +278,7 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 		indicesKnn1.pop_back();
 	}
 	for (int i = 0; i < distsKnn1.size(); i++)  kptsKnn1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
+	*/
 
 	//-- Image 2
 	vector<KeyPoint> kptsKnn2;
@@ -280,6 +286,8 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	for (int i = 0; i < kptsRatio2.size(); i++) ptsKnn2.push_back(kptsRatio2.at(i).pt);
 	cv::flann::KDTreeIndexParams indexParams2;
 	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+	
+	/*
 	vector<int> indicesKnn2;
 	vector<float> distsKnn2;
 	vector<float> query2; query2.push_back(ptsKnn2.at(0).x); query2.push_back(ptsKnn2.at(0).y);
@@ -289,6 +297,101 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 		indicesKnn2.pop_back();
 	}
 	for (int i = 0; i < distsKnn2.size(); i++)  kptsKnn1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
+	*/
+
+	//////////////////////////////////////////////////////////////////////////
+	/*
+	//we want to find local nbh homographies
+		For each point Kpt in vecKptsUnMatched1
+		Find all the features within a ball of radius r centered at Kpt in vecKptsUnMatched1
+		If there are more than a certain number of features the ball
+		Find all the corresponding matched features in vecKptsUnMatched2
+		Do RANSAC filtering with the ball of radius r in vecKptsUnMatched1 and the corresponding points in vecKptsUnMatched2, quite relaxed
+		If RANSAC does not fail
+		Put the matched points in vecKptsMatched1, remove then from vecKptsUnMatched1, same for image 2
+		Put the rejected feature points, what remains in vecKptsUnMatched1, TWO LEVELS BELOW,
+		Else send the feature points ONE LEVEL BELOW, (RANSAC failed)
+		Else remove Kpt from vecKptsUnMatched1, same for image 2
+
+		vecKptsMatched1 becomes vecKptsUnMatched1L2
+		vecKptsUnMatched1 becomes vecKptsUnMatched1L3
+
+		Go down to a certain level and then keep vecKptsMatched1 and vecKptsMatched2
+	*/
+	/////////////////////////////////////////////////////////////////////////
+
+	vector<vector<KeyPoint>> vecKptsUnMatchedImg1;
+	vector<vector<KeyPoint>> vecKptsMatchedImg1;
+	vector<vector<KeyPoint>> vecKptsUnMatchedImg2;
+	vector<vector<KeyPoint>> vecKptsMatchedImg2;
+
+	vecKptsUnMatchedImg1.at(0) = kptsRatio1;
+	vecKptsUnMatchedImg2.at(0) = kptsRatio2;
+	vector<int> radii = { 1000, 500, 100, 80, 40, 20, 10 };
+	vector<int> ransacPtNbThreshhold = { 50 , 50 , 25 , 20 , 14 , 10 , 6 };
+	vector<float> ransacReprojectionThreshhold = { 2000, 1000, 200, 160, 80, 40, 20 };
+	int maxKpts = kptsRatio1.size();
+	int nbKpts = kptsRatio1.size();
+	for (int cycle = 0; cycle < 7; cycle++) {
+		for (int kIdx = 0; kIdx < nbKpts; kIdx++) {
+			vector<int> indicesKnn1;
+			vector<float> distsKnn1;
+			vector<float> query1; 
+			query1.push_back(kptsRatio1.at(kIdx).pt.x); 
+			query1.push_back(kptsRatio1.at(kIdx).pt.y);
+			kdtree1.radiusSearch(query1, indicesKnn1, distsKnn1, radii.at(cycle), maxKpts, cv::flann::SearchParams(64));
+			while (!distsKnn1.empty() && (distsKnn1.back() == 0)) { //Guard against empty?
+				distsKnn1.pop_back();
+				indicesKnn1.pop_back();
+			}
+			int nbhSize = indicesKnn1.size();
+
+			//Are there enough points?
+			if (nbhSize > ransacPtNbThreshhold.at(cycle)) { 
+				vector<KeyPoint> nbh1;
+				vector<KeyPoint> nbh2;
+				int nbhSize = indicesKnn1.size();
+				for (int i = 0; i < nbhSize; i++) {
+					nbh1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
+					nbh2.push_back(kptsRatio2.at(indicesKnn1.at(i))); //This is not a mistake, the indices are taken from image 1.
+				}
+
+				//-- Do RANSAC
+				vector<Point2f> ptsRansac1;
+				vector<Point2f> ptsRansac2;
+				vector<DMatch> good_matches;
+				vector<KeyPoint> kptsRansacNbh1;
+				vector<KeyPoint> kptsRansacNbh2;
+
+				nbMatches = nbh1.size();
+				for (int i = 0; i < nbMatches; i++) {
+					ptsRansac1.push_back(nbh1.at(i).pt);
+					ptsRansac2.push_back(nbh2.at(i).pt);
+				}
+
+				//http://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html?highlight=findhomography#findhomography
+				Mat H = findHomography(ptsRansac1, ptsRansac2, CV_RANSAC, ransacReprojectionThreshhold.at(cycle));
+				nbMatches = ptsRansac1.size();
+				for (int i = 0; i < nbMatches; i++) {
+					Mat col = Mat::ones(3, 1, CV_64F);// , CV_32F);
+					col.at<double>(0) = kptsRatio1[i].pt.x;
+					col.at<double>(1) = kptsRatio2[i].pt.y;
+					col = H * col;
+					col /= col.at<double>(2); //because you are in projective space
+					double dist = sqrt(pow(col.at<double>(0) - kptsRatio2[i].pt.x, 2) + pow(col.at<double>(1) - kptsRatio2[i].pt.y, 2));
+					if (dist < ransacReprojectionThreshhold.at(cycle)) { //I this it is correct in thinking that this is the same as the parameter in findHomography
+						int new_i = static_cast<int>(kptsRansacNbh1.size());
+						kptsRansacNbh1.push_back(kptsRatio1[i]);
+						kptsRansacNbh2.push_back(kptsRatio2[i]);
+					}
+				}
+			}
+			else {
+
+			}
+			
+		}
+	}
 
 	//-- RANSAC homography estimation and keypoints filtering
 	float ballRadius = 5;

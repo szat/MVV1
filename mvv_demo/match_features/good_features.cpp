@@ -15,9 +15,9 @@ struct dataTrackbarCorners {
 
 	double qualityPrecision = 0.001;
 	double minDistancePrecision = 0.01;
-	double kPrecision = 0.001;
+	double kPrecision = 0.00001;
 
-	bool useHarrisDetector = true;
+	bool useHarrisDetector = false;
 };
 
 void changeCornersMaxCorners(int maxCornersSlider, void *userdata) {
