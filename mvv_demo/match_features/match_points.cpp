@@ -26,6 +26,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 
 using namespace std;
 using namespace cv;
@@ -239,6 +240,18 @@ vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePath
 	vector<float> distsKnn1;
 	vector<float> query; query.push_back(ptsKnn1.at(0).x); query.push_back(ptsKnn2.at(0).y); 
 	kdtree.radiusSearch(query, indicesKnn1, distsKnn1, 30, 100, cv::flann::SearchParams(64));
+
+	cout << "Knn found " << indicesKnn1.size() << " and " << distsKnn1.size() << " keypoints in a " << 30 << " radius ball. " << endl;
+
+	cout << "Little Development Testing" << endl;
+	vector<int> zero = { 0 };
+	vector<int> myvector = { 0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0 };
+
+	while (!myvector.empty() && (myvector.back() == 0)) {
+		myvector.pop_back();
+	}
+
+	for (auto const& value : myvector) cout << value << endl;
 
 	//-- RANSAC homography estimation and keypoints filtering
 	float ballRadius = 5;
