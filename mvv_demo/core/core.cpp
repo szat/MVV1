@@ -273,16 +273,40 @@ void render_matched_geometry(GeometricSlice slice, string windowName) {
 
 }
 
+int interpolation_preprocessing() {
+	// 
+	return -5;
+}
+
+void render_frame_t() {
+
+}
+
+int test_interpolation() {
+	// in interpolation preprocessing, we must:
+	// calculate the A,B matrices (i.e. the ) for EACH set of triangles
+
+	// in render_frame_t, we (at the beginning) calculate the A(t), B(t) parametrized matrices for each triangle at this step t
+	// render triangle-by-triangle
+
+	// assuming we have affine transformations that are parametrized, how exactly do we mesh the images together?????
+
+
+
+	
+	return -1;
+}
+
 int danny_test() {
 	//test_5_points();
-	//MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
-	//render_matched_geometry(geometry.sourceGeometry, "Test window 1");
+	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
+	render_matched_geometry(geometry.sourceGeometry, "Test window 1");
 	//render_matched_geometry(geometry.targetGeometry, "Test window 2");
 
 	//Vec6f testTri = Vec6f(0, 0, 100, 100, 0, 100);
 	//float result = get_triangle_area(testTri);
 
-	cout << test_interpolate(5);
+	
 
 	return 0;
 }
