@@ -355,7 +355,8 @@ int adrian_test() {
 	//test_BRISK("david_1.jpg", "david_2.jpg");
 	//test_FAST("david_1.jpg", "david_2.jpg");
 	//test_ORB("david_1.jpg", "david_2.jpg");
-	test_affine_ORB("david_1.jpg", "david_2.jpg");
+	//test_affine_ORB("david_1.jpg", "david_2.jpg");
+	test_kmeans("david_1.jpg", "david_2.jpg");
 	return 0;
 }
 

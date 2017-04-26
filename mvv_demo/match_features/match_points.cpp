@@ -700,7 +700,6 @@ void test_FAST(string imagePathA, string imagePathB) {
 	waitKey(0);
 }
 
-
 void test_AGAST(string imagePathA, string imagePathB) {
 	cout << "Welcome to match_GFTT testing unit!" << endl;
 	string address = "..\\data_store\\" + imagePathA;
@@ -781,6 +780,106 @@ void test_AGAST(string imagePathA, string imagePathB) {
 	waitKey(0);
 }
 
+void test_kmeans(std::string imagePathA, std::string imagePathB) {
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+	Mat img1Display = imread(address);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+	Mat img2Display = imread(address);
+
+	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
+
+	//Set Detector
+	//Find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
+
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(5000);
+	detectorGFTT->setQualityLevel(0.00000001);
+	detectorGFTT->setMinDistance(0.1);
+	detectorGFTT->setBlockSize(5);
+	detectorGFTT->setHarrisDetector(false);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> kpts1;
+	detectorGFTT->detect(img1, kpts1);
+	cout << "GFTT found " << kpts1.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1;
+	extractorORB->compute(img1, kpts1, desc1);
+
+	//Find features
+	vector<KeyPoint> kpts2;
+	detectorGFTT->detect(img2, kpts2);
+	cout << "GFTT found " << kpts2.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2;
+	extractorORB->compute(img2, kpts2, desc2);
+
+	//Ratio Matching
+	float ratio = 0.8f;
+	vector<KeyPoint> kptsRatio1;
+	vector<KeyPoint> kptsRatio2;
+
+	time_t tstart, tend;
+	vector<vector<DMatch>> matchesLoweRatio;
+	BFMatcher matcher(NORM_HAMMING);
+	tstart = time(0);
+	matcher.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < ratio * dist2) {
+			kptsRatio1.push_back(kpts1[first.queryIdx]);
+			kptsRatio2.push_back(kpts2[first.trainIdx]);
+		}
+	}
+	tend = time(0);
+	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kptsRatio1.size() << " features." << endl;
+
+	//-- Draw matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kptsRatio1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+
+	drawMatches(img1Display, kptsRatio1, img2Display, kptsRatio2, matchesIndexTrivial, img1to2);
+
+	//-- Show detected matches
+	imshow("Matches", img1to2);
+
+	//First get points
+	//Compute Descriptors
+	//Do Ratio Matching
+	//Do kmeans Matching
+	//data = distances(kptsRatio1,kptsRatio)
+	vector<int> bestLabels;
+	vector<float> dataKMeans;
+	for (int i = 0; i < kptsRatio1.size(); i++) {
+		float distSquared = pow(kptsRatio1.at(i).pt.x - kptsRatio2.at(i).pt.x, 2) + pow(kptsRatio1.at(i).pt.y - kptsRatio2.at(i).pt.y, 2);
+		dataKMeans.push_back(distSquared);
+	}
+	Mat centers;
+	kmeans(dataKMeans, 3, bestLabels, TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10000, 0.0001), 5, KMEANS_PP_CENTERS, centers);
+	vector<KeyPoint> kptsKmeans1;
+	vector<KeyPoint> kptsKmeans2;
+
+}
 
 vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePathB)
 {

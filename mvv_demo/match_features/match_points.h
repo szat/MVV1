@@ -41,6 +41,8 @@ void affine_ORB_detect_and_compute(const cv::Mat& img, std::vector< cv::KeyPoint
 
 void test_affine_ORB(std::string imagePathA, std::string imagePathB);
 
+void test_kmeans(std::string imagePathA, std::string imagePathB);
+
 std::vector<std::vector<cv::KeyPoint>> match_points_mat(cv::Mat img1, cv::Mat img2);
 
 std::vector<std::vector<cv::KeyPoint>> test_match_points(std::string imagePathA, std::string imagePathB);
