@@ -7,3 +7,5 @@
 cv::Mat affine_transform(cv::Vec6f sourceTri, cv::Vec6f targetTri);
 
 std::vector<cv::Mat> get_affine_transforms(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT);
+
+std::vector<std::vector<double>> interpolation_preprocessing(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT);
