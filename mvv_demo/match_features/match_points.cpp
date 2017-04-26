@@ -27,6 +27,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <math.h>       /* fabs */
 
 using namespace std;
 using namespace cv;
@@ -853,16 +854,6 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	tend = time(0);
 	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kptsRatio1.size() << " features." << endl;
 
-	//-- Draw matches
-	Mat img1to2;
-	vector<DMatch> matchesIndexTrivial;
-	for (int i = 0; i < kptsRatio1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
-
-	drawMatches(img1Display, kptsRatio1, img2Display, kptsRatio2, matchesIndexTrivial, img1to2);
-
-	//-- Show detected matches
-	imshow("Matches", img1to2);
-
 	//First get points
 	//Compute Descriptors
 	//Do Ratio Matching
@@ -879,6 +870,27 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	vector<KeyPoint> kptsKmeans1;
 	vector<KeyPoint> kptsKmeans2;
 
+	for (int i = 0; i < kptsRatio1.size(); i++) {
+		float d0 = centers.at<float>(0, 0);
+		float d1 = centers.at<float>(1, 0);
+		float d2 = centers.at<float>(2, 0);
+		if (fabs(dataKMeans.at(i) - d0) > 0.1*d0 || fabs(dataKMeans.at(i) - d1) > 0.1*d1 || fabs(dataKMeans.at(i) - d2) > 0.1*d2) {
+			kptsKmeans1.push_back(kptsRatio1.at(i));
+			kptsKmeans2.push_back(kptsRatio2.at(i));
+		}
+	}
+
+	//-- Draw Matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kptsKmeans1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+
+	drawMatches(img1Display, kptsKmeans1, img2Display, kptsKmeans2, matchesIndexTrivial, img1to2);
+
+	//-- Show detected matches
+	imshow("Matches", img1to2);
+
+	waitKey(0);
 }
 
 vector<vector<KeyPoint>> test_match_points_2(string imagePathA, string imagePathB)
