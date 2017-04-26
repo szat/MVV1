@@ -282,6 +282,16 @@ void render_frame_t() {
 
 }
 
+vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, double a00, double a01, double a10, double a11, double b00, double b01) {
+	vector<Point2f> paramPoints = vector<Point2f>();
+	for (int i = 0; i < 3; i++) {
+		float xP = (1 - t + a00 * t) * points[i].x + (a01 * t) * points[i].y + (b00 * t);
+		float yP = (a10 * t) * points[i].x + (1 - t + a11 * t) * points[i].y + (b01 * t);
+		paramPoints.push_back(Point2f(xP, yP));
+	}
+	return paramPoints;
+}
+
 int test_interpolation() {
 	// in interpolation preprocessing, we must:
 	// calculate the A,B matrices (i.e. the ) for EACH set of triangles
@@ -291,21 +301,44 @@ int test_interpolation() {
 
 	// assuming we have affine transformations that are parametrized, how exactly do we mesh the images together?????
 
+	// we gonna try this with 1 triangle
 
+	Vec6f tri1 = Vec6f(0, 0, 100, 0, 100, 100);
+	Vec6f tri2 = Vec6f(50, 0, 150, 40, 155, 250);
 
-	
+	Mat aff = affine_transform(tri1, tri2);
+	Size size = aff.size();
+
+	double a00 = aff.at<double>(0, 0);
+	double a01 = aff.at<double>(0, 1);
+	double b00 = aff.at<double>(0, 2);
+	double a10 = aff.at<double>(1, 0);
+	double a11 = aff.at<double>(1, 1);
+	double b01 = aff.at<double>(1, 2);
+
+	vector<Point2f> tri1points = vector<Point2f>();
+	tri1points.push_back(Point2f(0, 0));
+	tri1points.push_back(Point2f(100, 0));
+	tri1points.push_back(Point2f(100, 100));
+
+	int points = 3;
+	vector<Point2f> points1 = parametrized_interpolation(0, tri1points, a00, a01, a10, a11, b00, b01);
+	vector<Point2f> points2 = parametrized_interpolation(0.5, tri1points, a00, a01, a10, a11, b00, b01);
+	vector<Point2f> points3 = parametrized_interpolation(1, tri1points, a00, a01, a10, a11, b00, b01);
+
 	return -1;
 }
 
 int danny_test() {
 	//test_5_points();
-	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
-	render_matched_geometry(geometry.sourceGeometry, "Test window 1");
+	//MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
+	//render_matched_geometry(geometry.sourceGeometry, "Test window 1");
 	//render_matched_geometry(geometry.targetGeometry, "Test window 2");
 
 	//Vec6f testTri = Vec6f(0, 0, 100, 100, 0, 100);
 	//float result = get_triangle_area(testTri);
 
+	test_interpolation();
 	
 
 	return 0;
