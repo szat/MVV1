@@ -312,14 +312,19 @@ int danny_test() {
 }
 
 int adrian_test() {
-	vector<Point2f> corners;
-	trackbarCorners("..\\data_store\\david_1.jpg", corners);
+	//vector<Point2f> corners;
+	//trackbarCorners("..\\data_store\\david_1.jpg", corners);
 	//test_match_points("david_1.jpg", "david_2.jpg");
 
 	//test_match_points_2("david_1.jpg", "david_2.jpg");
+	//test_GFTT("david_1.jpg", "david_2.jpg");
+	//test_AGAST("david_1.jpg", "david_2.jpg");
+	//test_BRISK("david_1.jpg", "david_2.jpg");
+	//test_FAST("david_1.jpg", "david_2.jpg");
+	//test_ORB("david_1.jpg", "david_2.jpg");
+	test_affine_ORB("david_1.jpg", "david_2.jpg");
 	return 0;
 }
-
 
 int main()
 {
