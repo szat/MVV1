@@ -211,26 +211,6 @@ MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPa
 	return geometry;
 }
 
-
-int test_5_points() {
-	Rect imgRectA = Rect(0, 0, 500, 600);
-	Rect imgRectB = Rect(0, 0, 500, 600);
-
-	vector<Point2f> pointsA = vector<Point2f>();
-	vector<Point2f> pointsB = vector<Point2f>();
-
-	pointsA.push_back(Point2f(200, 300));
-	pointsA.push_back(Point2f(400, 300));
-	pointsA.push_back(Point2f(300, 500));
-
-	pointsB.push_back(Point2f(190.213, 313.219));
-	pointsB.push_back(Point2f(412.092, 290.012));
-	pointsB.push_back(Point2f(329, 523.3234));
-
-	MatchedGeometry m = create_matched_geometry(pointsA, pointsB, imgRectA, imgRectB);
-	return -1;
-}
-
 void render_matched_geometry(GeometricSlice slice, string windowName) {
 	// Render both images.
 
@@ -273,11 +253,6 @@ void render_matched_geometry(GeometricSlice slice, string windowName) {
 
 }
 
-
-void render_frame_t() {
-
-}
-
 vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, double a00, double a01, double a10, double a11, double b00, double b01) {
 	vector<Point2f> paramPoints = vector<Point2f>();
 	for (int i = 0; i < 3; i++) {
@@ -289,7 +264,7 @@ vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, doub
 }
 
 int interpolate(MatchedGeometry g) {
-	vector<vector<double>> affine = interpolation_preprocessing(g.sourceGeometry.triangles, g.targetGeometry.triangles);
+	vector<vector<vector<double>>> affine = interpolation_preprocessing(g.sourceGeometry.triangles, g.targetGeometry.triangles);
 	interpolation_trackbar(g.sourceGeometry.triangles, g.targetGeometry.triangles, g.sourceGeometry.img, g.targetGeometry.img, affine);
 	return -1;
 }
@@ -297,6 +272,24 @@ int interpolate(MatchedGeometry g) {
 int danny_test() {
 
 	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
+	/*
+	MatchedGeometry g = MatchedGeometry();
+	Rect sourceR = Rect(0, 0, 600, 600);
+	Rect targetR = Rect(0, 0, 600, 600);
+	vector<Vec6f> trianglesA = vector<Vec6f>();
+	vector<Vec6f> trianglesB = vector<Vec6f>();
+	trianglesA.push_back(Vec6f(0, 0, 100, 0, 155, 250));
+	trianglesA.push_back(Vec6f(100, 0, 155, 250, 300, 300));
+	trianglesB.push_back(Vec6f(50, 10, 140, 35, 169, 288));
+	trianglesB.push_back(Vec6f(140, 35, 169, 288, 432, 583));
+	g.sourceGeometry = GeometricSlice();
+	g.targetGeometry = GeometricSlice();
+	g.sourceGeometry.img = sourceR;
+	g.targetGeometry.img = targetR;
+	g.sourceGeometry.triangles = trianglesA;
+	g.targetGeometry.triangles = trianglesB;
+	*/
+
 	interpolate(geometry);
 
 	return 0;

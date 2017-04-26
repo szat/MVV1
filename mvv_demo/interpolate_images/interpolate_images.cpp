@@ -55,41 +55,47 @@ vector<Mat> get_affine_transforms(vector<Vec6f> sourceT, vector<Vec6f> targetT) 
 }
 
 
-vector<vector<double>> interpolation_preprocessing(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
+vector<vector<vector<double>>> interpolation_preprocessing(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
 	int numTriangles = sourceT.size();
 	vector<Mat> transforms = get_affine_transforms(sourceT, targetT);
 	// convert to a more readable form
-	vector<vector<double>> interpolation_params = vector<vector<double>>();
+	vector<vector<vector<double>>> interpolation_params = vector<vector<vector<double>>>();
 
 	for (int i = 0; i < numTriangles; i++) {
-		vector<double> currentParamsNumeric = vector<double>();
+		vector<vector<double>> currentParamsNumeric = vector<vector<double>>();
 		Mat currentParams = transforms[i];
 		// a00, a01, b00, a10, a11, b01
-		currentParamsNumeric.push_back(currentParams.at<double>(0, 0));
-		currentParamsNumeric.push_back(currentParams.at<double>(0, 1));
-		currentParamsNumeric.push_back(currentParams.at<double>(0, 2));
-		currentParamsNumeric.push_back(currentParams.at<double>(1, 0));
-		currentParamsNumeric.push_back(currentParams.at<double>(1, 1));
-		currentParamsNumeric.push_back(currentParams.at<double>(1, 2));
+		vector<double> firstRow = vector<double>();
+		firstRow.push_back(currentParams.at<double>(0, 0));
+		firstRow.push_back(currentParams.at<double>(0, 1));
+		firstRow.push_back(currentParams.at<double>(0, 2));
+		currentParamsNumeric.push_back(firstRow);
+		vector<double> secondRow = vector<double>();
+		secondRow.push_back(currentParams.at<double>(1, 0));
+	    secondRow.push_back(currentParams.at<double>(1, 1));
+		secondRow.push_back(currentParams.at<double>(1, 2));
+		currentParamsNumeric.push_back(secondRow);
 		interpolation_params.push_back(currentParamsNumeric);
 	}
 
 	return interpolation_params;
 }
 
-vector<Vec6f> get_interpolated_triangles(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<vector<double>> affine, int tInt) {
+vector<Vec6f> get_interpolated_triangles(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<vector<vector<double>>> affine, int tInt) {
 	int numTriangles = sourceT.size();
 	float t = (float)tInt / 100;
 	vector<Vec6f> interT = vector<Vec6f>();
 
+	// It is by will alone I set my mind in motion.
+	// Good luck with these indices...
 	for (int i = 0; i < numTriangles; i++) {
-		vector<double> affineParams = affine[i];
-		float pt1x = (1 - t + affineParams[0] * t) * sourceT[i][0] + affineParams[1] * sourceT[i][1] + affineParams[2];
-		float pt1y = (affineParams[3] * t) * sourceT[i][0] + affineParams[4] * sourceT[i][1] + affineParams[5];
-		float pt2x = (1 - t + affineParams[0] * t) * sourceT[i][2] + affineParams[1] * sourceT[i][3] + affineParams[2];
-		float pt2y = (affineParams[3] * t) * sourceT[i][2] + affineParams[4] * sourceT[i][3] + affineParams[5];
-		float pt3x = (1 - t + affineParams[0] * t) * sourceT[i][4] + affineParams[1] * sourceT[i][5] + affineParams[2];
-		float pt3y = (affineParams[3] * t) * sourceT[i][4] + affineParams[4] * sourceT[i][5] + affineParams[5];
+		vector<vector<double>> affineParams = affine[i];
+		float pt1x = (1 - t + affineParams[0][0] * t) * sourceT[i][0] + (affineParams[0][1] * t) * sourceT[i][1] + (affineParams[0][2] * t);
+		float pt1y = (affineParams[1][0] * t) * sourceT[i][0] + (1 - t + affineParams[1][1] * t) * sourceT[i][1] + (affineParams[1][2] * t);
+		float pt2x = (1 - t + affineParams[0][0] * t) * sourceT[i][2] + (affineParams[0][1] * t) * sourceT[i][3] + (affineParams[0][2] * t);
+		float pt2y = (affineParams[1][0] * t) * sourceT[i][2] + (1 - t + affineParams[1][1] * t) * sourceT[i][3] + (affineParams[1][2] * t);
+		float pt3x = (1 - t + affineParams[0][0] * t) * sourceT[i][4] + (affineParams[0][1] * t) * sourceT[i][5] + (affineParams[0][2] * t);
+		float pt3y = (affineParams[1][0] * t) * sourceT[i][4] + (1 - t + affineParams[1][1] * t) * sourceT[i][5] + (affineParams[1][2] * t);
 		interT.push_back(Vec6f(pt1x, pt1y, pt2x, pt2y, pt3x, pt3y));
 	}
 	return interT;
@@ -125,7 +131,7 @@ struct interpolationMorph {
 	int tInt;
 	vector<Vec6f> sourceT;
 	vector<Vec6f> targetT;
-	vector<vector<double>> affineParams;
+	vector<vector<vector<double>>> affineParams;
 };
 
 static void onInterpolate(int tInt, void *userdata) //void* mean that it is a pointer of unknown type
@@ -134,7 +140,7 @@ static void onInterpolate(int tInt, void *userdata) //void* mean that it is a po
 
 	vector<Vec6f> sourceT = (*((interpolationMorph*)userdata)).sourceT;
 	vector<Vec6f> targetT = (*((interpolationMorph*)userdata)).targetT;
-	vector<vector<double>> affineParams = (*((interpolationMorph*)userdata)).affineParams;
+	vector<vector<vector<double>>> affineParams = (*((interpolationMorph*)userdata)).affineParams;
 	Rect imgSize = (*((interpolationMorph*)userdata)).imageSize;
 	vector<Vec6f> interT = get_interpolated_triangles(sourceT, targetT, affineParams, tInt);
 	display_interpolated_triangles(interT, imgSize);
@@ -142,7 +148,7 @@ static void onInterpolate(int tInt, void *userdata) //void* mean that it is a po
 	//display_triangulation(subdiv, imgSize);
 }
 
-void interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, Rect imgSizeA, Rect imgSizeB, vector<vector<double>> affine)
+void interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, Rect imgSizeA, Rect imgSizeB, vector<vector<vector<double>>> affine)
 {
 	// max of height and weidth
 	int maxWidth = max(imgSizeA.width, imgSizeB.width);
