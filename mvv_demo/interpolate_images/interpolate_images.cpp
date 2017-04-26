@@ -142,7 +142,7 @@ static void onInterpolate(int tInt, void *userdata) //void* mean that it is a po
 	//display_triangulation(subdiv, imgSize);
 }
 
-int interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, Rect imgSizeA, Rect imgSizeB, vector<vector<double>> affine)
+void interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, Rect imgSizeA, Rect imgSizeB, vector<vector<double>> affine)
 {
 	// max of height and weidth
 	int maxWidth = max(imgSizeA.width, imgSizeB.width);
@@ -161,6 +161,4 @@ int interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, R
 	namedWindow("Adjust Window");
 	cvCreateTrackbar2("Morph", "Adjust Window", &tInt, 100, onInterpolate, (void*)(&holder));
 	waitKey(0);
-
-	return 0;
 }

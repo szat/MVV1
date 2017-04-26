@@ -288,16 +288,9 @@ vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, doub
 	return paramPoints;
 }
 
-void render_interpolation_trackbar(MatchedGeometry g, vector<vector<double>> affine) {
-	
-	// input triangles, triangles, affine, rect, rect
-}
-
-
 int interpolate(MatchedGeometry g) {
 	vector<vector<double>> affine = interpolation_preprocessing(g.sourceGeometry.triangles, g.targetGeometry.triangles);
-	render_interpolation_trackbar(g, affine);
-
+	interpolation_trackbar(g.sourceGeometry.triangles, g.targetGeometry.triangles, g.sourceGeometry.img, g.targetGeometry.img, affine);
 	return -1;
 }
 
