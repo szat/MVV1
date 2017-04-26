@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-Mat test_affine_transform(Vec6f sourceTri, Vec6f targetTri) {
+Mat affine_transform(Vec6f sourceTri, Vec6f targetTri) {
 	cv::Point2f sourceP[3];
 	sourceP[0] = cv::Point2f(sourceTri[0], sourceTri[1]);
 	sourceP[1] = cv::Point2f(sourceTri[2], sourceTri[3]);
