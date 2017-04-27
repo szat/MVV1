@@ -25,6 +25,7 @@
 #define APPLICATION_NAME "MVV"
 #define COMPANY_NAME "NDim Inc."
 #define COPYRIGHT_YEAR 2017
+#define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
 using namespace std;
 using namespace cv;
@@ -264,16 +265,96 @@ vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, doub
 }
 
 int interpolate(MatchedGeometry g) {
+	/*
 	vector<vector<vector<double>>> affine = interpolation_preprocessing(g.sourceGeometry.triangles, g.targetGeometry.triangles);
 	interpolation_trackbar(g.sourceGeometry.triangles, g.targetGeometry.triangles, g.sourceGeometry.img, g.targetGeometry.img, affine);
+	*/
 	return -1;
 }
 
-int danny_test() {
+void set_mask_to_triangle(Mat &mask, Vec6f t) {
+	Point pts[3] = {
+		Point(t[0],t[1]),
+		Point(t[2],t[3]),
+		Point(t[4],t[5]),
+	};
+	fillConvexPoly(mask, pts, 3, Scalar(1));
+}
 
-	//MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
-	//interpolate(geometry);
-	purple_mesh_test();
+void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect newImgSize, Rect sizeA, Rect sizeB,
+	vector<Mat> affineForward, vector<Mat> affineReverse, 
+	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
+
+	int xDim = newImgSize.width;
+	int yDim = newImgSize.height;
+	
+	Mat canvas = Mat::zeros(yDim, xDim, CV_8UC1);
+
+	// get affine
+	Mat currentMaskA = cv::Mat::zeros(sizeA.height, sizeA.width, CV_8UC1);
+	Mat currentMaskB = cv::Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
+
+	set_mask_to_triangle(currentMaskA, trianglesA[0]);
+	set_mask_to_triangle(currentMaskA, trianglesB[0]);
+
+	Mat tempImgA = Mat::zeros(sizeA.height, sizeA.width, CV_8UC1);
+	Mat tempImgB = Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
+
+	imgA.copyTo(tempImgA, currentMaskA);
+	imgB.copyTo(tempImgB, currentMaskB);
+
+	warpAffine(tempImgA, tempImgA, affineForward[0], Size(sizeA.width, sizeA.height));
+	warpAffine(tempImgB, tempImgB, affineReverse[0], Size(sizeA.width, sizeA.height));
+	warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[0], tau), Size(sizeB.width, sizeB.height));
+
+
+	addWeighted(tempImgB, tau, tempImgB, 1 - tau, 0.0, canvas);
+
+	imshow("purple", canvas);
+	waitKey(1);
+
+	
+	cout << "mesh test";
+
+}
+
+void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) {
+	std::clock_t start;
+	double duration;
+	start = clock();
+	
+	string rootPath = "../data_store";
+	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
+	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
+
+	Rect imgSizeA = Rect(0, 0, imgA.size().width, imgA.size().height);
+	Rect imgSizeB = Rect(0, 0, imgB.size().width, imgB.size().height);
+
+	int maxWidth = max(imgA.size().width, imgB.size().width);
+	int maxHeight = max(imgA.size().height, imgA.size().height);
+	Rect imgSizeMax = Rect(0, 0, maxWidth, maxHeight);
+
+	vector<Vec6f> trianglesA = g.sourceGeometry.triangles;
+	vector<Vec6f> trianglesB = g.targetGeometry.triangles;
+
+	// Forwards and reverse affine transformation parameters.
+	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
+	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
+	float tau = 0.6;
+
+	save_frame_at_tau(imgA, imgB, imgSizeMax, imgSizeA, imgSizeB, affineForward, affineReverse, trianglesA, trianglesB, tau);
+
+	cout << "Amount of time for affine params: " << duration << endl;
+}
+
+int danny_test() {
+	string img1path = "david_1.jpg";
+	string img2path = "david_2.jpg";
+	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
+	interpolate_frame(geometry, img1path, img2path);
+	//purple_mesh_test();
 	return 0;
 }
 

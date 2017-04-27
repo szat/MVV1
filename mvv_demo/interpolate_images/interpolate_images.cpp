@@ -54,33 +54,6 @@ vector<Mat> get_affine_transforms(vector<Vec6f> sourceT, vector<Vec6f> targetT) 
 	return transforms;
 }
 
-
-vector<vector<vector<double>>> interpolation_preprocessing(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
-	int numTriangles = sourceT.size();
-	vector<Mat> transforms = get_affine_transforms(sourceT, targetT);
-	// convert to a more readable form
-	vector<vector<vector<double>>> interpolation_params = vector<vector<vector<double>>>();
-
-	for (int i = 0; i < numTriangles; i++) {
-		vector<vector<double>> currentParamsNumeric = vector<vector<double>>();
-		Mat currentParams = transforms[i];
-		// a00, a01, b00, a10, a11, b01
-		vector<double> firstRow = vector<double>();
-		firstRow.push_back(currentParams.at<double>(0, 0));
-		firstRow.push_back(currentParams.at<double>(0, 1));
-		firstRow.push_back(currentParams.at<double>(0, 2));
-		currentParamsNumeric.push_back(firstRow);
-		vector<double> secondRow = vector<double>();
-		secondRow.push_back(currentParams.at<double>(1, 0));
-	    secondRow.push_back(currentParams.at<double>(1, 1));
-		secondRow.push_back(currentParams.at<double>(1, 2));
-		currentParamsNumeric.push_back(secondRow);
-		interpolation_params.push_back(currentParamsNumeric);
-	}
-
-	return interpolation_params;
-}
-
 vector<Vec6f> get_interpolated_triangles(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<vector<vector<double>>> affine, int tInt) {
 	int numTriangles = sourceT.size();
 	float t = (float)tInt / 100;
