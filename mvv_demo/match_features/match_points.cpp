@@ -830,6 +830,222 @@ void ransac_filter(std::vector<cv::KeyPoint> kptsDomain, std::vector<cv::KeyPoin
 
 }
 
+void test_nbh_first(std::string imagePathA, std::string imagePathB) {
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+	Mat img1Display = imread(address);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+	Mat img2Display = imread(address);
+
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
+
+	vector<KeyPoint> kpts1_step1;
+	vector<KeyPoint> kpts2_step1;
+	Mat desc1_step1;
+	Mat desc2_step1;
+	akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
+
+	vector<KeyPoint> kpts1_step2;
+	vector<KeyPoint> kpts2_step2;
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+
+	Mat homography;
+	vector<KeyPoint> kpts1_step3;
+	vector<KeyPoint> kpts2_step3;
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+	cout << "kpts1_step3 size is " << kpts1_step3.size() << endl;
+	cout << "kpts2_step3 size is " << kpts2_step3.size() << endl;
+
+	//visualize the matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kpts1_step3.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+	drawMatches(img1Display, kpts1_step3, img2Display, kpts2_step3, matchesIndexTrivial, img1to2);
+	imshow("Matches", img1to2);
+	waitKey(0);
+
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(20000);
+	detectorGFTT->setQualityLevel(0.00001);
+	detectorGFTT->setMinDistance(2);
+	detectorGFTT->setBlockSize(5);
+	detectorGFTT->setHarrisDetector(false);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> kpts1_new;
+	detectorGFTT->detect(img1, kpts1_new);
+	cout << "GFTT found " << kpts1_new.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1;
+	extractorORB->compute(img1, kpts1_new, desc1);
+
+	//Find features
+	vector<KeyPoint> kpts2_new;
+	detectorGFTT->detect(img2, kpts2_new);
+	cout << "GFTT found " << kpts2_new.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2;
+	extractorORB->compute(img2, kpts2_new, desc2);
+
+	cout << "Building kdtree1" << endl;
+	vector<KeyPoint> kptsKnn1;
+	vector<Point2f> ptsKnn1;
+	for (int i = 0; i < kpts1_new.size(); i++) ptsKnn1.push_back(kpts1_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+
+	cout << "Building kdtree2" << endl;
+	vector<KeyPoint> kptsKnn2;
+	vector<Point2f> ptsKnn2;
+	for (int i = 0; i < kpts2_new.size(); i++) ptsKnn2.push_back(kpts2_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams2;
+	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+
+	cout << "Getting nbh1" << endl;
+	float radius1 = 100;
+	int cardNbh1 = 100; //max number of points in the radius
+	vector<int> indicesNbh1;
+	vector<float> distsNbh1;
+	vector<float> centerNbh1; 
+	centerNbh1.push_back(kpts1_step3.at(0).pt.x); 
+	centerNbh1.push_back(kpts1_step3.at(0).pt.y);
+	kdtree1.radiusSearch(centerNbh1, indicesNbh1, distsNbh1, radius1, cardNbh1, cv::flann::SearchParams(64));
+	while (!distsNbh1.empty() && (distsNbh1.back() == 0)) { 
+		distsNbh1.pop_back();
+		indicesNbh1.pop_back();
+	}
+	cout << "nbh2 has size " << indicesNbh1.size() << endl;
+
+	cout << "Getting nbh2" << endl;
+	float radius2 = 100;
+	int cardNbh2 = 100; //max number of points in the radius
+	vector<int> indicesNbh2;
+	vector<float> distsNbh2;
+	vector<float> centerNbh2;
+	centerNbh2.push_back(kpts2_step3.at(0).pt.x);
+	centerNbh2.push_back(kpts2_step3.at(0).pt.y);
+	kdtree2.radiusSearch(centerNbh2, indicesNbh2, distsNbh2, radius2, cardNbh2, cv::flann::SearchParams(64));
+	while (!distsNbh2.empty() && (distsNbh2.back() == 0)) { //Guard against empty?
+		distsNbh2.pop_back();
+		indicesNbh2.pop_back();
+	}
+	cout << "nbh2 has size " << indicesNbh2.size() << endl;
+
+	vector<KeyPoint> nbh1;
+	for (int i = 0; i < indicesNbh1.size(); i++) {
+		int index = indicesNbh1.at(i);
+		nbh1.push_back(kpts1_new.at(index));
+	}
+	cout << "nbh1 has size " << nbh1.size() << endl;
+
+	vector<KeyPoint> nbh2;	
+	for (int i = 0; i < indicesNbh2.size(); i++) {
+		nbh2.push_back(kpts2_new.at(indicesNbh2.at(i)));
+	}
+
+	//Visualize the points
+
+	namedWindow("Img1", WINDOW_AUTOSIZE);
+	namedWindow("Img2", WINDOW_AUTOSIZE);
+	
+	int r = 3;
+	RNG rng(12345); //random number generator
+
+	for (size_t i = 0; i < nbh1.size(); i++) {
+		drawMarker(img1Display, nbh1.at(i).pt, cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), MARKER_CROSS, 10, 1);
+		//circle(img1Display, nbh1.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	for (size_t i = 0; i < kpts1_step3.size(); i++) {
+		circle(img1Display, kpts1_step3.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Img1", img1Display);
+
+	for (size_t i = 0; i < nbh2.size(); i++) {
+		drawMarker(img2Display, nbh2.at(i).pt, cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), MARKER_CROSS, 10, 1);
+		//circle(img2Display, nbh2.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	for (size_t i = 0; i < kpts2_step3.size(); i++) {
+		circle(img2Display, kpts2_step3.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Img2", img2Display);
+
+	waitKey(0);
+	
+	
+	//cout << "nbh2 has size " << nbh2.size() << endl;
+
+	//Take a point around a keypoint in kpts1_step3
+	//something does not work
+	//KeyPoint trial1 = kpts1_step3.at(3);
+	//KeyPoint trial2 = kpts1_step3.at(3);
+	//try this
+	//KeyPoint trial1 = kptsKnn1.at(3);
+	//KeyPoint trial2 = kptsKnn2.at(3);
+
+	/*
+	//Find the points around these two points
+	vector<KeyPoint> nbh1;
+	vector<KeyPoint> nbh2;
+
+	float radius1 = 20;
+	int cardNbh1 = 100; //max number of points in the radius
+	vector<int> indicesNbh1;
+	vector<int> distsNbh1;
+	vector<float> centerNbh1; centerNbh1.push_back(trial1.pt.x); centerNbh1.push_back(trial1.pt.y);
+
+	float radius2 = 20;
+	int cardNbh2 = 100;
+	vector<int> indicesNbh2;
+	vector<int> distsNbh2;
+	vector<float> centerNbh2; centerNbh2.push_back(trial2.pt.x); centerNbh2.push_back(trial2.pt.y);
+
+	//the problem is that you have to join the initial filtered keypoints for 
+	kdtree1.radiusSearch(centerNbh1, indicesNbh1, distsNbh1, radius1, cardNbh1, cv::flann::SearchParams(64));
+	while (!distsNbh1.empty() && (distsNbh1.back() == 0)) { //Guard against empty?
+		distsNbh1.pop_back();
+		indicesNbh1.pop_back();
+	}
+
+	kdtree2.radiusSearch(centerNbh2, indicesNbh2, distsNbh2, radius2, cardNbh2, cv::flann::SearchParams(64));
+	while (!distsNbh2.empty() && (distsNbh2.back() == 0)) { //Guard against empty?
+		distsNbh2.pop_back();
+		indicesNbh2.pop_back();
+	}
+	*/
+
+	/*
+	vector<int> indicesKnn2;
+	vector<float> distsKnn2;
+	vector<float> query2; query2.push_back(ptsKnn2.at(0).x); query2.push_back(ptsKnn2.at(0).y);
+	kdtree2.radiusSearch(query2, indicesKnn2, distsKnn2, 100000000, 20, cv::flann::SearchParams(64));
+	while (!distsKnn2.empty() && (distsKnn2.back() == 0)) { //Guard against empty?
+	distsKnn2.pop_back();
+	indicesKnn2.pop_back();
+	}
+	for (int i = 0; i < distsKnn2.size(); i++)  kptsKnn1.push_back(kptsRatio1.at(indicesKnn1.at(i)));
+	*/
+
+}
+
 void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	cout << "Welcome to match_points_2 testing unit!" << endl;
 	string address = "..\\data_store\\" + imagePathA;

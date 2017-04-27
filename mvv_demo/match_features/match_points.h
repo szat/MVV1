@@ -48,6 +48,8 @@ void council_filter(const std::vector<cv::KeyPoint> & kptsDomain, const std::vec
 
 void ransac_filter(std::vector<cv::KeyPoint> kptsDomain, std::vector<cv::KeyPoint> kptsTarget, std::vector<cv::KeyPoint> kptsDomainFiltered, std::vector<cv::KeyPoint> kptsTargetFiltered, float inlierThreshhold);
 
+void test_nbh_first(std::string imagePathA, std::string imagePathB);
+
 std::vector<std::vector<cv::KeyPoint>> match_points_mat(cv::Mat img1, cv::Mat img2);
 
 std::vector<std::vector<cv::KeyPoint>> test_match_points(std::string imagePathA, std::string imagePathB);
