@@ -263,21 +263,26 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	Mat currentMaskA = cv::Mat::zeros(yDim, xDim, CV_8UC1);
 	Mat currentMaskB = cv::Mat::zeros(yDim, xDim, CV_8UC1);
 
-	set_mask_to_triangle(currentMaskA, trianglesA[0]);
-	set_mask_to_triangle(currentMaskB, trianglesB[0]);
+	int numTriangles = trianglesA.size();
+	for (int i = 0; i < numTriangles; i++) {
+		currentMaskA = Mat::zeros(yDim, xDim, CV_8UC1);
+		currentMaskB = Mat::zeros(yDim, xDim, CV_8UC1);
+		set_mask_to_triangle(currentMaskA, trianglesA[i]);
+		set_mask_to_triangle(currentMaskB, trianglesB[i]);
+		Mat tempImgA = Mat::zeros(yDim, xDim, CV_8UC1);
+		Mat tempImgB = Mat::zeros(yDim, xDim, CV_8UC1);
+		Mat tempImgC = Mat::zeros(yDim, xDim, CV_8UC1);
+		imgA.copyTo(tempImgA, currentMaskA);
+		imgB.copyTo(tempImgB, currentMaskB);
+		warpAffine(tempImgA, tempImgA, affineForward[i], Size(xDim, yDim));
+		warpAffine(tempImgB, tempImgB, affineReverse[i], Size(xDim, yDim));
+		warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
+		addWeighted(tempImgB, tau, tempImgB, 1 - tau, 0.0, tempImgC);
+		addWeighted(tempImgC, 1, canvas, 1, 0.0, canvas);
+		// console output
+		cout << "Finished triangle " << i << "/" << numTriangles << endl;
+	}
 
-	Mat tempImgA = Mat::zeros(yDim, xDim, CV_8UC1);
-	Mat tempImgB = Mat::zeros(yDim, xDim, CV_8UC1);
-
-	imgA.copyTo(tempImgA, currentMaskA);
-	imgB.copyTo(tempImgB, currentMaskB);
-
-	warpAffine(tempImgA, tempImgA, affineForward[0], Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, affineReverse[0], Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[0], tau), Size(xDim, yDim));
-
-
-	addWeighted(tempImgB, tau, tempImgB, 1 - tau, 0.0, canvas);
 
 	imshow("purple", canvas);
 	waitKey(1);
