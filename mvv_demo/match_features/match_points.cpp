@@ -28,6 +28,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <ctime>
 #include <algorithm>
 #include <math.h>       /* fabs */
+#include <iterator> //back_inserter
 
 using namespace std;
 using namespace cv;
@@ -55,7 +56,6 @@ void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_
 	tend = time(0);
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
-
 
 void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	time_t tstart, tend;
@@ -261,7 +261,6 @@ void test_GFTT(string imagePathA, string imagePathB) {
 	waitKey(0);
 
 }
-
 
 void test_BRISK(string imagePathA, string imagePathB) {
 	cout << "Welcome to match_BRISK testing unit!" << endl;
@@ -781,6 +780,56 @@ void test_AGAST(string imagePathA, string imagePathB) {
 	waitKey(0);
 }
 
+void council_filter(const std::vector<cv::KeyPoint> & kptsDomain, const std::vector<cv::KeyPoint> & kptsTarget, std::vector<cv::KeyPoint> & kptsDomainFiltered, std::vector<cv::KeyPoint> & kptsTargetFiltered, int numNeighbors, float minNumber) {
+	if (kptsDomain.size() != kptsTarget.size()) {
+		cout << "The two set of keypoints do not have the same length!" << endl;
+		return;
+	}
+	int maxKpts = kptsDomain.size();
+
+	vector<Point2f> ptsKnn1;
+	vector<Point2f> ptsKnn2;
+
+	for (int i = 0; i < kptsDomain.size(); i++) ptsKnn1.push_back(kptsDomain.at(i).pt);
+	for (int i = 0; i < kptsTarget.size(); i++) ptsKnn2.push_back(kptsTarget.at(i).pt);
+
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+
+	cv::flann::KDTreeIndexParams indexParams2;
+	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+
+	float radius = 5;
+
+	for (int i = 0; i < kptsDomain.size(); i++) {
+		vector<int> indicesKnn1;
+		vector<float> distsKnn1;
+		vector<int> indicesKnn2;
+		vector<float> distsKnn2;
+		vector<float> query;
+
+		query.push_back(kptsDomain.at(i).pt.x);
+		query.push_back(kptsDomain.at(i).pt.y);
+		kdtree1.knnSearch(query, indicesKnn1, distsKnn1, numNeighbors);
+		kdtree2.knnSearch(query, indicesKnn2, distsKnn2, numNeighbors);
+		sort(indicesKnn1.begin(), indicesKnn1.end());
+		sort(indicesKnn2.begin(), indicesKnn2.end());
+
+		vector<int> indexIntersection;
+		set_intersection(indicesKnn1.begin(), indicesKnn1.end(), indicesKnn2.begin(), indicesKnn2.end(), back_inserter(indexIntersection));
+		//cout << "index intersection of nbh is " << indexIntersection.size() << endl;
+		if (indexIntersection.size() > minNumber) {
+			//cout << "inside the if statement" << endl;
+			kptsDomainFiltered.push_back(kptsDomain.at(i));
+			kptsTargetFiltered.push_back(kptsTarget.at(i));
+		}
+	}
+}
+
+void ransac_filter(std::vector<cv::KeyPoint> kptsDomain, std::vector<cv::KeyPoint> kptsTarget, std::vector<cv::KeyPoint> kptsDomainFiltered, std::vector<cv::KeyPoint> kptsTargetFiltered, float inlierThreshhold) {
+
+}
+
 void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	cout << "Welcome to match_points_2 testing unit!" << endl;
 	string address = "..\\data_store\\" + imagePathA;
@@ -801,11 +850,22 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 
 	//http://docs.opencv.org/trunk/da/d9b/group__features2d.html#ga15e1361bda978d83a2bea629b32dfd3c
 
+
+	//First get points
+	//Compute Descriptors
+	//Do Ratio Matching
+	//Do kmeans Matching
+	//data = distances(kptsRatio1,kptsRatio)
+
+	//Make an initial detection with ORB
+	//Get the homography ----> pretty conservative
+	//Use the homography to filter the matches before or after the kmeans,
+
 	//Set Detector
 	//Find the other detectors on page http://docs.opencv.org/trunk/d5/d51/group__features2d__main.html
 
 	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
-	detectorGFTT->setMaxFeatures(5000);
+	detectorGFTT->setMaxFeatures(10000);
 	detectorGFTT->setQualityLevel(0.00000001);
 	detectorGFTT->setMinDistance(0.1);
 	detectorGFTT->setBlockSize(5);
@@ -832,7 +892,7 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	extractorORB->compute(img2, kpts2, desc2);
 
 	//Ratio Matching
-	float ratio = 0.8f;
+	float ratio = 0.9f; //higher means more relaxed
 	vector<KeyPoint> kptsRatio1;
 	vector<KeyPoint> kptsRatio2;
 
@@ -841,6 +901,9 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	BFMatcher matcher(NORM_HAMMING);
 	tstart = time(0);
 	matcher.knnMatch(desc1, desc2, matchesLoweRatio, 2);
+
+	cout << "Build kdtree" << endl;
+
 	int nbMatches = matchesLoweRatio.size();
 	for (int i = 0; i < nbMatches; i++) {
 		DMatch first = matchesLoweRatio[i][0];
@@ -854,11 +917,6 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 	tend = time(0);
 	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kptsRatio1.size() << " features." << endl;
 
-	//First get points
-	//Compute Descriptors
-	//Do Ratio Matching
-	//Do kmeans Matching
-	//data = distances(kptsRatio1,kptsRatio)
 	vector<int> bestLabels;
 	vector<float> dataKMeans;
 	for (int i = 0; i < kptsRatio1.size(); i++) {
@@ -874,18 +932,30 @@ void test_kmeans(std::string imagePathA, std::string imagePathB) {
 		float d0 = centers.at<float>(0, 0);
 		float d1 = centers.at<float>(1, 0);
 		float d2 = centers.at<float>(2, 0);
-		if (fabs(dataKMeans.at(i) - d0) > 0.1*d0 || fabs(dataKMeans.at(i) - d1) > 0.1*d1 || fabs(dataKMeans.at(i) - d2) > 0.1*d2) {
+		if (fabs(dataKMeans.at(i) - d0) < 0.3*d0 || fabs(dataKMeans.at(i) - d1) < 0.3*d1 || fabs(dataKMeans.at(i) - d2) < 0.3*d2) {
 			kptsKmeans1.push_back(kptsRatio1.at(i));
 			kptsKmeans2.push_back(kptsRatio2.at(i));
 		}
 	}
 
-	//-- Draw Matches
+	cout << "After kmeans on dist there are " << kptsKmeans1.size() << " features. " << endl;
+
+	//Council voting --> knn radius search dist = 1/16 of image width
+	//Minimal nbh size = 3
+	//
+	
+	vector<KeyPoint> kptsCouncil1;
+	vector<KeyPoint> kptsCouncil2;
+
+	council_filter(kptsKmeans1, kptsKmeans2, kptsCouncil1, kptsCouncil2, 30, 2);
+
+	//End of council voting
+
 	Mat img1to2;
 	vector<DMatch> matchesIndexTrivial;
-	for (int i = 0; i < kptsKmeans1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+	for (int i = 0; i < kptsCouncil1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
 
-	drawMatches(img1Display, kptsKmeans1, img2Display, kptsKmeans2, matchesIndexTrivial, img1to2);
+	drawMatches(img1Display, kptsCouncil1, img2Display, kptsCouncil2, matchesIndexTrivial, img1to2);
 
 	//-- Show detected matches
 	imshow("Matches", img1to2);

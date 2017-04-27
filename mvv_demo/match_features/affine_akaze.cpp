@@ -1,4 +1,5 @@
 #include "affine_akaze.h"
+#include "match_points.h"
 
 #include <iostream>
 #include <opencv2/features2d.hpp>
@@ -17,7 +18,7 @@ const float inlier_threshold = 2.5f; // Distance threshold to identify inliers
 const float nn_match_ratio = 0.8f;   // Nearest neighbor matching ratio
 const double akaze_thresh = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 
-void affine_skew(double tilt, double phi, Mat& img, Mat& mask, Mat& Ai)
+void affine_skew_here(double tilt, double phi, Mat& img, Mat& mask, Mat& Ai)
 {
 	cout << "Applying affine_skew(tilt = " << tilt << ", phi = " << phi << ") ..." << endl;
 
@@ -67,7 +68,7 @@ void affine_skew(double tilt, double phi, Mat& img, Mat& mask, Mat& Ai)
 	invertAffineTransform(A, Ai);
 }
 
-void detect_and_compute(const Mat& img, std::vector< KeyPoint >& keypoints, Mat& descriptors)
+void detect_and_compute_here(const Mat& img, std::vector< KeyPoint >& keypoints, Mat& descriptors)
 {
 	cout << "Applying detect_and_compute(img, keypoints, descriptors)..." << endl;
 
@@ -84,7 +85,7 @@ void detect_and_compute(const Mat& img, std::vector< KeyPoint >& keypoints, Mat&
 			Mat timg, mask, Ai;
 			img.copyTo(timg);
 
-			affine_skew(t, phi, timg, mask, Ai);
+			affine_skew_here(t, phi, timg, mask, Ai);
 
 #if 0
 			Mat img_disp;
@@ -119,18 +120,20 @@ void affine_akaze_test(string imagePathA_in, string imagePathB_in, vector<KeyPoi
 	if (!img1.data) { 
 		cout << "Error loading " << imagePathA_in << endl;
 		return; }
+	Mat img1Display = imread(imagePathA_in);
 	Mat img2 = imread(imagePathB_in, IMREAD_GRAYSCALE);
 	if (!img2.data) {
 		cout << "Error loading " << imagePathB_in << endl;
 		return;
 	}
-	
+	Mat img2Display = imread(imagePathB_in);
+
 	cout << "Starting affine_akaze(" << imagePathA_in <<" , " << imagePathB_in << ") ..." << endl;
 
 	vector<KeyPoint> kptsImg1, kptsImg2;
 	Mat descImg1, descImg2;
-	detect_and_compute(img1, kptsImg1, descImg1);
-	detect_and_compute(img2, kptsImg2, descImg2);
+	detect_and_compute_here(img1, kptsImg1, descImg1);
+	detect_and_compute_here(img2, kptsImg2, descImg2);
 
 	BFMatcher matcher(NORM_HAMMING);
 	vector< vector<DMatch> > nn_matches;
@@ -157,5 +160,24 @@ void affine_akaze_test(string imagePathA_in, string imagePathB_in, vector<KeyPoi
 
 	keysImgA_out = inliers1;
 	keysImgB_out = inliers2;
+	vector<KeyPoint> kptsRansac1;
+	vector<KeyPoint> kptsRansac2;
+	vector<int> indicesDomain;
+	vector<int> indicesTarget;
+	vector<int> indicesDomainPass;
+	vector<int> indicesTargetPass;
+	vector<int> indicesDomainFail;
+	vector<int> indicesTargetFail;
 
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kptsRansac1.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+
+	drawMatches(img1Display, kptsRansac1, img2Display, kptsRansac2, matchesIndexTrivial, img1to2);
+
+	//-- Show detected matches
+	imshow("Matches", img1to2);
+
+	waitKey(0);
+	
 }
