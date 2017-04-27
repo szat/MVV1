@@ -29,6 +29,7 @@ This software is provided by the copyright holders and contributors “as is” and 
 #include <algorithm>
 #include <math.h>       /* fabs */
 #include <iterator> //back_inserter
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -920,6 +921,71 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 	cv::flann::KDTreeIndexParams indexParams2;
 	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
 
+	vector<KeyPoint> kpts1_all = kpts1_step3;
+	vector<KeyPoint> kpts2_all = kpts2_step3;
+
+	for (int k = 0; k < kpts1_step3.size(); k++) {
+		cout << "itaration " << k << endl;
+		cout << "Getting nbh1" << endl;
+		float radius1 = 300;
+		int cardNbh1 = 100; //max number of points in the radius
+		vector<int> indicesNbh1;
+		vector<float> distsNbh1;
+		vector<float> centerNbh1;
+		centerNbh1.push_back(kpts1_step3.at(k).pt.x);
+		centerNbh1.push_back(kpts1_step3.at(k).pt.y);
+		kdtree1.radiusSearch(centerNbh1, indicesNbh1, distsNbh1, radius1, cardNbh1, cv::flann::SearchParams(64));
+		while (!distsNbh1.empty() && (distsNbh1.back() == 0)) {
+			distsNbh1.pop_back();
+			indicesNbh1.pop_back();
+		}
+		cout << "nbh2 has size " << indicesNbh1.size() << endl;
+
+		cout << "Getting nbh2" << endl;
+		float radius2 = 300;
+		int cardNbh2 = 100; //max number of points in the radius
+		vector<int> indicesNbh2;
+		vector<float> distsNbh2;
+		vector<float> centerNbh2;
+		centerNbh2.push_back(kpts2_step3.at(k).pt.x);
+		centerNbh2.push_back(kpts2_step3.at(k).pt.y);
+		kdtree2.radiusSearch(centerNbh2, indicesNbh2, distsNbh2, radius2, cardNbh2, cv::flann::SearchParams(64));
+		while (!distsNbh2.empty() && (distsNbh2.back() == 0)) { //Guard against empty?
+			distsNbh2.pop_back();
+			indicesNbh2.pop_back();
+		}
+		cout << "nbh2 has size " << indicesNbh2.size() << endl;
+
+		vector<KeyPoint> nbh1;
+		Mat descNbh1;
+		for (int i = 0; i < indicesNbh1.size(); i++) {
+			int index = indicesNbh1.at(i);
+			nbh1.push_back(kpts1_new.at(index));
+			Mat descRow = desc1.row(index);
+			descNbh1.push_back(descRow);
+		}
+		cout << "nbh1 has size " << nbh1.size() << endl;
+
+		vector<KeyPoint> nbh2;
+		Mat descNbh2;
+		for (int i = 0; i < indicesNbh2.size(); i++) {
+			int index = indicesNbh2.at(i);
+			nbh2.push_back(kpts2_new.at(index));
+			Mat descRow = desc2.row(index);
+			descNbh2.push_back(descRow);
+		}
+		vector<KeyPoint> kpts1_ratio;
+		vector<KeyPoint> kpts2_ratio;
+		ratio_matcher_script(0.8f, nbh1, nbh2, descNbh1, descNbh2, kpts1_ratio, kpts2_ratio);
+
+		for (int j = 0; j < kpts1_ratio.size(); j++) kpts1_all.push_back(kpts1_ratio.at(j));
+		for (int j = 0; j < kpts2_ratio.size(); j++) kpts2_all.push_back(kpts2_ratio.at(j));
+
+		cout << "initial matching size " << kpts1_step3.size() << ", second matching size " << kpts1_ratio.size() << ", concat matching size " << kpts1_all.size() << endl;
+		cout << "initial matching size " << kpts2_step3.size() << ", second matching size " << kpts2_ratio.size() << ", concat matching size " << kpts2_all.size() << endl;
+	}//end for
+
+
 	cout << "Getting nbh1" << endl;
 	float radius1 = 100;
 	int cardNbh1 = 100; //max number of points in the radius
@@ -951,22 +1017,27 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 	cout << "nbh2 has size " << indicesNbh2.size() << endl;
 
 	vector<KeyPoint> nbh1;
+	Mat descNbh1;
 	for (int i = 0; i < indicesNbh1.size(); i++) {
 		int index = indicesNbh1.at(i);
 		nbh1.push_back(kpts1_new.at(index));
+		Mat descRow = desc1.row(index);
+		descNbh1.push_back(descRow);
 	}
 	cout << "nbh1 has size " << nbh1.size() << endl;
 
 	vector<KeyPoint> nbh2;	
+	Mat descNbh2;
 	for (int i = 0; i < indicesNbh2.size(); i++) {
-		nbh2.push_back(kpts2_new.at(indicesNbh2.at(i)));
+		int index = indicesNbh2.at(i);
+		nbh2.push_back(kpts2_new.at(index));
+		Mat descRow = desc2.row(index);
+		descNbh2.push_back(descRow);
 	}
 
-	//Visualize the points
-
+	//Visualize the points ///VVVVVVVVVVVVVVVVVVVVVVVVVV
 	namedWindow("Img1", WINDOW_AUTOSIZE);
 	namedWindow("Img2", WINDOW_AUTOSIZE);
-	
 	int r = 3;
 	RNG rng(12345); //random number generator
 
@@ -987,10 +1058,29 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 		circle(img2Display, kpts2_step3.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
 	}
 	imshow("Img2", img2Display);
-
 	waitKey(0);
+	///VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 	
-	
+	//Match the nbhs
+	vector<KeyPoint> kpts1_ratio;
+	vector<KeyPoint> kpts2_ratio;
+	ratio_matcher_script(0.8f, nbh1, nbh2, descNbh1, descNbh2, kpts1_ratio, kpts2_ratio);
+
+	//Add the new points to the old points
+
+
+
+
+	//Draw matches
+	//namedWindow("Concatenated Matching", WINDOW_AUTOSIZE);
+	//visualize the matches
+	Mat img1to2_concat;
+	vector<DMatch> matchesIndexTrivial_concat;
+	for (int i = 0; i < kpts1_all.size(); i++) matchesIndexTrivial_concat.push_back(DMatch(i, i, 0));
+	drawMatches(img1Display, kpts1_all, img2Display, kpts2_all, matchesIndexTrivial_concat, img1to2_concat);
+	imshow("Matches", img1to2_concat);
+	waitKey(0);
+
 	//cout << "nbh2 has size " << nbh2.size() << endl;
 
 	//Take a point around a keypoint in kpts1_step3
