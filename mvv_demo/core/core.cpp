@@ -250,31 +250,31 @@ void set_mask_to_triangle(Mat &mask, Vec6f t) {
 	fillConvexPoly(mask, pts, 3, Scalar(1));
 }
 
-void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect newImgSize, Rect sizeA, Rect sizeB,
+void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	vector<Mat> affineForward, vector<Mat> affineReverse, 
 	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
 
-	int xDim = newImgSize.width;
-	int yDim = newImgSize.height;
+	int xDim = imgRect.width;
+	int yDim = imgRect.height;
 	
 	Mat canvas = Mat::zeros(yDim, xDim, CV_8UC1);
 
 	// get affine
-	Mat currentMaskA = cv::Mat::zeros(sizeA.height, sizeA.width, CV_8UC1);
-	Mat currentMaskB = cv::Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
+	Mat currentMaskA = cv::Mat::zeros(yDim, xDim, CV_8UC1);
+	Mat currentMaskB = cv::Mat::zeros(yDim, xDim, CV_8UC1);
 
 	set_mask_to_triangle(currentMaskA, trianglesA[0]);
 	set_mask_to_triangle(currentMaskB, trianglesB[0]);
 
-	Mat tempImgA = Mat::zeros(sizeA.height, sizeA.width, CV_8UC1);
-	Mat tempImgB = Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
+	Mat tempImgA = Mat::zeros(yDim, xDim, CV_8UC1);
+	Mat tempImgB = Mat::zeros(yDim, xDim, CV_8UC1);
 
 	imgA.copyTo(tempImgA, currentMaskA);
 	imgB.copyTo(tempImgB, currentMaskB);
 
-	warpAffine(tempImgA, tempImgA, affineForward[0], Size(sizeA.width, sizeA.height));
-	warpAffine(tempImgB, tempImgB, affineReverse[0], Size(sizeA.width, sizeA.height));
-	warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[0], tau), Size(sizeB.width, sizeB.height));
+	warpAffine(tempImgA, tempImgA, affineForward[0], Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affineReverse[0], Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[0], tau), Size(xDim, yDim));
 
 
 	addWeighted(tempImgB, tau, tempImgB, 1 - tau, 0.0, canvas);
@@ -298,12 +298,7 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 	Size desiredSize = imgB.size();
 	resize(imgA, imgA, desiredSize);
 
-	Rect imgSizeA = Rect(0, 0, imgA.size().width, imgA.size().height);
-	Rect imgSizeB = Rect(0, 0, imgB.size().width, imgB.size().height);
-
-	int maxWidth = max(imgA.size().width, imgB.size().width);
-	int maxHeight = max(imgA.size().height, imgA.size().height);
-	Rect imgSizeMax = Rect(0, 0, maxWidth, maxHeight);
+	Rect imgRect = Rect(0, 0, desiredSize.width, desiredSize.height);
 
 	vector<Vec6f> trianglesA = g.sourceGeometry.triangles;
 	vector<Vec6f> trianglesB = g.targetGeometry.triangles;
@@ -315,7 +310,7 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
 	float tau = 0.6;
 
-	save_frame_at_tau(imgA, imgB, imgSizeMax, imgSizeA, imgSizeB, affineForward, affineReverse, trianglesA, trianglesB, tau);
+	save_frame_at_tau(imgA, imgB, imgRect, affineForward, affineReverse, trianglesA, trianglesB, tau);
 
 	cout << "Amount of time for affine params: " << duration << endl;
 }
