@@ -21,8 +21,6 @@ void display_triangulation(cv::Subdiv2D subdiv, cv::Rect imageBounds);
 
 std::vector<cv::Vec6f> construct_triangles(std::vector<cv::Point2f> sourceImagePoints, cv::Size sourceSize);
 
-std::vector<cv::Vec6f> test_interface();
-
 std::vector<cv::Point2f> convert_key_points(std::vector<cv::KeyPoint> keyPoints);
 
 std::vector<cv::Vec6f> triangulate_target(std::vector<cv::Point2f> imgPointsA, std::vector<cv::Point2f> imgPointsB, std::vector<cv::Vec6f> trianglesA);

@@ -96,33 +96,6 @@ void image_diagnostics(Mat img) {
 	cout << "Image height: " << size.height << endl;
 }
 
-int triangulation_diagnostic() {
-	// This function takes two input images from two angles (rescaled to the same size)
-	// There will be a slider that controls the parameter t (0,1), so we can see the discrete triangulation shifts
-	string imagePathA = "david_1.jpg";
-	string imagePathB = "david_2.jpg";
-	string rootPath = "../data_store";
-
-	//Rect imageSizeA = getImageSize(imageA);
-	//Rect imageSizeB = getImageSize(imageB);
-
-	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
-	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
-
-	// Resize imageB so that is has the same size as imgA
-	cv::resize(imgB, imgB, imgA.size());
-
-	Rect imgSizeRectA = Rect(0, 0, imgA.size().width, imgA.size().height);
-	vector<vector<KeyPoint>> pointMatches = match_points_mat(imgA, imgB);
-	
-	vector<KeyPoint> imgPointsA = pointMatches[0];
-	vector<KeyPoint> imgPointsB = pointMatches[1];
-
-	triangulation_trackbar(imgPointsA, imgPointsB, imgSizeRectA);
-
-	return -1;
-}
-
 struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
@@ -291,7 +264,7 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect newImgSize, Rect sizeA, Rect s
 	Mat currentMaskB = cv::Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
 
 	set_mask_to_triangle(currentMaskA, trianglesA[0]);
-	set_mask_to_triangle(currentMaskA, trianglesB[0]);
+	set_mask_to_triangle(currentMaskB, trianglesB[0]);
 
 	Mat tempImgA = Mat::zeros(sizeA.height, sizeA.width, CV_8UC1);
 	Mat tempImgB = Mat::zeros(sizeB.height, sizeB.width, CV_8UC1);
@@ -322,6 +295,8 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 	string rootPath = "../data_store";
 	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
 	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
+	Size desiredSize = imgB.size();
+	resize(imgA, imgA, desiredSize);
 
 	Rect imgSizeA = Rect(0, 0, imgA.size().width, imgA.size().height);
 	Rect imgSizeB = Rect(0, 0, imgB.size().width, imgB.size().height);
@@ -349,7 +324,7 @@ int danny_test() {
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
-	//interpolate_frame(geometry, img1path, img2path);
+	interpolate_frame(geometry, img1path, img2path);
 	//purple_mesh_test();
 	return 0;
 }
