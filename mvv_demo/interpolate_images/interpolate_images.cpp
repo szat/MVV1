@@ -201,9 +201,12 @@ void purple_mesh_test() {
 	Vec6f triA_2 = Vec6f(300, 300, 400, 400, 400, 500);
 	Vec6f triB_2 = Vec6f(298, 311, 391, 421, 410, 550);
 	// get affine
-	Mat affine = affine_transform(triA_1, triB_1);
-	Mat affineReverse = affine_transform(triB_1, triA_1);
-	Mat affinePartial = get_affine_intermediate(affine, t);
+	Mat affineA = affine_transform(triA_1, triB_1);
+	Mat affineReverseA = affine_transform(triB_1, triA_1);
+	Mat affinePartialA = get_affine_intermediate(affineA, t);
+	Mat affineB = affine_transform(triA_2, triB_2);
+	Mat affineReverseB = affine_transform(triB_2, triA_2);
+	Mat affinePartialB = get_affine_intermediate(affineB, t);
 	Mat maskA_1 = cv::Mat::zeros(xDim, yDim, CV_8U);
 	Mat maskB_1 = cv::Mat::zeros(xDim, yDim, CV_8U);
 	Mat maskA_2 = cv::Mat::zeros(xDim, yDim, CV_8U);
@@ -242,23 +245,27 @@ void purple_mesh_test() {
 	imgRed.copyTo(tempImgA, maskA_1);
 	imgBlue.copyTo(tempImgB, maskB_1);
 
-	warpAffine(tempImgA, tempImgA, affinePartial, Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, affineReverse, Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, affinePartial, Size(xDim, yDim));
+	warpAffine(tempImgA, tempImgA, affinePartialA, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affineReverseA, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affinePartialA, Size(xDim, yDim));
 
 	addWeighted(tempImgA, t, tempImgB, 1 - t, 0.0, dst);
 	
-	/*
+	
+	Mat dst2 = Mat::zeros(xDim, yDim, CV_8U);
+	tempImgA = Mat::zeros(xDim, yDim, CV_8U);
+	tempImgB = Mat::zeros(xDim, yDim, CV_8U);
 	imgRed.copyTo(tempImgA, maskA_2);
 	imgBlue.copyTo(tempImgB, maskB_2);
 
-	warpAffine(tempImgA, tempImgA, affinePartial, Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, affineReverse, Size(xDim, yDim));
-	warpAffine(tempImgB, tempImgB, affinePartial, Size(xDim, yDim));
+	warpAffine(tempImgA, tempImgA, affinePartialB, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affineReverseB, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affinePartialB, Size(xDim, yDim));
 
+	addWeighted(tempImgA, t, tempImgB, 1 - t, 0.0, dst2);
 
-	addWeighted(tempImgA, t, tempImgB, 1 - t, 0.0, dst);
-	*/
+	addWeighted(dst, 1, dst2, 1, 0.0, dst);
+	
 	imshow("purple", dst);
 	waitKey(1);
 
