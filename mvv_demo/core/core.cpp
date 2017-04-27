@@ -271,27 +271,9 @@ int interpolate(MatchedGeometry g) {
 
 int danny_test() {
 
-	MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
-	/*
-	MatchedGeometry g = MatchedGeometry();
-	Rect sourceR = Rect(0, 0, 600, 600);
-	Rect targetR = Rect(0, 0, 600, 600);
-	vector<Vec6f> trianglesA = vector<Vec6f>();
-	vector<Vec6f> trianglesB = vector<Vec6f>();
-	trianglesA.push_back(Vec6f(0, 0, 100, 0, 155, 250));
-	trianglesA.push_back(Vec6f(100, 0, 155, 250, 300, 300));
-	trianglesB.push_back(Vec6f(50, 10, 140, 35, 169, 288));
-	trianglesB.push_back(Vec6f(140, 35, 169, 288, 432, 583));
-	g.sourceGeometry = GeometricSlice();
-	g.targetGeometry = GeometricSlice();
-	g.sourceGeometry.img = sourceR;
-	g.targetGeometry.img = targetR;
-	g.sourceGeometry.triangles = trianglesA;
-	g.targetGeometry.triangles = trianglesB;
-	*/
-
-	interpolate(geometry);
-
+	//MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
+	//interpolate(geometry);
+	purple_mesh_test();
 	return 0;
 }
 

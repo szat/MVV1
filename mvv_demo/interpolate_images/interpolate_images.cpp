@@ -168,3 +168,100 @@ void interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, 
 	cvCreateTrackbar2("Morph", "Adjust Window", &tInt, 100, onInterpolate, (void*)(&holder));
 	waitKey(0);
 }
+
+Mat get_affine_intermediate(Mat affine, float t) {
+	// parametrization
+	double a00 = 1 - t + t * affine.at<double>(0, 0);
+	double a01 = t * affine.at<double>(0, 1);
+	double b00 = t * affine.at<double>(0, 2);
+	double a10 = t * affine.at<double>(1, 0);
+	double a11 = 1 - t + t * affine.at<double>(1, 1);
+	double b01 = t * affine.at<double>(1, 2);
+	Mat affineIntermediate = (Mat_<double>(2, 3) << a00, a01, b00, a10, a11, b01);
+	return affineIntermediate;
+}
+
+void purple_mesh_test() {
+	int xDim = 600;
+	int yDim = 600;
+	Mat imgRed(xDim, yDim, CV_8UC3, Scalar(255, 0, 0));
+	Mat imgBlue(xDim, yDim, CV_8UC3, Scalar(0, 0, 255));
+	/*
+	imshow("red", imgRed);
+	waitKey(1);
+	imshow("blue", imgBlue);
+	waitKey(1);
+	*/
+
+	// use masks
+	float t = 0.5;
+
+	Vec6f triA_1 = Vec6f(10, 10, 40, 45, 21, 125);
+	Vec6f triB_1 = Vec6f(201, 242, 240, 255, 201, 293);
+	Vec6f triA_2 = Vec6f(300, 300, 400, 400, 400, 500);
+	Vec6f triB_2 = Vec6f(298, 311, 391, 421, 410, 550);
+	// get affine
+	Mat affine = affine_transform(triA_1, triB_1);
+	Mat affineReverse = affine_transform(triB_1, triA_1);
+	Mat affinePartial = get_affine_intermediate(affine, t);
+	Mat maskA_1 = cv::Mat::zeros(xDim, yDim, CV_8U);
+	Mat maskB_1 = cv::Mat::zeros(xDim, yDim, CV_8U);
+	Mat maskA_2 = cv::Mat::zeros(xDim, yDim, CV_8U);
+	Mat maskB_2 = cv::Mat::zeros(xDim, yDim, CV_8U);
+
+	Point ptsA_1[3] = {
+		Point(triA_1[0],triA_1[1]),
+		Point(triA_1[2],triA_1[3]),
+		Point(triA_1[4],triA_1[5]),
+	};
+	Point ptsB_1[3] = {
+		Point(triB_1[0],triB_1[1]),
+		Point(triB_1[2],triB_1[3]),
+		Point(triB_1[4],triB_1[5]),
+	};
+	Point ptsA_2[3] = {
+		Point(triA_2[0],triA_2[1]),
+		Point(triA_2[2],triA_2[3]),
+		Point(triA_2[4],triA_2[5]),
+	};
+	Point ptsB_2[3] = {
+		Point(triB_2[0],triB_2[1]),
+		Point(triB_2[2],triB_2[3]),
+		Point(triB_2[4],triB_2[5]),
+	};
+
+	fillConvexPoly(maskA_1, ptsA_1, 3, Scalar(1));
+	fillConvexPoly(maskB_1, ptsB_1, 3, Scalar(1));
+	fillConvexPoly(maskA_2, ptsA_2, 3, Scalar(1));
+	fillConvexPoly(maskB_2, ptsB_2, 3, Scalar(1));
+
+	Mat tempImgA = Mat::zeros(xDim, yDim, CV_8U);
+	Mat tempImgB = Mat::zeros(xDim, yDim, CV_8U);
+	Mat dst = Mat::zeros(xDim, yDim, CV_8U);
+	
+	imgRed.copyTo(tempImgA, maskA_1);
+	imgBlue.copyTo(tempImgB, maskB_1);
+
+	warpAffine(tempImgA, tempImgA, affinePartial, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affineReverse, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affinePartial, Size(xDim, yDim));
+
+	addWeighted(tempImgA, t, tempImgB, 1 - t, 0.0, dst);
+	
+	/*
+	imgRed.copyTo(tempImgA, maskA_2);
+	imgBlue.copyTo(tempImgB, maskB_2);
+
+	warpAffine(tempImgA, tempImgA, affinePartial, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affineReverse, Size(xDim, yDim));
+	warpAffine(tempImgB, tempImgB, affinePartial, Size(xDim, yDim));
+
+
+	addWeighted(tempImgA, t, tempImgB, 1 - t, 0.0, dst);
+	*/
+	imshow("purple", dst);
+	waitKey(1);
+
+
+	cout << "Purple mesh test";
+}
