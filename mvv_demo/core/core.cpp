@@ -263,7 +263,7 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	Mat currentMaskA = cv::Mat::zeros(yDim, xDim, CV_8UC1);
 	Mat currentMaskB = cv::Mat::zeros(yDim, xDim, CV_8UC1);
 
-	int numTriangles = trianglesA.size();
+	int numTriangles = trianglesA.size(); 
 	for (int i = 0; i < numTriangles; i++) {
 		currentMaskA = Mat::zeros(yDim, xDim, CV_8UC1);
 		currentMaskB = Mat::zeros(yDim, xDim, CV_8UC1);
@@ -274,10 +274,10 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 		Mat tempImgC = Mat::zeros(yDim, xDim, CV_8UC1);
 		imgA.copyTo(tempImgA, currentMaskA);
 		imgB.copyTo(tempImgB, currentMaskB);
-		warpAffine(tempImgA, tempImgA, affineForward[i], Size(xDim, yDim));
+		warpAffine(tempImgA, tempImgA, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
 		warpAffine(tempImgB, tempImgB, affineReverse[i], Size(xDim, yDim));
 		warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
-		addWeighted(tempImgB, tau, tempImgB, 1 - tau, 0.0, tempImgC);
+		addWeighted(tempImgA, tau, tempImgB, 1 - tau, 0.0, tempImgC);
 		addWeighted(tempImgC, 1, canvas, 1, 0.0, canvas);
 		// console output
 		cout << "Finished triangle " << i << "/" << numTriangles << endl;
@@ -315,7 +315,11 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
 	float tau = 0.6;
 
-	save_frame_at_tau(imgA, imgB, imgRect, affineForward, affineReverse, trianglesA, trianglesB, tau);
+	for (int i = 1; i < 10; i++) {
+		tau = (float)i * 0.1;
+		cout << "Getting for tau: " << tau << endl;
+		save_frame_at_tau(imgA, imgB, imgRect, affineForward, affineReverse, trianglesA, trianglesB, tau);
+	}
 
 	cout << "Amount of time for affine params: " << duration << endl;
 }
