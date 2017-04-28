@@ -5,11 +5,11 @@
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include <iostream>
 #include <vector>
 #include <ctime>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -25,6 +25,8 @@
 #define APPLICATION_NAME "MVV"
 #define COMPANY_NAME "NDim Inc."
 #define COPYRIGHT_YEAR 2017
+#define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
+#define NUM_THREADS 16
 
 using namespace std;
 using namespace cv;
@@ -82,8 +84,8 @@ int test_matching() {
 	}
 
 	//graphical_triangulation(imagePointsA, imageSizeA);
-	Subdiv2D subdiv = raw_triangulation(imagePointsA, imageSizeA);
-	display_triangulation(subdiv, imageSizeA);
+	//Subdiv2D subdiv = raw_triangulation(imagePointsA, imageSizeA);
+	//display_triangulation(subdiv, imageSizeA);
 
 
 	return 0;
@@ -93,33 +95,6 @@ void image_diagnostics(Mat img) {
 	Size size = img.size();
 	cout << "Image width: " << size.width << endl;
 	cout << "Image height: " << size.height << endl;
-}
-
-int triangulation_diagnostic() {
-	// This function takes two input images from two angles (rescaled to the same size)
-	// There will be a slider that controls the parameter t (0,1), so we can see the discrete triangulation shifts
-	string imagePathA = "david_1.jpg";
-	string imagePathB = "david_2.jpg";
-	string rootPath = "../data_store";
-
-	//Rect imageSizeA = getImageSize(imageA);
-	//Rect imageSizeB = getImageSize(imageB);
-
-	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
-	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
-
-	// Resize imageB so that is has the same size as imgA
-	cv::resize(imgB, imgB, imgA.size());
-
-	Rect imgSizeRectA = Rect(0, 0, imgA.size().width, imgA.size().height);
-	vector<vector<KeyPoint>> pointMatches = match_points_mat(imgA, imgB);
-	
-	vector<KeyPoint> imgPointsA = pointMatches[0];
-	vector<KeyPoint> imgPointsB = pointMatches[1];
-
-	triangulation_trackbar(imgPointsA, imgPointsB, imgSizeRectA);
-
-	return -1;
 }
 
 struct GeometricSlice {
@@ -133,15 +108,12 @@ struct MatchedGeometry {
 	GeometricSlice targetGeometry;
 	vector<int> trianglePriority;
 	vector<int> trapezoidPriority;
+	Size imageSize;
 };
 
-MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, Rect imgSizeRectA, Rect imgSizeRectB) {
-	if (imgPointsA.size() != imgPointsB.size()) {
-		throw "Matched points must have the same size (imgPointsA.size != imgPointsB.size)";
-	}
-
+MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, Size size) {
 	// triangulate source interior
-	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, imgSizeRectA);
+	vector<Vec6f> trianglesA = construct_triangles(imgPointsA, size);
 
 	// triangulate target interior
 	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
@@ -149,7 +121,6 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	// Need a function to render triangles output
 	// detect edges of source (convex hull)
 	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
-
 	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
 	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
 
@@ -158,8 +129,9 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 
 	// construct target and source trapezoids  
 	// use the same Key/Value mapping from triangulate_target
-	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgSizeRectA, centerOfMassA);
-	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgSizeRectB, centerOfMassB);
+	Rect imgBounds = Rect(0, 0, size.width, size.height);
+	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgBounds, centerOfMassA);
+	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgBounds, centerOfMassB);
 
 	// calculate priority (triangles)
 	vector<int> interiorPriority = calculate_triangle_priority(trianglesB);
@@ -170,16 +142,15 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	MatchedGeometry matchedResult = MatchedGeometry();
 	GeometricSlice source = GeometricSlice();
 	GeometricSlice target = GeometricSlice();
-	source.img = imgSizeRectA;
 	source.triangles = trianglesA;
 	source.trapezoids = trapezoidsA;
-	target.img = imgSizeRectB;
 	target.triangles = trianglesB;
 	target.trapezoids = trapezoidsB;
 	matchedResult.sourceGeometry = source;
 	matchedResult.targetGeometry = target;
 	matchedResult.trianglePriority = interiorPriority;
 	matchedResult.trapezoidPriority = exteriorPriority;
+	matchedResult.imageSize = size;
 	return matchedResult;
 }
 
@@ -197,8 +168,8 @@ MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPa
 	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
 	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
 
-	Rect imgSizeRectA = Rect(0, 0, imgA.size().width, imgA.size().height);
-	Rect imgSizeRectB = Rect(0, 0, imgB.size().width, imgB.size().height);
+	Size desiredSize = imgB.size();
+	resize(imgA, imgA, desiredSize);
 
 	vector<vector<KeyPoint>> pointMatches = match_points_mat(imgA, imgB);
 
@@ -207,28 +178,8 @@ MatchedGeometry read_matched_points_from_file(string sourcePath, string targetPa
 	vector<Point2f> imgPointsA = convert_key_points(imgKeyPointsA);
 	vector<Point2f> imgPointsB = convert_key_points(imgKeyPointsB);
 
-	MatchedGeometry geometry = create_matched_geometry(imgPointsA, imgPointsB, imgSizeRectA, imgSizeRectB);
+	MatchedGeometry geometry = create_matched_geometry(imgPointsA, imgPointsB, desiredSize);
 	return geometry;
-}
-
-
-int test_5_points() {
-	Rect imgRectA = Rect(0, 0, 500, 600);
-	Rect imgRectB = Rect(0, 0, 500, 600);
-
-	vector<Point2f> pointsA = vector<Point2f>();
-	vector<Point2f> pointsB = vector<Point2f>();
-
-	pointsA.push_back(Point2f(200, 300));
-	pointsA.push_back(Point2f(400, 300));
-	pointsA.push_back(Point2f(300, 500));
-
-	pointsB.push_back(Point2f(190.213, 313.219));
-	pointsB.push_back(Point2f(412.092, 290.012));
-	pointsB.push_back(Point2f(329, 523.3234));
-
-	MatchedGeometry m = create_matched_geometry(pointsA, pointsB, imgRectA, imgRectB);
-	return -1;
 }
 
 void render_matched_geometry(GeometricSlice slice, string windowName) {
@@ -273,15 +224,6 @@ void render_matched_geometry(GeometricSlice slice, string windowName) {
 
 }
 
-int interpolation_preprocessing() {
-	// 
-	return -5;
-}
-
-void render_frame_t() {
-
-}
-
 vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, double a00, double a01, double a10, double a11, double b00, double b01) {
 	vector<Point2f> paramPoints = vector<Point2f>();
 	for (int i = 0; i < 3; i++) {
@@ -292,55 +234,104 @@ vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, doub
 	return paramPoints;
 }
 
-int test_interpolation() {
-	// in interpolation preprocessing, we must:
-	// calculate the A,B matrices (i.e. the ) for EACH set of triangles
-
-	// in render_frame_t, we (at the beginning) calculate the A(t), B(t) parametrized matrices for each triangle at this step t
-	// render triangle-by-triangle
-
-	// assuming we have affine transformations that are parametrized, how exactly do we mesh the images together?????
-
-	// we gonna try this with 1 triangle
-
-	Vec6f tri1 = Vec6f(0, 0, 100, 0, 100, 100);
-	Vec6f tri2 = Vec6f(50, 0, 150, 40, 155, 250);
-
-	Mat aff = affine_transform(tri1, tri2);
-	Size size = aff.size();
-
-	double a00 = aff.at<double>(0, 0);
-	double a01 = aff.at<double>(0, 1);
-	double b00 = aff.at<double>(0, 2);
-	double a10 = aff.at<double>(1, 0);
-	double a11 = aff.at<double>(1, 1);
-	double b01 = aff.at<double>(1, 2);
-
-	vector<Point2f> tri1points = vector<Point2f>();
-	tri1points.push_back(Point2f(0, 0));
-	tri1points.push_back(Point2f(100, 0));
-	tri1points.push_back(Point2f(100, 100));
-
-	int points = 3;
-	vector<Point2f> points1 = parametrized_interpolation(0, tri1points, a00, a01, a10, a11, b00, b01);
-	vector<Point2f> points2 = parametrized_interpolation(0.5, tri1points, a00, a01, a10, a11, b00, b01);
-	vector<Point2f> points3 = parametrized_interpolation(1, tri1points, a00, a01, a10, a11, b00, b01);
-
+int interpolate(MatchedGeometry g) {
+	/*
+	vector<vector<vector<double>>> affine = interpolation_preprocessing(g.sourceGeometry.triangles, g.targetGeometry.triangles);
+	interpolation_trackbar(g.sourceGeometry.triangles, g.targetGeometry.triangles, g.sourceGeometry.img, g.targetGeometry.img, affine);
+	*/
 	return -1;
 }
 
-int danny_test() {
-	//test_5_points();
-	//MatchedGeometry geometry = read_matched_points_from_file("david_1.jpg", "david_2.jpg");
-	//render_matched_geometry(geometry.sourceGeometry, "Test window 1");
-	//render_matched_geometry(geometry.targetGeometry, "Test window 2");
 
-	//Vec6f testTri = Vec6f(0, 0, 100, 100, 0, 100);
-	//float result = get_triangle_area(testTri);
+void set_mask_to_triangle(Mat &mask, Vec6f t) {
+	Point pts[3] = {
+		Point(t[0],t[1]),
+		Point(t[2],t[3]),
+		Point(t[4],t[5]),
+	};
+	fillConvexPoly(mask, pts, 3, Scalar(1));
+}
 
-	test_interpolation();
+void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
+	vector<Mat> & affineForward, vector<Mat> & affineReverse, 
+	vector<Vec6f> & trianglesA, vector<Vec6f> & trianglesB, float tau) {
+
+	int xDim = imgRect.width;
+	int yDim = imgRect.height;
 	
+	Mat canvas = Mat::zeros(yDim, xDim, CV_8UC1);
 
+	// get affine
+	Mat currentMaskA = cv::Mat::zeros(yDim, xDim, CV_8UC1);
+	Mat currentMaskB = cv::Mat::zeros(yDim, xDim, CV_8UC1);
+
+	int numTriangles = trianglesA.size(); 
+	for (int i = 0; i < numTriangles; i++) {
+		currentMaskA = Mat::zeros(yDim, xDim, CV_8UC1);
+		currentMaskB = Mat::zeros(yDim, xDim, CV_8UC1);
+		set_mask_to_triangle(currentMaskA, trianglesA[i]);
+		set_mask_to_triangle(currentMaskB, trianglesB[i]);
+		Mat tempImgA = Mat::zeros(yDim, xDim, CV_8UC1);
+		Mat tempImgB = Mat::zeros(yDim, xDim, CV_8UC1);
+		Mat tempImgC = Mat::zeros(yDim, xDim, CV_8UC1);
+		imgA.copyTo(tempImgA, currentMaskA);
+		imgB.copyTo(tempImgB, currentMaskB);
+		warpAffine(tempImgA, tempImgA, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
+		warpAffine(tempImgB, tempImgB, affineReverse[i], Size(xDim, yDim));
+		warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
+		addWeighted(tempImgA, tau, tempImgB, 1 - tau, 0.0, tempImgC);
+		addWeighted(tempImgC, 1, canvas, 1, 0.0, canvas);
+	}
+
+
+	imshow("purple", canvas);
+	waitKey(1);
+
+	
+	cout << "mesh test";
+
+}
+
+void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) {
+
+	
+	string rootPath = "../data_store";
+	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
+	Mat imgB = cv::imread(rootPath + "/" + imagePathB, IMREAD_GRAYSCALE);
+	Size desiredSize = imgB.size();
+	resize(imgA, imgA, desiredSize);
+
+	Rect imgRect = Rect(0, 0, desiredSize.width, desiredSize.height);
+
+	vector<Vec6f> trianglesA = g.sourceGeometry.triangles;
+	vector<Vec6f> trianglesB = g.targetGeometry.triangles;
+
+	// Forwards and reverse affine transformation parameters.
+	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
+	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
+	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
+	float tau = 0.6;
+
+	for (int i = 1; i < 10; i++) {
+		std::clock_t start;
+		double duration;
+		start = clock();
+		tau = (float)i * 0.1;
+		cout << "Getting for tau: " << tau << endl;
+		save_frame_at_tau(imgA, imgB, imgRect, affineForward, affineReverse, trianglesA, trianglesB, tau);
+		duration = (clock() - start) / (double)CLOCKS_PER_MS;
+		cout << "Amount of time for tau = " << tau << " : " << duration << endl;
+	}
+
+
+}
+
+int danny_test() {
+	string img1path = "david_1.jpg";
+	string img2path = "david_2.jpg";
+	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
+	interpolate_frame(geometry, img1path, img2path);
+	//purple_mesh_test();
 	return 0;
 }
 

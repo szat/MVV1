@@ -159,9 +159,10 @@ Subdiv2D graphical_triangulation(vector<Point2f> points, Rect sourceImageBoundin
 	return subdiv;
 }
 
-Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) {
+Subdiv2D raw_triangulation(vector<Point2f> points, Size size) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
-	Subdiv2D subdiv(sourceImageBoundingBox);
+	Rect boundingBox = Rect(0, 0, size.width, size.height);
+	Subdiv2D subdiv(boundingBox);
 	int numPoints = points.size();
 
 	for (int i = 0; i < numPoints; i++) {
@@ -171,11 +172,11 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) 
 	return subdiv;
 }
 
-vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Rect sourceImageBounds) {
+vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Size sourceSize) {
 	// Constructing triangulation of first image
 
 	Subdiv2D subdiv;
-	subdiv = raw_triangulation(sourceImagePoints, sourceImageBounds);
+	subdiv = raw_triangulation(sourceImagePoints, sourceSize);
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
 
@@ -221,139 +222,6 @@ void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
 	draw_subdiv(img, subdiv, delaunay_color);
 	imshow(win, img);
 	waitKey(1);
-}
-
-vector<Vec6f> test_interface()
-{
-	string input = "";
-	int numberPoints = 0;
-
-	while (true) {
-		cout << "Please enter the number of feature points you wish to test: ";
-		getline(cin, input);
-
-		stringstream myStream(input);
-		if (myStream >> numberPoints)
-			break;
-		cout << "Invalid number, please try again." << endl;
-	}
-
-	char graphics = { 0 };
-	bool graphicsMode = false;
-
-	while (true) {
-		cout << "Graphical mode? (y/n)" << endl;
-		getline(cin, input);
-
-		if (input.length() == 1) {
-			graphics = input[0];
-			if (graphics == 'y' || graphics == 'Y') {
-				graphicsMode = true;
-				break;
-			}
-			else if (graphics == 'n' || graphics == 'N') {
-				graphicsMode = false;
-				break;
-			}
-		}
-
-		cout << "Invalid character, please try again." << endl;
-	}
-
-	cout << "Running delaunay triangulation on " << numberPoints << " vertices." << endl;
-
-	Rect rect(0, 0, 600, 600);
-	vector<Point2f> points = get_n_random_points(rect, numberPoints);
-
-	Subdiv2D subdiv;
-	string processMessage;
-
-	// timing triangulation process
-	std::clock_t start;
-	double duration;
-	start = clock();
-	subdiv = raw_triangulation(points, rect);
-
-	if (graphicsMode) {
-		display_triangulation(subdiv, rect);
-		processMessage = "Graphical triangulation time: ";
-	}
-	else {
-		processMessage = "Raw triangulation time: ";
-	}
-	// duration of raw or visual triangulation.
-	duration = (clock() - start) / (double)CLOCKS_PER_MS;
-	cout << processMessage << duration << "ms" << "\n";
-
-	cout << "Completed triangulation on source image.\n";
-
-	// maybe modify the subdiv to eliminate edges and vertrtices before making trianges???
-
-	vector<Vec6f> triangles = vector<Vec6f>();
-	subdiv.getTriangleList(triangles);
-	return triangles;
-}
-
-struct trackbarTriangleMorph {
-	Rect imageSize;
-	int morph;
-	vector<KeyPoint> sourcePoints;
-	vector<KeyPoint> targetPoints;
-};
-
-vector<Point2f> construct_intermediate_points(vector<KeyPoint> sourcePoints, vector<KeyPoint> targetPoints, int morph) {
-	float morphFactor = (float)morph / 100;
-	vector<Point2f> intermediate = vector<Point2f>();
-
-	int numPoints = sourcePoints.size();
-
-	for (int i = 0; i < numPoints; i++) {
-		Point2f srcPoint = sourcePoints[i].pt;
-		Point2f tarPoint = targetPoints[i].pt;
-		float x_0 = srcPoint.x;
-		float x_1 = tarPoint.x;
-		float y_0 = srcPoint.y;
-		float y_1 = tarPoint.y;
-
-		float x_diff = x_1 - x_0;
-		float y_diff = y_1 - y_0;
-
-		float x_morph = x_0 + x_diff * morphFactor;
-		float y_morph = y_0 + y_diff * morphFactor;
-
-		Point2f intermediatePoint = Point2f(x_morph, y_morph);
-		intermediate.push_back(intermediatePoint);
-	}
-	return intermediate;
-}
-
-static void onChangeTriangleMorph(int morph, void *userdata) //void* mean that it is a pointer of unknown type
-{
-	(*((trackbarTriangleMorph*)userdata)).morph = morph;
-
-	vector<KeyPoint> srcPoints = (*((trackbarTriangleMorph*)userdata)).sourcePoints;
-	vector<KeyPoint> tarPoints = (*((trackbarTriangleMorph*)userdata)).targetPoints;
-	Rect imgSize = (*((trackbarTriangleMorph*)userdata)).imageSize;
-	vector<Point2f> interPoints = construct_intermediate_points(srcPoints, tarPoints, morph);
-	Subdiv2D subdiv = raw_triangulation(interPoints, imgSize);
-	display_triangulation(subdiv, imgSize);
-}
-
-int triangulation_trackbar(vector<KeyPoint> sourcePoints, vector<KeyPoint> targetPoints, Rect imgSize)
-{
-	trackbarTriangleMorph holder;
-	holder.sourcePoints = sourcePoints;
-	holder.targetPoints = targetPoints;
-	holder.imageSize = imgSize;
-	holder.morph = 0;
-
-	int morph = 0;
-
-	namedWindow("Adjust Window");
-	cvCreateTrackbar2("Morph", "Adjust Window", &morph, 100, onChangeTriangleMorph, (void*)(&holder));
-	waitKey(0);
-
-	return 0;
 }
 
 vector<Point2f> convert_key_points(vector<KeyPoint> keyPoints) {
