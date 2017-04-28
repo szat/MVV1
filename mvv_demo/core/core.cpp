@@ -356,11 +356,15 @@ int adrian_test() {
 	//test_FAST("david_1.jpg", "david_2.jpg");
 	//test_ORB("david_1.jpg", "david_2.jpg");
 	//test_affine_ORB("david_1.jpg", "david_2.jpg");
+
 	//test_kmeans("david_1.jpg", "david_2.jpg");
 	//vector<KeyPoint> bs1;
 	//vector<KeyPoint> bs2;
 	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", bs1, bs2);
-	test_nbh_first("david_1.jpg", "david_2.jpg");
+	//test_nbh_first("david_1.jpg", "david_2.jpg");
+	//test_nbh_grow("david_1.jpg", "david_2.jpg");
+	//test_one_nbh("david_1.jpg", "david_2.jpg");
+	test_akaze_harris_global_harris_local("david_1.jpg", "david_2.jpg");
 	return 0;
 }
 

@@ -78,6 +78,43 @@ void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, c
 	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kpts1_out.size() << " features." << endl;
 }
 
+void ransac_script_against_hom(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
+	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
+
+	vector<Point2f> keysImage1;
+	vector<Point2f> keysImage2;
+	vector<DMatch> good_matches;
+
+	int nbMatches = kpts1_in.size();
+	for (int i = 0; i < nbMatches; i++) {
+		keysImage1.push_back(kpts1_in.at(i).pt);
+		keysImage2.push_back(kpts2_in.at(i).pt);
+	}
+
+	//Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC, ball_radius);
+	cout << "RANSAC found the homography." << endl;
+
+	nbMatches = kpts1_in.size();
+	for (int i = 0; i < nbMatches; i++) {
+		Mat col = Mat::ones(3, 1, CV_64F);// , CV_32F);
+		col.at<double>(0) = kpts1_in[i].pt.x;
+		col.at<double>(1) = kpts1_in[i].pt.y;
+
+		//col = H * col;
+		col = homography_in * col;
+		col /= col.at<double>(2); //because you are in projective space
+		double dist = sqrt(pow(col.at<double>(0) - kpts2_in[i].pt.x, 2) + pow(col.at<double>(1) - kpts2_in[i].pt.y, 2));
+
+		if (dist < inlier_thresh) {
+			int new_i = static_cast<int>(kpts1_out.size());
+			kpts1_out.push_back(kpts1_in[i]);
+			kpts2_out.push_back(kpts2_in[i]);
+		}
+	}
+
+	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
+}
+
 void ransac_script(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
 
@@ -92,6 +129,8 @@ void ransac_script(const float ball_radius, const float inlier_thresh, const vec
 	}
 
 	Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC, ball_radius);
+	homography_out = H;
+
 	cout << "RANSAC found the homography." << endl;
 
 	nbMatches = kpts1_in.size();
@@ -831,7 +870,127 @@ void ransac_filter(std::vector<cv::KeyPoint> kptsDomain, std::vector<cv::KeyPoin
 
 }
 
-void test_nbh_first(std::string imagePathA, std::string imagePathB) {
+void test_akaze_harris_global_harris_local(std::string imagePathA, std::string imagePathB) {
+	//First Apply Akaze
+	//Second do a global matching with many GFTT points, i.e. ratio and then RANSAC using the AKAZE homography
+	//Do a nbh growth
+
+	//this code take the akaze matched keypoints in two images, and tries does one nbh growth (one time)
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+	Mat img1Display = imread(address);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+	Mat img2Display = imread(address);
+
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
+
+	vector<KeyPoint> kpts1_step1;
+	vector<KeyPoint> kpts2_step1;
+	Mat desc1_step1;
+	Mat desc2_step1;
+	akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
+
+	vector<KeyPoint> kpts1_step2;
+	vector<KeyPoint> kpts2_step2;
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+
+	Mat homography;
+	vector<KeyPoint> kpts1_step3;
+	vector<KeyPoint> kpts2_step3;
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+	cout << "kpts1_step3 size is " << kpts1_step3.size() << endl;
+	cout << "kpts2_step3 size is " << kpts2_step3.size() << endl;
+
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(20000);
+	detectorGFTT->setQualityLevel(0.00001);
+	detectorGFTT->setMinDistance(1);
+	detectorGFTT->setBlockSize(3);
+	detectorGFTT->setHarrisDetector(true);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> kpts1_new;
+	detectorGFTT->detect(img1, kpts1_new);
+	cout << "GFTT found " << kpts1_new.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1_new;
+	extractorORB->compute(img1, kpts1_new, desc1_new);
+
+	//Find features
+	vector<KeyPoint> kpts2_new;
+	detectorGFTT->detect(img2, kpts2_new);
+	cout << "GFTT found " << kpts2_new.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2_new;
+	extractorORB->compute(img2, kpts2_new, desc2_new);
+
+	cout << "Building kdtree1" << endl;
+	vector<KeyPoint> kptsKnn1;
+	vector<Point2f> ptsKnn1;
+	for (int i = 0; i < kpts1_new.size(); i++) ptsKnn1.push_back(kpts1_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+
+	cout << "Building kdtree2" << endl;
+	vector<KeyPoint> kptsKnn2;
+	vector<Point2f> ptsKnn2;
+	for (int i = 0; i < kpts2_new.size(); i++) ptsKnn2.push_back(kpts2_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams2;
+	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+
+	//Match the keypoints obtained from Harris globally
+	
+	vector<KeyPoint> kpts1_global;
+	vector<KeyPoint> kpts2_global;
+	ratio_matcher_script(ratio, kpts1_new, kpts2_new, desc1_new, desc2_new, kpts1_global, kpts2_global);
+
+	vector<KeyPoint> kpts1_global_ransac;
+	vector<KeyPoint> kpts2_global_ransac;
+	ransac_script(ball_radius, inlier_thr, kpts1_global, kpts2_global, homography, kpts1_global_ransac, kpts2_global_ransac);
+	cout << "kpts1_global_ransac size is " << kpts1_global_ransac.size() << endl;
+	cout << "kpts2_global_ransac size is " << kpts1_global_ransac.size() << endl;
+
+	vector<KeyPoint> kpts1_all = kpts1_step3; 
+	for (int i = 0; i < kpts1_global_ransac.size(); i++) kpts1_all.push_back(kpts1_global_ransac.at(i));
+	vector<KeyPoint> kpts2_all = kpts2_step3;
+	for (int i = 0; i < kpts2_global_ransac.size(); i++) kpts2_all.push_back(kpts2_global_ransac.at(i));
+
+	cout << "kpts1_all size is " << kpts1_all.size() << endl;
+	cout << "kpts2_all size is " << kpts2_all.size() << endl;
+
+	//visualize the matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kpts1_step3.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+	drawMatches(img1Display, kpts1_all, img2Display, kpts2_all, matchesIndexTrivial, img1to2);
+	imshow("Matches", img1to2);
+	waitKey(0);
+
+
+
+}
+
+void test_one_nbh(std::string imagePathA, std::string imagePathB) {
+	//this code take the akaze matched keypoints in two images, and tries does one nbh growth (one time)
 	cout << "Welcome to match_points_2 testing unit!" << endl;
 	string address = "..\\data_store\\" + imagePathA;
 	string input = "";
@@ -883,7 +1042,199 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
 	detectorGFTT->setMaxFeatures(20000);
 	detectorGFTT->setQualityLevel(0.00001);
-	detectorGFTT->setMinDistance(2);
+	detectorGFTT->setMinDistance(5);
+	detectorGFTT->setBlockSize(5);
+	detectorGFTT->setHarrisDetector(false);
+	detectorGFTT->setK(0.2);
+
+	//Find features
+	vector<KeyPoint> kpts1_new;
+	detectorGFTT->detect(img1, kpts1_new);
+	cout << "GFTT found " << kpts1_new.size() << " feature points in image A." << endl;
+
+	//Compute descriptors
+	Ptr<DescriptorExtractor> extractorORB = ORB::create();
+	Mat desc1;
+	extractorORB->compute(img1, kpts1_new, desc1);
+
+	//Find features
+	vector<KeyPoint> kpts2_new;
+	detectorGFTT->detect(img2, kpts2_new);
+	cout << "GFTT found " << kpts2_new.size() << " feature points in image B." << endl;
+
+	//Compute descriptors
+	Mat desc2;
+	extractorORB->compute(img2, kpts2_new, desc2);
+
+	cout << "Building kdtree1" << endl;
+	vector<KeyPoint> kptsKnn1;
+	vector<Point2f> ptsKnn1;
+	for (int i = 0; i < kpts1_new.size(); i++) ptsKnn1.push_back(kpts1_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams1;
+	cv::flann::Index kdtree1(cv::Mat(ptsKnn1).reshape(1), indexParams1);
+
+	cout << "Building kdtree2" << endl;
+	vector<KeyPoint> kptsKnn2;
+	vector<Point2f> ptsKnn2;
+	for (int i = 0; i < kpts2_new.size(); i++) ptsKnn2.push_back(kpts2_new.at(i).pt);
+	cv::flann::KDTreeIndexParams indexParams2;
+	cv::flann::Index kdtree2(cv::Mat(ptsKnn2).reshape(1), indexParams2);
+
+	vector<KeyPoint> kpts1_all = kpts1_step3;
+	vector<KeyPoint> kpts2_all = kpts2_step3;
+
+	cout << "Getting nbh1" << endl;
+	float radius1 = 100;
+	int cardNbh1 = 100; //max number of points in the radius
+	vector<int> indicesNbh1;
+	vector<float> distsNbh1;
+	vector<float> centerNbh1;
+	centerNbh1.push_back(kpts1_step3.at(0).pt.x);
+	centerNbh1.push_back(kpts1_step3.at(0).pt.y);
+	kdtree1.radiusSearch(centerNbh1, indicesNbh1, distsNbh1, radius1, cardNbh1, cv::flann::SearchParams(64));
+	while (!distsNbh1.empty() && (distsNbh1.back() == 0)) {
+		distsNbh1.pop_back();
+		indicesNbh1.pop_back();
+	}
+	cout << "nbh2 has size " << indicesNbh1.size() << endl;
+
+	cout << "Getting nbh2" << endl;
+	float radius2 = 100;
+	int cardNbh2 = 100; //max number of points in the radius
+	vector<int> indicesNbh2;
+	vector<float> distsNbh2;
+	vector<float> centerNbh2;
+	centerNbh2.push_back(kpts2_step3.at(0).pt.x);
+	centerNbh2.push_back(kpts2_step3.at(0).pt.y);
+	kdtree2.radiusSearch(centerNbh2, indicesNbh2, distsNbh2, radius2, cardNbh2, cv::flann::SearchParams(64));
+	while (!distsNbh2.empty() && (distsNbh2.back() == 0)) { //Guard against empty?
+		distsNbh2.pop_back();
+		indicesNbh2.pop_back();
+	}
+	cout << "nbh2 has size " << indicesNbh2.size() << endl;
+
+	vector<KeyPoint> nbh1;
+	Mat descNbh1;
+	for (int i = 0; i < indicesNbh1.size(); i++) {
+		int index = indicesNbh1.at(i);
+		nbh1.push_back(kpts1_new.at(index));
+		Mat descRow = desc1.row(index);
+		descNbh1.push_back(descRow);
+	}
+	cout << "nbh1 has size " << nbh1.size() << endl;
+
+	vector<KeyPoint> nbh2;
+	Mat descNbh2;
+	for (int i = 0; i < indicesNbh2.size(); i++) {
+		int index = indicesNbh2.at(i);
+		nbh2.push_back(kpts2_new.at(index));
+		Mat descRow = desc2.row(index);
+		descNbh2.push_back(descRow);
+	}
+
+	//Visualize the points ///VVVVVVVVVVVVVVVVVVVVVVVVVV
+	namedWindow("Img1", WINDOW_AUTOSIZE);
+	namedWindow("Img2", WINDOW_AUTOSIZE);
+	int r = 3;
+	RNG rng(12345); //random number generator
+
+	for (size_t i = 0; i < nbh1.size(); i++) {
+		drawMarker(img1Display, nbh1.at(i).pt, cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), MARKER_CROSS, 10, 1);
+		//circle(img1Display, nbh1.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	for (size_t i = 0; i < kpts1_step3.size(); i++) {
+		circle(img1Display, kpts1_step3.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Img1", img1Display);
+
+	for (size_t i = 0; i < nbh2.size(); i++) {
+		drawMarker(img2Display, nbh2.at(i).pt, cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), MARKER_CROSS, 10, 1);
+		//circle(img2Display, nbh2.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	for (size_t i = 0; i < kpts2_step3.size(); i++) {
+		circle(img2Display, kpts2_step3.at(i).pt, r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)), -1, 8, 0);
+	}
+	imshow("Img2", img2Display);
+	waitKey(0);
+	///VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+
+	//Match the nbhs
+	vector<KeyPoint> kpts1_ratio;
+	vector<KeyPoint> kpts2_ratio;
+	ratio_matcher_script(0.8f, nbh1, nbh2, descNbh1, descNbh2, kpts1_ratio, kpts2_ratio);
+
+	for (int i = 0; i < kpts1_ratio.size(); i++) {
+		kpts1_all.push_back(kpts1_ratio.at(i));
+		kpts2_all.push_back(kpts2_ratio.at(i));
+	}
+	//Add the new points to the old points
+
+	//Draw matches
+	//namedWindow("Concatenated Matching", WINDOW_AUTOSIZE);
+	//visualize the matches
+	Mat img1to2_concat;
+	vector<DMatch> matchesIndexTrivial_concat;
+	for (int i = 0; i < kpts1_all.size(); i++) matchesIndexTrivial_concat.push_back(DMatch(i, i, 0));
+	drawMatches(img1Display, kpts1_all, img2Display, kpts2_all, matchesIndexTrivial_concat, img1to2_concat);
+	imshow("Matches", img1to2_concat);
+	waitKey(0);
+
+}
+
+void test_nbh_first(std::string imagePathA, std::string imagePathB) {
+	//this code take the akaze matched keypoints in two images, and tries does one nbh growth (one time)
+	cout << "Welcome to match_points_2 testing unit!" << endl;
+	string address = "..\\data_store\\" + imagePathA;
+	string input = "";
+	ifstream infile1;
+	infile1.open(address.c_str());
+
+	Mat img1 = imread(address, IMREAD_GRAYSCALE);
+	Mat img1Display = imread(address);
+
+	address = "..\\data_store\\" + imagePathB;
+	input = "";
+	ifstream infile2;
+	infile2.open(address.c_str());
+
+	Mat img2 = imread(address, IMREAD_GRAYSCALE);
+	Mat img2Display = imread(address);
+
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
+
+	vector<KeyPoint> kpts1_step1;
+	vector<KeyPoint> kpts2_step1;
+	Mat desc1_step1;
+	Mat desc2_step1;
+	akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
+
+	vector<KeyPoint> kpts1_step2;
+	vector<KeyPoint> kpts2_step2;
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+
+	Mat homography;
+	vector<KeyPoint> kpts1_step3;
+	vector<KeyPoint> kpts2_step3;
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+	cout << "kpts1_step3 size is " << kpts1_step3.size() << endl;
+	cout << "kpts2_step3 size is " << kpts2_step3.size() << endl;
+
+	//visualize the matches
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kpts1_step3.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+	drawMatches(img1Display, kpts1_step3, img2Display, kpts2_step3, matchesIndexTrivial, img1to2);
+	imshow("Matches", img1to2);
+	waitKey(0);
+
+	Ptr<GFTTDetector> detectorGFTT = GFTTDetector::create();
+	detectorGFTT->setMaxFeatures(20000);
+	detectorGFTT->setQualityLevel(0.00001);
+	detectorGFTT->setMinDistance(5);
 	detectorGFTT->setBlockSize(5);
 	detectorGFTT->setHarrisDetector(false);
 	detectorGFTT->setK(0.2);
@@ -927,8 +1278,8 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 	for (int k = 0; k < kpts1_step3.size(); k++) {
 		cout << "itaration " << k << endl;
 		cout << "Getting nbh1" << endl;
-		float radius1 = 300;
-		int cardNbh1 = 100; //max number of points in the radius
+		float radius1 = 2000;
+		int cardNbh1 = 2000; //max number of points in the radius
 		vector<int> indicesNbh1;
 		vector<float> distsNbh1;
 		vector<float> centerNbh1;
@@ -942,8 +1293,8 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 		cout << "nbh2 has size " << indicesNbh1.size() << endl;
 
 		cout << "Getting nbh2" << endl;
-		float radius2 = 300;
-		int cardNbh2 = 100; //max number of points in the radius
+		float radius2 = 2000;
+		int cardNbh2 = 2000; //max number of points in the radius
 		vector<int> indicesNbh2;
 		vector<float> distsNbh2;
 		vector<float> centerNbh2;
@@ -984,7 +1335,6 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 		cout << "initial matching size " << kpts1_step3.size() << ", second matching size " << kpts1_ratio.size() << ", concat matching size " << kpts1_all.size() << endl;
 		cout << "initial matching size " << kpts2_step3.size() << ", second matching size " << kpts2_ratio.size() << ", concat matching size " << kpts2_all.size() << endl;
 	}//end for
-
 
 	cout << "Getting nbh1" << endl;
 	float radius1 = 100;
@@ -1067,9 +1417,6 @@ void test_nbh_first(std::string imagePathA, std::string imagePathB) {
 	ratio_matcher_script(0.8f, nbh1, nbh2, descNbh1, descNbh2, kpts1_ratio, kpts2_ratio);
 
 	//Add the new points to the old points
-
-
-
 
 	//Draw matches
 	//namedWindow("Concatenated Matching", WINDOW_AUTOSIZE);

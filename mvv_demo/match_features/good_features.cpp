@@ -156,7 +156,7 @@ int trackbarCorners(string imagePath, vector<Point2f>& corners)
 	int maxCorners = 1000;
 	int blockSize = 3;
 	double k = 0.04;
-	bool useHarrisDetector = false;
+	bool useHarrisDetector = true;
 
 	dataTrackbarCorners holder;
 	holder.image = src1;

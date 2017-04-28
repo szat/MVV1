@@ -50,8 +50,13 @@ void ransac_filter(std::vector<cv::KeyPoint> kptsDomain, std::vector<cv::KeyPoin
 
 void test_nbh_first(std::string imagePathA, std::string imagePathB);
 
+void test_one_nbh(std::string imagePathA, std::string imagePathB);
+
+void test_akaze_harris_global_harris_local(std::string imagePathA, std::string imagePathB);
+
 std::vector<std::vector<cv::KeyPoint>> match_points_mat(cv::Mat img1, cv::Mat img2);
 
 std::vector<std::vector<cv::KeyPoint>> test_match_points(std::string imagePathA, std::string imagePathB);
 
 std::vector<std::vector<cv::KeyPoint>> test_match_points_2(std::string imagePathA, std::string imagePathB);
+
