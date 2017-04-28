@@ -5,11 +5,11 @@
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include <iostream>
 #include <vector>
 #include <ctime>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -26,6 +26,7 @@
 #define COMPANY_NAME "NDim Inc."
 #define COPYRIGHT_YEAR 2017
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
+#define NUM_THREADS 16
 
 using namespace std;
 using namespace cv;
@@ -241,6 +242,7 @@ int interpolate(MatchedGeometry g) {
 	return -1;
 }
 
+
 void set_mask_to_triangle(Mat &mask, Vec6f t) {
 	Point pts[3] = {
 		Point(t[0],t[1]),
@@ -251,8 +253,8 @@ void set_mask_to_triangle(Mat &mask, Vec6f t) {
 }
 
 void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
-	vector<Mat> affineForward, vector<Mat> affineReverse, 
-	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
+	vector<Mat> & affineForward, vector<Mat> & affineReverse, 
+	vector<Vec6f> & trianglesA, vector<Vec6f> & trianglesB, float tau) {
 
 	int xDim = imgRect.width;
 	int yDim = imgRect.height;
@@ -279,8 +281,6 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 		warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
 		addWeighted(tempImgA, tau, tempImgB, 1 - tau, 0.0, tempImgC);
 		addWeighted(tempImgC, 1, canvas, 1, 0.0, canvas);
-		// console output
-		cout << "Finished triangle " << i << "/" << numTriangles << endl;
 	}
 
 
@@ -293,9 +293,7 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 }
 
 void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) {
-	std::clock_t start;
-	double duration;
-	start = clock();
+
 	
 	string rootPath = "../data_store";
 	Mat imgA = cv::imread(rootPath + "/" + imagePathA, IMREAD_GRAYSCALE);
@@ -311,17 +309,21 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 	// Forwards and reverse affine transformation parameters.
 	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
-	duration = (clock() - start) / (double)CLOCKS_PER_MS;
 	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
 	float tau = 0.6;
 
 	for (int i = 1; i < 10; i++) {
+		std::clock_t start;
+		double duration;
+		start = clock();
 		tau = (float)i * 0.1;
 		cout << "Getting for tau: " << tau << endl;
 		save_frame_at_tau(imgA, imgB, imgRect, affineForward, affineReverse, trianglesA, trianglesB, tau);
+		duration = (clock() - start) / (double)CLOCKS_PER_MS;
+		cout << "Amount of time for tau = " << tau << " : " << duration << endl;
 	}
 
-	cout << "Amount of time for affine params: " << duration << endl;
+
 }
 
 int danny_test() {
