@@ -248,75 +248,106 @@ void purple_mesh_test() {
 
 	cout << "Purple mesh test";
 }
-/*
-fillBottomFlatTriangle(Vertice v1, Vertice v2, Vertice v3)
+
+void fill_bottom_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Point2f v3)
 {
+	Point2f temp;
+	if (v2.x >= v3.x) {
+		temp = v2;
+		v2 = v3;
+		v3 = temp;
+	}
 	float invslope1 = (v2.x - v1.x) / (v2.y - v1.y);
 	float invslope2 = (v3.x - v1.x) / (v3.y - v1.y);
 	float curx1 = v1.x;
 	float curx2 = v1.x;
-	for (int scanlineY = v1.y; scanlineY <= v2.y; scanlineY++)
+	for (int scanlineY = (int)v1.y; scanlineY >= v2.y; scanlineY--)
 	{
-		drawLine((int)curx1, scanlineY, (int)curx2, scanlineY);
+		for (int scanlineX = (int)curx1; scanlineX <= (int)curx2; scanlineX++) {
+			points.push_back(Point2f(scanlineX, scanlineY));
+		}
+		curx1 -= invslope1;
+		curx2 -= invslope2;
+	}
+}
+
+void fill_top_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Point2f v3)
+{
+	Point2f temp;
+	if (v1.x >= v2.x) {
+		temp = v1;
+		v1 = v2;
+		v2 = temp;
+	}
+	float invslope1 = (v3.x - v1.x) / (v3.y - v1.y);
+	float invslope2 = (v3.x - v2.x) / (v3.y - v2.y);
+	float curx1 = v3.x;
+	float curx2 = v3.x;
+	for (int scanlineY = (int)v3.y; scanlineY <= v1.y; scanlineY++)
+	{
+		for (int scanlineX = (int)curx1; scanlineX <= (int)curx2; scanlineX++) {
+			points.push_back(Point2f(scanlineX, scanlineY));
+		}
 		curx1 += invslope1;
 		curx2 += invslope2;
 	}
 }
 
-fillTopFlatTriangle(Vertice v1, Vertice v2, Vertice v3)
+bool sort_vertices(Point2f &elem1, Point2f &elem2)
 {
-	float invslope1 = (v3.x - v1.x) / (v3.y - v1.y);
-	float invslope2 = (v3.x - v2.x) / (v3.y - v2.y);
-	float curx1 = v3.x;
-	float curx2 = v3.x;
-	for (int scanlineY = v3.y; scanlineY > v1.y; scanlineY--)
-	{
-		drawLine((int)curx1, scanlineY, (int)curx2, scanlineY);
-		curx1 -= invslope1;
-		curx2 -= invslope2;
-	}
-}
-*/
-
-
-bool sort_vertices(Point2f const *lhs, Point2f const *rhs) {
-	return lhs->y >= rhs->y;
+	return elem1.y >= elem2.y;
 }
 
-vector<Point2f> sort_vertices_y_asc(Vec6f t) {
+vector<Point2f> sort_vertices_y_desc(Vec6f t) {
 	vector<Point2f> vertices = vector<Point2f>();
 	vertices.push_back(Point2f(t[0], t[1]));
 	vertices.push_back(Point2f(t[2], t[3]));
 	vertices.push_back(Point2f(t[4], t[5]));
-	sort(vertices.begin(), vertices.end(), &sort_vertices);
+	sort(vertices.begin(), vertices.end(), sort_vertices);
 	return vertices;
 }
 
-
 vector<Point2f> fill_triangle(Vec6f triangle)
 {
-	   /* at first sort the three vertices by y-coordinate ascending so v1 is the topmost vertice */
-	vector<Point2f> sortedVertices = sort_vertices_y_asc(triangle);
+	/* at first sort the three vertices by y-coordinate ascending so v1 is the bottom vertice */
+	vector<Point2f> sortedVertices = sort_vertices_y_desc(triangle);
+	Point2f v1 = sortedVertices[0];
+	Point2f v2 = sortedVertices[1];
+	Point2f v3 = sortedVertices[2];
+	vector<Point2f> points = vector<Point2f>();
 
-	  /* here we know that v1.y <= v2.y <= v3.y */
-	    /* check for trivial case of bottom-flat triangle */
+	/* here we know that v1.y <= v2.y <= v3.y */
+	/* check for trivial case of bottom-flat triangle */
 	if (v2.y == v3.y)
 	{
-		fill_bottom_flat_triangle(v1, v2, v3);
+		Point2f temp;
+		if (v1.x > v2.x) {
+			temp = v2;
+			v2 = v1;
+			v1 = temp;
+		}
+		fill_bottom_flat_triangle(points, v1, v2, v3);
 	}
-	  /* check for trivial case of top-flat triangle */
-	else if (vt1.y == vt2.y)
+	/* check for trivial case of top-flat triangle */
+	else if (v1.y == v2.y)
 	{
-		fillTopFlatTriangle(g, vt1, vt2, vt3);
+		Point2f temp;
+		if (v1.x > v2.x) {
+			temp = v2;
+			v2 = v1;
+			v1 = temp;
+		}
+		fill_top_flat_triangle(points, v1, v2, v3);
 	}
 	else
 	{
-		    /* general case - split the triangle in a topflat and bottom-flat one */
-		Vertice v4 = new Vertice(
-			(int)(vt1.x + ((float)(vt2.y - vt1.y) / (float)(vt3.y - vt1.y)) * (vt3.x - vt1.x)), vt2.y);
-		fillBottomFlatTriangle(g, vt1, vt2, v4);
-		fillTopFlatTriangle(g, vt2, v4, vt3);
+		/* general case - split the triangle in a topflat and bottom-flat one */
+		Point2f v4 = Point2f(
+		(float)(v1.x + ((float)(v2.y - v1.y) / (float)(v3.y - v1.y)) * (v3.x - v1.x)), v2.y);
+		fill_bottom_flat_triangle(points, v1, v2, v4);
+		fill_top_flat_triangle(points, v2, v4, v3);
 	}
+	return points;
 }
 
 void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
@@ -335,9 +366,11 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	start = clock();
 
 	vector<Vec6f> intTriangles = vector<Vec6f>();
+	vector<vector<Point2f>> points = vector<vector<Point2f>>();
 
 	// build up intermediate triangles from T_A, T_B and tau
 	for (int i = 0; i < numTriangles; i++) {
+		
 		float xA = trianglesA[i][0] + (trianglesB[i][0] - trianglesA[i][0])*tau;
 		float xB = trianglesA[i][2] + (trianglesB[i][2] - trianglesA[i][2])*tau;
 		float xC = trianglesA[i][4] + (trianglesB[i][4] - trianglesA[i][4])*tau;
@@ -345,11 +378,15 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 		float yB = trianglesA[i][3] + (trianglesB[i][3] - trianglesA[i][3])*tau;
 		float yC = trianglesA[i][5] + (trianglesB[i][5] - trianglesA[i][5])*tau;
 		intTriangles.push_back(Vec6f(xA, yA, xB, yB, xC, yC));
+
 	}
 
-
-
 	// get vector<vector<Point2f>> of points
+	for (int i = 0; i < numTriangles; i++) {
+		vector<Point2f> triPoints = fill_triangle(intTriangles[i]);
+		points.push_back(triPoints);
+	}
+
 
 	// get all transformation params for all triangles
 
