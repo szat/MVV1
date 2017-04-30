@@ -17,3 +17,5 @@ void interpolation_trackbar(std::vector<cv::Vec6f> trianglesA, std::vector<cv::V
 void purple_mesh_test();
 
 void save_frame_at_tau(cv::Mat &imgA, cv::Mat &imgB, cv::Rect imgRect, std::vector<cv::Mat> affineForward, std::vector<cv::Mat> affineReverse, std::vector<cv::Vec6f> trianglesA, std::vector<cv::Vec6f> trianglesB, float tau);
+
+std::vector<cv::Point> fill_triangle(cv::Vec6f triangle);

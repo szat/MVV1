@@ -292,6 +292,9 @@ int danny_test() {
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
 	interpolate_frame(geometry, img1path, img2path);
 	//purple_mesh_test();
+	//Vec6f triangle = Vec6f(0, 10, 5, 20, 10, 0);
+	//vector<Point> points = fill_triangle(triangle);
+
 	return 0;
 }
 

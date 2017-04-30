@@ -249,10 +249,10 @@ void purple_mesh_test() {
 	cout << "Purple mesh test";
 }
 
-void fill_bottom_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Point2f v3)
+void fill_bottom_flat_triangle(vector<Point> &points, Point2f v1, Point2f v2, Point2f v3)
 {
 	Point2f temp;
-	if (v2.x >= v3.x) {
+	if (v2.x > v3.x) {
 		temp = v2;
 		v2 = v3;
 		v3 = temp;
@@ -264,14 +264,14 @@ void fill_bottom_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, 
 	for (int scanlineY = (int)v1.y; scanlineY >= v2.y; scanlineY--)
 	{
 		for (int scanlineX = (int)curx1; scanlineX <= (int)curx2; scanlineX++) {
-			points.push_back(Point2f(scanlineX, scanlineY));
+			points.push_back(Point(scanlineX, scanlineY));
 		}
 		curx1 -= invslope1;
 		curx2 -= invslope2;
 	}
 }
 
-void fill_top_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Point2f v3)
+void fill_top_flat_triangle(vector<Point> &points, Point2f v1, Point2f v2, Point2f v3)
 {
 	Point2f temp;
 	if (v1.x >= v2.x) {
@@ -286,7 +286,7 @@ void fill_top_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Poi
 	for (int scanlineY = (int)v3.y; scanlineY <= v1.y; scanlineY++)
 	{
 		for (int scanlineX = (int)curx1; scanlineX <= (int)curx2; scanlineX++) {
-			points.push_back(Point2f(scanlineX, scanlineY));
+			points.push_back(Point(scanlineX, scanlineY));
 		}
 		curx1 += invslope1;
 		curx2 += invslope2;
@@ -295,7 +295,7 @@ void fill_top_flat_triangle(vector<Point2f> &points, Point2f v1, Point2f v2, Poi
 
 bool sort_vertices(Point2f &elem1, Point2f &elem2)
 {
-	return elem1.y >= elem2.y;
+	return elem1.y > elem2.y;
 }
 
 vector<Point2f> sort_vertices_y_desc(Vec6f t) {
@@ -307,36 +307,24 @@ vector<Point2f> sort_vertices_y_desc(Vec6f t) {
 	return vertices;
 }
 
-vector<Point2f> fill_triangle(Vec6f triangle)
+vector<Point> fill_triangle(Vec6f triangle)
 {
 	/* at first sort the three vertices by y-coordinate ascending so v1 is the bottom vertice */
 	vector<Point2f> sortedVertices = sort_vertices_y_desc(triangle);
 	Point2f v1 = sortedVertices[0];
 	Point2f v2 = sortedVertices[1];
 	Point2f v3 = sortedVertices[2];
-	vector<Point2f> points = vector<Point2f>();
+	vector<Point> points = vector<Point>();
 
 	/* here we know that v1.y <= v2.y <= v3.y */
 	/* check for trivial case of bottom-flat triangle */
 	if (v2.y == v3.y)
 	{
-		Point2f temp;
-		if (v1.x > v2.x) {
-			temp = v2;
-			v2 = v1;
-			v1 = temp;
-		}
 		fill_bottom_flat_triangle(points, v1, v2, v3);
 	}
 	/* check for trivial case of top-flat triangle */
 	else if (v1.y == v2.y)
 	{
-		Point2f temp;
-		if (v1.x > v2.x) {
-			temp = v2;
-			v2 = v1;
-			v1 = temp;
-		}
 		fill_top_flat_triangle(points, v1, v2, v3);
 	}
 	else
@@ -366,7 +354,7 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	start = clock();
 
 	vector<Vec6f> intTriangles = vector<Vec6f>();
-	vector<vector<Point2f>> points = vector<vector<Point2f>>();
+	vector<vector<Point>> points = vector<vector<Point>>();
 
 	// build up intermediate triangles from T_A, T_B and tau
 	for (int i = 0; i < numTriangles; i++) {
@@ -383,7 +371,7 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 
 	// get vector<vector<Point2f>> of points
 	for (int i = 0; i < numTriangles; i++) {
-		vector<Point2f> triPoints = fill_triangle(intTriangles[i]);
+		vector<Point> triPoints = fill_triangle(intTriangles[i]);
 		points.push_back(triPoints);
 	}
 
