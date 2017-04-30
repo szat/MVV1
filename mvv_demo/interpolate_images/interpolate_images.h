@@ -15,3 +15,5 @@ cv::Mat get_affine_intermediate(cv::Mat affine, float t);
 void interpolation_trackbar(std::vector<cv::Vec6f> trianglesA, std::vector<cv::Vec6f> trianglesB, cv::Rect imgSizeA, cv::Rect imgSizeB, std::vector<std::vector<std::vector<double>>> affine);
 
 void purple_mesh_test();
+
+void save_frame_at_tau(cv::Mat &imgA, cv::Mat &imgB, cv::Rect imgRect, std::vector<cv::Mat> affineForward, std::vector<cv::Mat> affineReverse, std::vector<cv::Vec6f> trianglesA, std::vector<cv::Vec6f> trianglesB, float tau);

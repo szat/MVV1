@@ -4,8 +4,11 @@
 #include <vector>
 #include <ctime>
 #include <stdio.h>
+#include <algorithm> 
 
 #include "interpolate_images.h"
+
+#define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 
 using namespace cv;
 using namespace std;
@@ -244,4 +247,122 @@ void purple_mesh_test() {
 
 
 	cout << "Purple mesh test";
+}
+/*
+fillBottomFlatTriangle(Vertice v1, Vertice v2, Vertice v3)
+{
+	float invslope1 = (v2.x - v1.x) / (v2.y - v1.y);
+	float invslope2 = (v3.x - v1.x) / (v3.y - v1.y);
+	float curx1 = v1.x;
+	float curx2 = v1.x;
+	for (int scanlineY = v1.y; scanlineY <= v2.y; scanlineY++)
+	{
+		drawLine((int)curx1, scanlineY, (int)curx2, scanlineY);
+		curx1 += invslope1;
+		curx2 += invslope2;
+	}
+}
+
+fillTopFlatTriangle(Vertice v1, Vertice v2, Vertice v3)
+{
+	float invslope1 = (v3.x - v1.x) / (v3.y - v1.y);
+	float invslope2 = (v3.x - v2.x) / (v3.y - v2.y);
+	float curx1 = v3.x;
+	float curx2 = v3.x;
+	for (int scanlineY = v3.y; scanlineY > v1.y; scanlineY--)
+	{
+		drawLine((int)curx1, scanlineY, (int)curx2, scanlineY);
+		curx1 -= invslope1;
+		curx2 -= invslope2;
+	}
+}
+*/
+
+
+bool sort_vertices(Point2f const *lhs, Point2f const *rhs) {
+	return lhs->y >= rhs->y;
+}
+
+vector<Point2f> sort_vertices_y_asc(Vec6f t) {
+	vector<Point2f> vertices = vector<Point2f>();
+	vertices.push_back(Point2f(t[0], t[1]));
+	vertices.push_back(Point2f(t[2], t[3]));
+	vertices.push_back(Point2f(t[4], t[5]));
+	sort(vertices.begin(), vertices.end(), &sort_vertices);
+	return vertices;
+}
+
+
+vector<Point2f> fill_triangle(Vec6f triangle)
+{
+	   /* at first sort the three vertices by y-coordinate ascending so v1 is the topmost vertice */
+	vector<Point2f> sortedVertices = sort_vertices_y_asc(triangle);
+
+	  /* here we know that v1.y <= v2.y <= v3.y */
+	    /* check for trivial case of bottom-flat triangle */
+	if (v2.y == v3.y)
+	{
+		fill_bottom_flat_triangle(v1, v2, v3);
+	}
+	  /* check for trivial case of top-flat triangle */
+	else if (vt1.y == vt2.y)
+	{
+		fillTopFlatTriangle(g, vt1, vt2, vt3);
+	}
+	else
+	{
+		    /* general case - split the triangle in a topflat and bottom-flat one */
+		Vertice v4 = new Vertice(
+			(int)(vt1.x + ((float)(vt2.y - vt1.y) / (float)(vt3.y - vt1.y)) * (vt3.x - vt1.x)), vt2.y);
+		fillBottomFlatTriangle(g, vt1, vt2, v4);
+		fillTopFlatTriangle(g, vt2, v4, vt3);
+	}
+}
+
+void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
+	vector<Mat> affineForward, vector<Mat> affineReverse,
+	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
+
+	int xDim = imgRect.width;
+	int yDim = imgRect.height;
+
+	Mat canvas = Mat::zeros(yDim, xDim, CV_8UC1);
+
+	int numTriangles = trianglesA.size();
+
+	std::clock_t start;
+	double duration;
+	start = clock();
+
+	vector<Vec6f> intTriangles = vector<Vec6f>();
+
+	// build up intermediate triangles from T_A, T_B and tau
+	for (int i = 0; i < numTriangles; i++) {
+		float xA = trianglesA[i][0] + (trianglesB[i][0] - trianglesA[i][0])*tau;
+		float xB = trianglesA[i][2] + (trianglesB[i][2] - trianglesA[i][2])*tau;
+		float xC = trianglesA[i][4] + (trianglesB[i][4] - trianglesA[i][4])*tau;
+		float yA = trianglesA[i][1] + (trianglesB[i][1] - trianglesA[i][1])*tau;
+		float yB = trianglesA[i][3] + (trianglesB[i][3] - trianglesA[i][3])*tau;
+		float yC = trianglesA[i][5] + (trianglesB[i][5] - trianglesA[i][5])*tau;
+		intTriangles.push_back(Vec6f(xA, yA, xB, yB, xC, yC));
+	}
+
+
+
+	// get vector<vector<Point2f>> of points
+
+	// get all transformation params for all triangles
+
+	// combine pixels and weight
+
+
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	cout << duration << endl;
+
+	imshow("purple", canvas);
+	waitKey(1);
+
+
+	cout << "mesh test";
+
 }

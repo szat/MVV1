@@ -250,48 +250,6 @@ void set_mask_to_triangle(Mat &mask, Vec6f t) {
 	fillConvexPoly(mask, pts, 3, Scalar(1));
 }
 
-void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
-	vector<Mat> affineForward, vector<Mat> affineReverse, 
-	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
-
-	int xDim = imgRect.width;
-	int yDim = imgRect.height;
-	
-	Mat canvas = Mat::zeros(yDim, xDim, CV_8UC1);
-
-	// get affine
-	Mat currentMaskA = cv::Mat::zeros(yDim, xDim, CV_8UC1);
-	Mat currentMaskB = cv::Mat::zeros(yDim, xDim, CV_8UC1);
-
-	int numTriangles = trianglesA.size(); 
-	for (int i = 0; i < numTriangles; i++) {
-		currentMaskA = Mat::zeros(yDim, xDim, CV_8UC1);
-		currentMaskB = Mat::zeros(yDim, xDim, CV_8UC1);
-		set_mask_to_triangle(currentMaskA, trianglesA[i]);
-		set_mask_to_triangle(currentMaskB, trianglesB[i]);
-		Mat tempImgA = Mat::zeros(yDim, xDim, CV_8UC1);
-		Mat tempImgB = Mat::zeros(yDim, xDim, CV_8UC1);
-		Mat tempImgC = Mat::zeros(yDim, xDim, CV_8UC1);
-		imgA.copyTo(tempImgA, currentMaskA);
-		imgB.copyTo(tempImgB, currentMaskB);
-		warpAffine(tempImgA, tempImgA, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
-		warpAffine(tempImgB, tempImgB, affineReverse[i], Size(xDim, yDim));
-		warpAffine(tempImgB, tempImgB, get_affine_intermediate(affineForward[i], tau), Size(xDim, yDim));
-		addWeighted(tempImgA, tau, tempImgB, 1 - tau, 0.0, tempImgC);
-		addWeighted(tempImgC, 1, canvas, 1, 0.0, canvas);
-		// console output
-		cout << "Finished triangle " << i << "/" << numTriangles << endl;
-	}
-
-
-	imshow("purple", canvas);
-	waitKey(1);
-
-	
-	cout << "mesh test";
-
-}
-
 void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) {
 	std::clock_t start;
 	double duration;
