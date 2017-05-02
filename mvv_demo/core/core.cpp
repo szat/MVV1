@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <chrono>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -355,7 +356,19 @@ int adrian_test() {
 	//test_nbh_first("david_1.jpg", "david_2.jpg");
 	//test_nbh_grow("david_1.jpg", "david_2.jpg");
 	//test_one_nbh("david_1.jpg", "david_2.jpg");
-	test_akaze_harris_global_harris_local("david_1.jpg", "david_2.jpg");
+	//test_akaze_harris_global_harris_local("david_1.jpg", "david_2.jpg");
+
+	//loading an david seems to take approx 50ms, so two davids 100ms
+	string address1 = "..\\data_store\\david_1.jpg";
+	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
+	string address2 = "..\\data_store\\david_2_resize_no_background.jpg";
+	Mat img2 = imread(address2, IMREAD_GRAYSCALE);
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+
+
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	chrono::duration<double, std::milli> time_span = t2 - t1;
+	std::cout << "It took me " << time_span.count() / 10 << " milliseconds." << endl;
 	return 0;
 }
 
