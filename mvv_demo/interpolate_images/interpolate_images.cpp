@@ -338,6 +338,10 @@ vector<Point> fill_triangle(Vec6f triangle)
 	return points;
 }
 
+uchar get_interpolated_pixel(int x, int y) {
+
+}
+
 void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 	vector<Mat> affineForward, vector<Mat> affineReverse,
 	vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, float tau) {
@@ -375,13 +379,29 @@ void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect imgRect,
 		points.push_back(triPoints);
 	}
 
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	start = clock();
+
+	uchar value;
+
+	int len = points.size();
+	for (int i = 0; i < len; i++) {
+		int size = points[i].size();
+		for (int j = 0; j < size; j++) {
+			int x = points[i][j].x;
+			int y = points[i][j].y;
+			// get interpolated pixel
+			uchar pixel = get_interpolated_pixel(x, y);
+			value = canvas.at<uchar>(y, x);
+		}
+	}
 
 	// get all transformation params for all triangles
 
 	// combine pixels and weight
 
 
-	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	double duration2 = (clock() - start) / (double)CLOCKS_PER_MS;
 	cout << duration << endl;
 
 	imshow("purple", canvas);
