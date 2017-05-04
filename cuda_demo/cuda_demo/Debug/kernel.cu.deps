@@ -303,6 +303,9 @@ c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\host_defines.h
 c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\vector_functions.h
 c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\device_launch_parameters.h
 c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\vector_types.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_wstdio.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_stdio_config.h
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\iostream
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\istream
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ostream
@@ -310,9 +313,6 @@ C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ios
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xlocnum
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\climits
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\cstdio
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_wstdio.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_stdio_config.h
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\streambuf
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xiosbase
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xlocale
@@ -382,5 +382,12 @@ C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xfacet
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\system_error
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\cerrno
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\share.h
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\conio.h
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ctime
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\chrono
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ratio
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\thr/xtimec.h
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\thr/xthrcommon.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda_runtime.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\device_launch_parameters.h
