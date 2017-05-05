@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <iostream>
-<<<<<<< HEAD
 #include <cuda.h>
 #include <conio.h>
 #include <ctime>
