@@ -33,6 +33,26 @@ __device__ int * unflatten_idx_gpu(int arrayIdx, int numRows, int numCols) {
 	return 0;
 }
 
+__global__ void rowOperation_block(float * d_matrix1D_out, float * d_matrix1D_in, int numRows, int numCols) {
+	//number of blocks should be the number of rows
+	//number of threads should be the number of cols
+	int idxBlk = blockIdx.x;
+	int idxThd = threadIdx.x;
+	//give a row per block, in a 2d matrix it would be mat[idxBlk][idxThd], mat[idxBlk][idxThd], mat[idxBlk][idxThd], ...
+	int idx2D[] = { idxBlk, idxThd };
+	int matIdx = flatten_idx_gpu(idx2D, numRows, numCols);
+	d_matrix1D_out[matIdx] = d_matrix1D_in[matIdx] + 1;
+}
+
+__global__ void colOperation_block(float * d_matrix1D_out, float * d_matrix1D_in, int numRows, int numCols) {
+	int idxBlk = blockIdx.x;
+	int idxThd = threadIdx.x;
+	//give a column per thread, in a 2d matrix it would be mat[idxThd][idxBlk], mat[idxThd][idxBlk], mat[idxThd][idxBlk], ...
+	int idx2D[] = { idxThd, idxBlk };
+	int matIdx = flatten_idx_gpu(idx2D, numRows, numCols);
+	d_matrix1D_out[matIdx] = d_matrix1D_in[matIdx] + 0.01;
+}
+
 __global__ void rowOperation(float * d_matrix1D_out, float * d_matrix1D_in, int numRows, int numCols) {
 	int idx = threadIdx.x;
 	printf("We are in thread %d\n", idx);
@@ -86,6 +106,7 @@ int main(int argc, char ** argv) {
 	}
 
 	//Visualize canonically in 1D
+	/*
 	printf("\nVisualize matrix1D_in(%d,%d) with one for loop...\n", numRows, numCols);
 	for (int i = 0; i < ARRAY_SIZE; i++) {
 		if (i % numCols == 0) printf("\n");
@@ -97,7 +118,7 @@ int main(int argc, char ** argv) {
 		}
 	}
 	printf("\n");
-
+	*/
 
 	float h_matrix1D_out[ARRAY_SIZE];
 
@@ -105,7 +126,7 @@ int main(int argc, char ** argv) {
 	float * d_matrix1D_in;
 	float * d_matrix1D_out;
 
-	auto t1 = Clock::now();
+	
 
 	// allocate GPU memory
 	cudaMalloc((void**)&d_matrix1D_in, ARRAY_BYTES);
@@ -114,12 +135,15 @@ int main(int argc, char ** argv) {
 	// transfer the array to the GPU
 	cudaMemcpy(d_matrix1D_in, h_matrix1D_in, ARRAY_BYTES, cudaMemcpyHostToDevice);
 
+	auto t1 = Clock::now();
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1000000 << std::endl;
 
 	// launch the kernel
 	// rowOperation << <1, numRows >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);
-	colOperation << <1, numCols >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);
+	// colOperation << <1, numCols >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);
+	// rowOperation_block << <numRows, numCols >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);
+	colOperation_block << < numCols, numRows >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);
 	// cube << <1, ARRAY_SIZE >> > (d_matrix1D_out, d_matrix1D_in);
 	
 	// copy back the result array to the CPU
