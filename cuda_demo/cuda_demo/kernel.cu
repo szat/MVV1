@@ -57,7 +57,6 @@ int main(int argc, char ** argv) {
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1000000 << std::endl;
 
-
 	// launch the kernel
 	cube << <1, ARRAY_SIZE >> > (d_out, d_in);
 
