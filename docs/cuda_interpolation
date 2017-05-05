@@ -1,0 +1,36 @@
+Here is a rough algorithm-level sketch of the interpolation scheme in CUDA.
+
+For now, we are assuming that the images are processed on a frame-by-frame basis.
+The memory loading on the CPU side will be relatively complex, so I am going to focus on the GPU algorithm for
+a single frame.
+
+Step 1: Subdivide the image according to the image size.
+
+There are two approaches for blocks - we can have rectangular 2D blocks, or blocks that consist of whole vertical or
+horizontal stripes of the image.
+
+In any case, we will have (precomputed and loaded into memory):
+
+-ImgA at a particular frame at time t (with a fourth channel containing a triangleId for each pixel)
+-ImgB at a particular frame at time t (with a fourth channel containing a triangleId for each pixel)
+-A transformation parameter τ
+-Affine transformation parameters for all triangles at time t
+
+kernelA -> takes image A and transforms pixel-by-pixel into an intermediate image intA
+kernelB -> takes image B and reverse affine transforms pixel-by-pixel into an intermediate image intB
+kernel_avg -> averages intA and intB in an intelligent way according to (intA)*(1-τ) + (intB)*(τ)
+kernel_display -> renders the resulting averaged image
+
+
+Memory allocation:
+
+local memory:
+-threadIdx, etc.
+
+shared memory:
+-for each block, the portion of input image corresponding to each block
+
+global memory:
+-output images intA, intB
+-affine transformation parameters
+-parameter τ
