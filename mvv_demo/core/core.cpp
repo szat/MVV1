@@ -102,16 +102,29 @@ void image_diagnostics(Mat img) {
 struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
-	vector<pair<Vec4f, Vec4f>> trapezoids;
 };
 
 struct MatchedGeometry {
 	GeometricSlice sourceGeometry;
 	GeometricSlice targetGeometry;
-	vector<int> trianglePriority;
-	vector<int> trapezoidPriority;
-	Size imageSize;
 };
+
+vector<Vec6f> split_trapezoids(vector<pair<Vec4f, Vec4f>> trapezoids) {
+	vector<Vec6f> triangles = vector<Vec6f>();
+	int size = trapezoids.size();
+	for (int i = 0; i < size; i++) {
+		Point2f pointA = Point2f(trapezoids[i].first[0], trapezoids[i].second[0]);
+		Point2f pointB = Point2f(trapezoids[i].first[1], trapezoids[i].second[1]);
+		Point2f pointC = Point2f(trapezoids[i].first[2], trapezoids[i].second[2]);
+		Point2f pointD = Point2f(trapezoids[i].first[3], trapezoids[i].second[3]);
+		// ABC, ACD triangles
+		Vec6f triangleA = Vec6f(pointA.x, pointA.y, pointB.x, pointB.y, pointC.x, pointC.y);
+		Vec6f triangleB = Vec6f(pointA.x, pointA.y, pointC.x, pointC.y, pointD.x, pointD.y);
+		triangles.push_back(triangleA);
+		triangles.push_back(triangleB);
+	}
+	return triangles;
+}
 
 MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, Size size) {
 	// triangulate source interior
@@ -135,26 +148,25 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgBounds, centerOfMassA);
 	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgBounds, centerOfMassB);
 
-	// calculate priority (triangles)
-	vector<int> interiorPriority = calculate_triangle_priority(trianglesB);
-	// calculate priority (trapezoids)
-	vector<int> exteriorPriority = calculate_trapezoid_priority(trapezoidsB);
+	vector<Vec6f> trap_trianglesA = split_trapezoids(trapezoidsA);
+	vector<Vec6f> trap_trianglesB = split_trapezoids(trapezoidsB);
+
+	// combining triangle sets
+	vector<Vec6f> combinedA = trap_trianglesA;
+	vector<Vec6f> combinedB = trap_trianglesB;
+	//combinedA.insert(combinedA.end(), trap_trianglesA.begin(), trap_trianglesA.end());
+	//combinedB.insert(combinedB.end(), trap_trianglesB.begin(), trap_trianglesB.end());
 
 	// This could potentially be replaced by two constructors.
 	MatchedGeometry matchedResult = MatchedGeometry();
 	GeometricSlice source = GeometricSlice();
 	GeometricSlice target = GeometricSlice();
-	source.triangles = trianglesA;
-	source.trapezoids = trapezoidsA;
-	target.triangles = trianglesB;
-	target.trapezoids = trapezoidsB;
+	source.triangles = combinedA;
+	target.triangles = combinedB;
 	source.img = imgBounds;
 	target.img = imgBounds;
 	matchedResult.sourceGeometry = source;
 	matchedResult.targetGeometry = target;
-	matchedResult.trianglePriority = interiorPriority;
-	matchedResult.trapezoidPriority = exteriorPriority;
-	matchedResult.imageSize = size;
 	return matchedResult;
 }
 
@@ -205,7 +217,7 @@ void render_matched_geometry(GeometricSlice slice, string windowName) {
 		line(img, pt[1], pt[2], triangle_color, 1, LINE_AA, 0);
 		line(img, pt[2], pt[0], triangle_color, 1, LINE_AA, 0);
 	}
-
+	/*
 	vector<Point> ptr(4);
 	int numTrapezoids = slice.trapezoids.size();
 	for (int i = 0; i < numTrapezoids; i++) {
@@ -220,6 +232,7 @@ void render_matched_geometry(GeometricSlice slice, string windowName) {
 		line(img, ptr[2], ptr[3], trapezoid_color, 1, LINE_AA, 0);
 		line(img, ptr[3], ptr[0], trapezoid_color, 1, LINE_AA, 0);
 	}
+	*/
 
 	imshow(win, img);
 	waitKey(1);
@@ -340,10 +353,18 @@ int danny_test() {
 	Rect imgBoundsA = geometry.sourceGeometry.img;
 	Rect imgBoundsB = geometry.targetGeometry.img;
 
+	std::clock_t start;
+	double duration;
+	start = clock();
+
 	vector<vector<Point>> rasteredTrianglesA = raster_triangulation(trianglesA, imgBoundsA);
 	vector<vector<Point>> rasteredTrianglesB = raster_triangulation(trianglesB, imgBoundsB);
 
+	duration = (clock() - start) / (double)CLOCKS_PER_MS;
+	cout << "Rasterization time = " << duration << " ms" << endl;
+
 	render_rasterization(rasteredTrianglesA, imgBoundsA);
+
 	cin.get();
 	return 0;
 }

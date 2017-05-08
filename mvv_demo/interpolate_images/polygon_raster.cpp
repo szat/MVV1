@@ -25,7 +25,7 @@ int max3(int x, int y, int z) {
 }
 
 // Replace with more efficient method
-vector<Point> raster_triangle(Vec6f t, int imgWidth, int imgHeight)
+vector<Point> raster_triangle(Vec6f &t, int imgWidth, int imgHeight)
 {
 	vector<Point> points = vector<Point>();
 	Point v0 = Point(t[0], t[1]);
@@ -48,6 +48,11 @@ vector<Point> raster_triangle(Vec6f t, int imgWidth, int imgHeight)
 	for (p.y = minY; p.y <= maxY; p.y++) {
 		for (p.x = minX; p.x <= maxX; p.x++) {
 			// Determine barycentric coordinates
+
+			if (p.x == 80 && p.y == 600) {
+				int i = 0;
+			}
+
 			int w0 = orient2d(v1, v2, p);
 			int w1 = orient2d(v2, v0, p);
 			int w2 = orient2d(v0, v1, p);
@@ -60,7 +65,7 @@ vector<Point> raster_triangle(Vec6f t, int imgWidth, int imgHeight)
 	return points;
 }
 
-vector<vector<Point>> raster_triangulation(vector<Vec6f> triangles, Rect imgBounds) {
+vector<vector<Point>> raster_triangulation(vector<Vec6f> &triangles, Rect imgBounds) {
 	vector<vector<Point>> raster = vector<vector<Point>>();
 	int size = triangles.size();
 	float width = imgBounds.width;
