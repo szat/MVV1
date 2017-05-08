@@ -114,7 +114,7 @@ vector<int> get_colors(int colorCase) {
 void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
 	int width = imgBounds.width;
 	int height = imgBounds.height;
-	Mat img(width, height, CV_8UC3, Scalar(0, 0, 0));
+	Mat img(height, width, CV_8UC3, Scalar(0, 0, 0));
 	int numTriangles = raster.size();
 
 	for (int i = 0; i < numTriangles; i++) {
@@ -123,9 +123,9 @@ void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
 			Point pixel = raster[i][j];
 			int colorCase = i % 6;
 			vector<int> colors = get_colors(colorCase);
-			img.at<cv::Vec3b>(pixel.x, pixel.y)[0] = colors[0]; // change it to white
-			img.at<cv::Vec3b>(pixel.x, pixel.y)[1] = colors[1];
-			img.at<cv::Vec3b>(pixel.x, pixel.y)[2] = colors[2];
+			img.at<cv::Vec3b>(pixel.y, pixel.x)[0] = colors[0];
+			img.at<cv::Vec3b>(pixel.y, pixel.x)[1] = colors[1];
+			img.at<cv::Vec3b>(pixel.y, pixel.x)[2] = colors[2];
 		}
 	}
 
