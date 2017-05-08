@@ -132,9 +132,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="interpolate_images.h" />
+    <ClInclude Include="polygon_raster.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interpolate_images.cpp" />
+    <ClCompile Include="polygon_raster.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

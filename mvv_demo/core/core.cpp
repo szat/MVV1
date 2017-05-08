@@ -21,6 +21,7 @@
 #include "knn_test.h"
 
 #include "interpolate_images.h"
+#include "polygon_raster.h"
 
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
@@ -147,6 +148,8 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	source.trapezoids = trapezoidsA;
 	target.triangles = trianglesB;
 	target.trapezoids = trapezoidsB;
+	source.img = imgBounds;
+	target.img = imgBounds;
 	matchedResult.sourceGeometry = source;
 	matchedResult.targetGeometry = target;
 	matchedResult.trianglePriority = interiorPriority;
@@ -331,8 +334,17 @@ int danny_test() {
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
-	interpolate_frame(geometry, img1path, img2path);
-	//purple_mesh_test();
+
+	vector<Vec6f> trianglesA = geometry.sourceGeometry.triangles;
+	vector<Vec6f> trianglesB = geometry.targetGeometry.triangles;
+	Rect imgBoundsA = geometry.sourceGeometry.img;
+	Rect imgBoundsB = geometry.targetGeometry.img;
+
+	vector<vector<Point>> rasteredTrianglesA = raster_triangulation(trianglesA, imgBoundsA);
+	vector<vector<Point>> rasteredTrianglesB = raster_triangulation(trianglesB, imgBoundsB);
+
+	render_rasterization(rasteredTrianglesA, imgBoundsA);
+	cin.get();
 	return 0;
 }
 
