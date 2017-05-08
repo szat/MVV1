@@ -1,0 +1,41 @@
+From http://cvlab.epfl.ch/data/pose
+
+Images
+------
+file format(epfl-gims08tripod-seqtripod_seq_%02d_%03d.jpg, seq_id, frame_id)
+seq_id is the sequence number                      1, 2, ..., 20
+frame_id is the frame number within the sequence s 1, 2, ..., N^s_f
+
+Sequence Information
+--------------------
+tripod-seq.txt Contains information about the sequences that you can
+use in your code to compute rotation angles and so on. It is in the following format
+---------------------------------------------------------------------------------------------
+(# of sequences) (image width) (image height)
+(# of frames in seq. 1) (# of frames in seq. 2) ...
+(printf format for image files)
+(printf format for bounding box files)
+(# of frames in seq. 1 covering 360 degrees) (# of frames in seq. 2 covering 360 degrees) ...
+(frame # of frontal pose in seq. 1) (frame # of frontal pose in seq. 2) ...
+(rotation sense for the car in seq. 1) (rotation sense for the car in seq. 2) ..
+---------------------------------------------------------------------------------------------
+Note that the cars rotate more than 360 degrees, so you need to use
+the frame numbers for 360 degrees when computing the rotation
+angle. Frontal frame # can be used to place the origin.
+
+Rotation sense is +1 for clock-wise rotation when viewed from top, -1
+for ccw.
+
+Timing
+------
+(times_%02d.txt, seq_id) contains the list of capture times for each frame
+
+times.txt contains the relative time of capture of each frame with
+           respect to the sequence start in seconds. Every line
+           corresponds to a single sequence.
+
+Bounding Boxes
+--------------
+(bbox_%02d.txt, seq_id) contains the bounding box coordinates for
+                           each frame in the sequence.
+bbox format top-left corner x, top-left corner y, width, height
