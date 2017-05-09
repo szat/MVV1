@@ -1,0 +1,13 @@
+File specification for .mvv files
+
+The file is strictly composed of floats, ints or char[4], each of which are 4 bytes long.
+The beginning of the file consists of a fixed-width header which specifies some information about the file.
+The numbers specify the array position (not the byte number).
+
+HEADER (64 BYTES LONG)
+----------------------
+0: (char[4]) Filespec version number
+(first two allocated for major version, second two for minor verson, starting at 01.00 and going up to 
+1: (int) Frame number
+2: (int) Total number of frames
+3: (int) Number of triangles
