@@ -2,6 +2,7 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 #include <ctime>
+#include <iostream>
 #include "polygon_raster.h"
 
 using namespace cv;
@@ -136,4 +137,52 @@ void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
 
 	imshow("raster", img);
 	waitKey(1);
+}
+
+int** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
+	int** grid = new int*[height + 1];
+	// Initializing arrays to default -1 value, which indicates no triangulation in this region.
+
+	for (int h = 0; h < height + 1; h++)
+	{
+		grid[h] = new int[width + 1];
+		for (int w = 0; w < width + 1; w++)
+		{
+			grid[h][w] = -1;
+		}
+	}
+
+	int numRaster = raster.size();
+
+	for (int i = 0; i < numRaster; i++) {
+		int numPixels = raster[i].size();
+		for (int j = 0; j < numPixels; j++) {
+			int x = raster[i][j].x;
+			int y = raster[i][j].y;
+			// weird index swapping
+			// triangle index for the affine transforms
+			grid[y][x] = i;
+		}
+	}
+	// possible memory leak if this gets called a bunch and the arrays are never deleted
+	return grid;
+}
+
+void check_grid(int** grid, Rect imgBounds) {
+	int width = imgBounds.width;
+	int height = imgBounds.height;
+	int count = 0;
+	int invalidCount = 0;
+	for (int h = 0; h < height + 1; h++)
+	{
+		for (int w = 0; w < width + 1; w++)
+		{
+			if (grid[h][w] == -1) {
+				invalidCount++;
+			}
+			count++;
+		}
+	}
+	cout << "Invalid count: " << invalidCount << endl;
+	cout << "Total count: " << count << endl;
 }

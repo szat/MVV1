@@ -15,3 +15,5 @@ cv::Mat get_affine_intermediate(cv::Mat affine, float t);
 void interpolation_trackbar(std::vector<cv::Vec6f> trianglesA, std::vector<cv::Vec6f> trianglesB, cv::Rect imgSizeA, cv::Rect imgSizeB, std::vector<std::vector<std::vector<double>>> affine);
 
 void purple_mesh_test();
+
+int** convert_transforms_to_array(std::vector<cv::Mat> affine);

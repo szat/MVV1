@@ -245,3 +245,30 @@ void purple_mesh_test() {
 
 	cout << "Purple mesh test";
 }
+
+int** convert_transforms_to_array(std::vector<cv::Mat> affine) {
+	int numTriangles = affine.size();
+	int numParameters = 6;
+	int** paramArray = new int*[numTriangles];
+	// Initializing arrays to default -1 value, which indicates no triangulation in this region.
+
+	for (int i = 0; i < numTriangles; i++)
+	{
+		paramArray[i] = new int[numParameters];
+		// flattening 2x3 pseudomatrix (really AX+B)
+		double a00 = affine[i].at<double>(0, 0);
+		double a01 = affine[i].at<double>(0, 1);
+		double b00 = affine[i].at<double>(0, 2);
+		double a10 = affine[i].at<double>(1, 0);
+		double a11 = affine[i].at<double>(1, 1);
+		double b01 = affine[i].at<double>(1, 2);
+		paramArray[i][0] = a00;
+		paramArray[i][1] = a01;
+		paramArray[i][2] = b00;
+		paramArray[i][3] = a10;
+		paramArray[i][4] = a11;
+		paramArray[i][5] = b01;
+	}
+
+	return paramArray;
+}

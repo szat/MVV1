@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <chrono>
+#include <fstream>
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -133,36 +134,14 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgPointsA, vector<Point
 	// triangulate target interior
 	vector<Vec6f> trianglesB = triangulate_target(imgPointsA, imgPointsB, trianglesA);
 
-	// Need a function to render triangles output
-	// detect edges of source (convex hull)
-	vector<int> convexHullIndices = get_source_convex_hull(imgPointsA);
-	vector<Point2f> convexHullA = hull_indices_to_points(convexHullIndices, imgPointsA);
-	vector<Point2f> convexHullB = hull_indices_to_points(convexHullIndices, imgPointsB);
-
-	Point2f centerOfMassA = get_center_of_mass(imgPointsA);
-	Point2f centerOfMassB = get_center_of_mass(imgPointsB);
-
-	// construct target and source trapezoids  
-	// use the same Key/Value mapping from triangulate_target
 	Rect imgBounds = Rect(0, 0, size.width, size.height);
-	vector<pair<Vec4f, Vec4f>> trapezoidsA = project_trapezoids_from_hull(convexHullA, imgBounds, centerOfMassA);
-	vector<pair<Vec4f, Vec4f>> trapezoidsB = project_trapezoids_from_hull(convexHullB, imgBounds, centerOfMassB);
-
-	vector<Vec6f> trap_trianglesA = split_trapezoids(trapezoidsA);
-	vector<Vec6f> trap_trianglesB = split_trapezoids(trapezoidsB);
-
-	// combining triangle sets
-	vector<Vec6f> combinedA = trap_trianglesA;
-	vector<Vec6f> combinedB = trap_trianglesB;
-	//combinedA.insert(combinedA.end(), trap_trianglesA.begin(), trap_trianglesA.end());
-	//combinedB.insert(combinedB.end(), trap_trianglesB.begin(), trap_trianglesB.end());
 
 	// This could potentially be replaced by two constructors.
 	MatchedGeometry matchedResult = MatchedGeometry();
 	GeometricSlice source = GeometricSlice();
 	GeometricSlice target = GeometricSlice();
-	source.triangles = combinedA;
-	target.triangles = combinedB;
+	source.triangles = trianglesA;
+	target.triangles = trianglesB;
 	source.img = imgBounds;
 	target.img = imgBounds;
 	matchedResult.sourceGeometry = source;
@@ -343,9 +322,31 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 
 }
 
-int danny_test() {
-	string img1path = "david_1.jpg";
-	string img2path = "david_2.jpg";
+void save_frame_info(int** gridA, int** gridB, int** affineForward, int** affineReverse, int widthA, int heightA, int widthB, int heightB) {
+	const float f = 3.14f;
+	std::ofstream ofile("../data_store/frame.bin", std::ios::binary);
+	ofile.write((char*)&widthA, sizeof(int));
+	ofile.write((char*)&heightA, sizeof(int));
+	ofile.write((char*)&widthB, sizeof(int));
+	ofile.write((char*)&heightB, sizeof(int));
+	
+	int numTriangles = 100;
+	ofile.write((char*)&numTriangles, sizeof(int));
+	ofile.close();
+}
+
+void binary_read_test() {
+	ifstream r("../data_store/frame.bin");
+	int in_ints[4];
+	r.read((char*)&in_ints, sizeof(in_ints));
+	for (int i = 0; i < 10; i++) {
+		cout << in_ints[i] << " ";
+	}
+	cout << "Done";
+}
+
+
+void save_frame_master(string img1path, string img2path) {
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
 
 	vector<Vec6f> trianglesA = geometry.sourceGeometry.triangles;
@@ -353,19 +354,47 @@ int danny_test() {
 	Rect imgBoundsA = geometry.sourceGeometry.img;
 	Rect imgBoundsB = geometry.targetGeometry.img;
 
-	std::clock_t start;
-	double duration;
-	start = clock();
-
 	vector<vector<Point>> rasteredTrianglesA = raster_triangulation(trianglesA, imgBoundsA);
 	vector<vector<Point>> rasteredTrianglesB = raster_triangulation(trianglesB, imgBoundsB);
 
-	duration = (clock() - start) / (double)CLOCKS_PER_MS;
-	cout << "Rasterization time = " << duration << " ms" << endl;
+	int widthA = imgBoundsA.width;
+	int heightA = imgBoundsA.height;
+	int widthB = imgBoundsB.width;
+	int heightB = imgBoundsB.height;
 
-	render_rasterization(rasteredTrianglesA, imgBoundsA);
+	int** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
+	int** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
+
+	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
+	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
+
+	int** affineForwardArray = convert_transforms_to_array(affineForward);
+	int** affineReverseArray = convert_transforms_to_array(affineReverse);
+
+	save_frame_info(gridA, gridB, affineForwardArray, affineReverseArray, widthA, heightA, widthB, heightB);
 
 	cin.get();
+}
+
+int danny_test() {
+	// master function for constructing and saving a frame
+	string img1path = "david_1.jpg";
+	string img2path = "david_2.jpg";
+	//save_frame_master(img1path, img2path);
+
+	/*
+	int** gridA = 0;
+	int** gridB = 0;
+	int** affFwd = 0;
+	int** affRvs = 0;
+	int wA = 12;
+	int hA = 24;
+	int wB = 72349;
+	int hB = 120002;
+	save_frame_info(gridA, gridB, affFwd, affRvs, wA, hA, wB, hB);
+	return 0;
+	*/
+	binary_read_test();
 	return 0;
 }
 
