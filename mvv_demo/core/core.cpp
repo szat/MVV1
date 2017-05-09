@@ -336,12 +336,38 @@ void save_frame_info(int** gridA, int** gridB, int** affineForward, int** affine
 }
 
 void binary_read_test() {
-	ifstream r("../data_store/frame.bin");
-	int in_ints[4];
+	char majorVersion1 = '0';
+	char majorVersion2 = '1';
+	char minorVersion1 = '0';
+	char minorVersion2 = '0';
+	int widthA = 14;
+	int heightA = 39;
+	int widthB = 213;
+	int heightB = 324903;
+	const float f = 3.14f;
+	std::ofstream ofile("../data_store/mvv_files/frame.mvv", std::ios::binary);
+	ofile.write((char*)&majorVersion1, sizeof(char));
+	ofile.write((char*)&majorVersion2, sizeof(char));
+	ofile.write((char*)&minorVersion1, sizeof(char));
+	ofile.write((char*)&minorVersion2, sizeof(char));
+	ofile.write((char*)&widthA, sizeof(int));
+	ofile.write((char*)&heightA, sizeof(int));
+	ofile.write((char*)&widthB, sizeof(int));
+	ofile.write((char*)&heightB, sizeof(int));
+
+	int numTriangles = 100;
+	ofile.write((char*)&numTriangles, sizeof(int));
+	ofile.close();
+
+
+	ifstream r("../data_store/mvv_files/frame.mvv");
+	int in_ints[6];
 	r.read((char*)&in_ints, sizeof(in_ints));
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 5; i++) {
 		cout << in_ints[i] << " ";
 	}
+	int imin = INT_MIN; // minimum value
+	int imax = INT_MAX;
 	cout << "Done";
 }
 
