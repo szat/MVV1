@@ -13,6 +13,8 @@
 #include <chrono>
 #include <fstream>
 
+#include "mvv_iostream.h"
+
 #include "build_geometry.h"
 #include "generate_test_points.h"
 
@@ -322,27 +324,12 @@ void interpolate_frame(MatchedGeometry g, string imagePathA, string imagePathB) 
 
 }
 
-void save_frame_info(int** gridA, int** gridB, int** affineForward, int** affineReverse, int widthA, int heightA, int widthB, int heightB) {
-	const float f = 3.14f;
-	std::ofstream ofile("../data_store/frame.bin", std::ios::binary);
-	ofile.write((char*)&widthA, sizeof(int));
-	ofile.write((char*)&heightA, sizeof(int));
-	ofile.write((char*)&widthB, sizeof(int));
-	ofile.write((char*)&heightB, sizeof(int));
-	
-	int numTriangles = 100;
-	ofile.write((char*)&numTriangles, sizeof(int));
-	ofile.close();
-}
 
-void write_mvv_header() {
-	char version[4] = { '0','1','0','0' };
+void write_mvv_header(char *version, int widthA, int heightA, int widthB, int heightB, int numFrames) {
+	// header is 64 bytes
+
 	int versionLength = 4;
-	int widthA = 667;
-	int heightA = 1000;
-	int widthB = 667;
-	int heightB = 1000;
-	
+
 	std::ofstream ofile("../data_store/mvv_files/frame.mvv", std::ios::binary);
 	
 	for (int i = 0; i < versionLength; i++) {
@@ -352,8 +339,9 @@ void write_mvv_header() {
 	ofile.write((char*)&heightA, sizeof(int));
 	ofile.write((char*)&widthB, sizeof(int));
 	ofile.write((char*)&heightB, sizeof(int));
+	ofile.write((char*)&numFrames, sizeof(int));
 
-	int numZeros = 11;
+	int numZeros = 10;
 	// numBytes = 4*numZeros
 	int zero = 0;
 	for (int j = 0; j < numZeros; j++) {
@@ -364,6 +352,53 @@ void write_mvv_header() {
 
 }
 
+void save_frame_info(short** gridA, short** gridB,
+	char** rChannelA, char** gChannelA, char** bChannelA, char** rChannelB, char** gChannelB, char** bChannelB,
+	int** affineForward, int** affineReverse, int widthA, int heightA, int widthB, int heightB, int numFrames) {
+	char version[4] = { '0','1','0','0' };
+	write_mvv_header(version, widthA, heightA, widthB, heightB, numFrames);
+	
+	// frame header 16 bytes long
+	fstream file("../data_store/mvv_files/frame.mvv", ios::in | ios::binary);
+
+	int frameNumber = 1;
+	file.write((char*)&frameNumber, sizeof(int));
+
+	int numZeros = 3;
+	// numBytes = 4*numZeros
+	int zero = 0;
+	for (int j = 0; j < numZeros; j++) {
+		file.write((char*)&zero, sizeof(int));
+	}
+
+	int numTriangles = sizeof(affineForward) / sizeof(affineForward[0]);
+	int numTrianglesReverse = sizeof(affineReverse) / sizeof(affineReverse[0]);
+
+	// triangles, affine params
+
+	// rgb channel
+
+	// t channel
+
+	// write mvv body
+	// grid[y][x]
+	// rows, columns
+	// channel[y][x]
+}
+
+char** read_image_channel(int width, int height) {
+	char** channel = new char*[height];
+	// could be some comparison to expected width
+	for (int h = 0; h < height; h++)
+	{
+		channel[h] = new char[width];
+		for (int w = 0; w < width; w++)
+		{
+			channel[h][w] = 0;
+		}
+	}
+	return channel;
+}
 
 void save_frame_master(string img1path, string img2path) {
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
@@ -381,8 +416,8 @@ void save_frame_master(string img1path, string img2path) {
 	int widthB = imgBoundsB.width;
 	int heightB = imgBoundsB.height;
 
-	int** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
-	int** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
+	short** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
+	short** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
 
 	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
@@ -390,30 +425,30 @@ void save_frame_master(string img1path, string img2path) {
 	int** affineForwardArray = convert_transforms_to_array(affineForward);
 	int** affineReverseArray = convert_transforms_to_array(affineReverse);
 
-	save_frame_info(gridA, gridB, affineForwardArray, affineReverseArray, widthA, heightA, widthB, heightB);
+	char** rChannelA = read_image_channel(widthA, heightA);
+	char** gChannelA = read_image_channel(widthA, heightA);
+	char** bChannelA = read_image_channel(widthA, heightA);
+	char** rChannelB = read_image_channel(widthB, heightB);
+	char** gChannelB = read_image_channel(widthB, heightB);
+	char** bChannelB = read_image_channel(widthB, heightB);
 
+	int numFrames = 1;
+
+	save_frame_info(gridA, gridB, rChannelA, gChannelA, bChannelA, rChannelB, gChannelB, bChannelB,
+		affineForwardArray, affineReverseArray, widthA, heightA, widthB, heightB, numFrames);
 	cin.get();
 }
 
 int danny_test() {
 	// master function for constructing and saving a frame
+	/*
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
-	//save_frame_master(img1path, img2path);
-
-	/*
-	int** gridA = 0;
-	int** gridB = 0;
-	int** affFwd = 0;
-	int** affRvs = 0;
-	int wA = 12;
-	int hA = 24;
-	int wB = 72349;
-	int hB = 120002;
-	save_frame_info(gridA, gridB, affFwd, affRvs, wA, hA, wB, hB);
-	return 0;
+	save_frame_master(img1path, img2path);
 	*/
-	write_mvv_header();
+
+	io_test();
+
 	return 0;
 }
 

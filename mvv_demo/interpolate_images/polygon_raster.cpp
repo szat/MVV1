@@ -139,14 +139,14 @@ void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
 	waitKey(1);
 }
 
-int** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
-	int** grid = new int*[height + 1];
+short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
+	short** grid = new short*[height];
 	// Initializing arrays to default -1 value, which indicates no triangulation in this region.
 
-	for (int h = 0; h < height + 1; h++)
+	for (int h = 0; h < height; h++)
 	{
-		grid[h] = new int[width + 1];
-		for (int w = 0; w < width + 1; w++)
+		grid[h] = new short[width];
+		for (int w = 0; w < width; w++)
 		{
 			grid[h][w] = -1;
 		}
@@ -157,8 +157,8 @@ int** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 	for (int i = 0; i < numRaster; i++) {
 		int numPixels = raster[i].size();
 		for (int j = 0; j < numPixels; j++) {
-			int x = raster[i][j].x;
-			int y = raster[i][j].y;
+			short x = (short)raster[i][j].x;
+			short y = (short)raster[i][j].y;
 			// weird index swapping
 			// triangle index for the affine transforms
 			grid[y][x] = i;
