@@ -335,40 +335,33 @@ void save_frame_info(int** gridA, int** gridB, int** affineForward, int** affine
 	ofile.close();
 }
 
-void binary_read_test() {
-	char majorVersion1 = '0';
-	char majorVersion2 = '1';
-	char minorVersion1 = '0';
-	char minorVersion2 = '0';
-	int widthA = 14;
-	int heightA = 39;
-	int widthB = 213;
-	int heightB = 324903;
-	const float f = 3.14f;
+void write_mvv_header() {
+	char version[4] = { '0','1','0','0' };
+	int versionLength = 4;
+	int widthA = 667;
+	int heightA = 1000;
+	int widthB = 667;
+	int heightB = 1000;
+	
 	std::ofstream ofile("../data_store/mvv_files/frame.mvv", std::ios::binary);
-	ofile.write((char*)&majorVersion1, sizeof(char));
-	ofile.write((char*)&majorVersion2, sizeof(char));
-	ofile.write((char*)&minorVersion1, sizeof(char));
-	ofile.write((char*)&minorVersion2, sizeof(char));
+	
+	for (int i = 0; i < versionLength; i++) {
+		ofile.write((char*)&version[i], sizeof(char));
+	}
 	ofile.write((char*)&widthA, sizeof(int));
 	ofile.write((char*)&heightA, sizeof(int));
 	ofile.write((char*)&widthB, sizeof(int));
 	ofile.write((char*)&heightB, sizeof(int));
 
-	int numTriangles = 100;
-	ofile.write((char*)&numTriangles, sizeof(int));
+	int numZeros = 11;
+	// numBytes = 4*numZeros
+	int zero = 0;
+	for (int j = 0; j < numZeros; j++) {
+		ofile.write((char*)&zero, sizeof(int));
+	}
+
 	ofile.close();
 
-
-	ifstream r("../data_store/mvv_files/frame.mvv");
-	int in_ints[6];
-	r.read((char*)&in_ints, sizeof(in_ints));
-	for (int i = 0; i < 5; i++) {
-		cout << in_ints[i] << " ";
-	}
-	int imin = INT_MIN; // minimum value
-	int imax = INT_MAX;
-	cout << "Done";
 }
 
 
@@ -420,7 +413,7 @@ int danny_test() {
 	save_frame_info(gridA, gridB, affFwd, affRvs, wA, hA, wB, hB);
 	return 0;
 	*/
-	binary_read_test();
+	write_mvv_header();
 	return 0;
 }
 

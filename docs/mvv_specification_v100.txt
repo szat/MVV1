@@ -22,7 +22,7 @@ HEADER (64 BYTES)
 ----------------------
 0: (char[4]) Filespec version number
 (first two allocated for major version, second two for minor verson, starting at 01.00)
-1: total number of frames in this file
+1: (int) total number of frames in this file
 2: (int) imageA width
 3: (int) imageA height
 4: (int) imageB width
@@ -50,6 +50,19 @@ T block:
 short[][] (2 bytes)
 
 
+
+2. Validation and Corruption
+
+How to check that an .mvv file is valid?
+-Byte lengths, ensuring that everything is in it's place, scanning through
+
+MVV Validator command line application
+
+
+4. Compression Scheme
+
+In its current form, the .mvv file format is uncompressed. Further iterations
+will require some combination of temporal and spatial compression.
 
 11.  Interoperability Considerations
 
