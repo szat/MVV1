@@ -14,6 +14,12 @@ using namespace cv;
 
 // what IO functions should we have:
 
+float** convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_params) {
+	int num_triangles = forward_params.size();
+	float** params = new float*[num_triangles];
+	return params;
+}
+
 void save_csv(string folder_name, string file_name, float** affine_params, int num_triangles) {
 	ofstream csv_file;
 	string full_path = "../data_store/" + folder_name + "/" + file_name;
@@ -31,11 +37,7 @@ void save_csv(string folder_name, string file_name, float** affine_params, int n
 }
 
 float** read_csv(string folder_name, string file_name) {
-	// will read entire csv file
-	// csv[triangle#][12floats]
-
-
-	
+	// this is very inefficient
 
 	string full_path = "../data_store/" + folder_name + "/" + file_name;
 
@@ -45,6 +47,7 @@ float** read_csv(string folder_name, string file_name) {
 	stringstream str_stream;
 	str_stream << csv_file.rdbuf();//read the file
 	//string str = strStream.str();//str holds the content of the file
+
 
 	int triangles;
 	string line;
@@ -67,6 +70,7 @@ float** read_csv(string folder_name, string file_name) {
 		}
 		params[i] = param_list;
 	}
+
 
 	return params;
 }
@@ -106,21 +110,7 @@ int io_test() {
 		}
 	}
 	//save_csv("csv", "triangles.csv", floats, num_triangles);
-
-
-
 	float** result = read_csv("csv", "triangles.csv");
-
-	
-	for (int i = 0; i < 300; i++) {
-		for (int j = 0; j < 12; j++) {
-			float test = result[i][j];
-			cout << result[i][j] << ",";
-		}
-		cout << "\n";
-	}
-	
-
 	return 0;
 }
 

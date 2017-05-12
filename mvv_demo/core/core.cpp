@@ -403,8 +403,11 @@ char** read_image_channel(int width, int height) {
 void save_frame_master(string img1path, string img2path) {
 	MatchedGeometry geometry = read_matched_points_from_file(img1path, img2path);
 
+	
 	vector<Vec6f> trianglesA = geometry.sourceGeometry.triangles;
 	vector<Vec6f> trianglesB = geometry.targetGeometry.triangles;
+	
+	/*
 	Rect imgBoundsA = geometry.sourceGeometry.img;
 	Rect imgBoundsB = geometry.targetGeometry.img;
 
@@ -418,36 +421,23 @@ void save_frame_master(string img1path, string img2path) {
 
 	short** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
 	short** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
+	*/
 
-	vector<Mat> affineForward = get_affine_transforms(trianglesA, trianglesB);
-	vector<Mat> affineReverse = get_affine_transforms(trianglesB, trianglesA);
+	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
+	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
 
-	int** affineForwardArray = convert_transforms_to_array(affineForward);
-	int** affineReverseArray = convert_transforms_to_array(affineReverse);
+	float** affine_params = convert_vector_params(affine_forward, affine_reverse);
 
-	char** rChannelA = read_image_channel(widthA, heightA);
-	char** gChannelA = read_image_channel(widthA, heightA);
-	char** bChannelA = read_image_channel(widthA, heightA);
-	char** rChannelB = read_image_channel(widthB, heightB);
-	char** gChannelB = read_image_channel(widthB, heightB);
-	char** bChannelB = read_image_channel(widthB, heightB);
-
-	int numFrames = 1;
-
-	save_frame_info(gridA, gridB, rChannelA, gChannelA, bChannelA, rChannelB, gChannelB, bChannelB,
-		affineForwardArray, affineReverseArray, widthA, heightA, widthB, heightB, numFrames);
 	cin.get();
 }
 
 int danny_test() {
 	// master function for constructing and saving a frame
-	/*
+	
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
 	save_frame_master(img1path, img2path);
-	*/
-
-	io_test();
+	
 
 	return 0;
 }
