@@ -5,29 +5,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <vector>
 
 using namespace std;
 using namespace cv;
 
-#define ROOT_DATA_FOLDER "../data_store"
-
 // what IO functions should we have:
 
-void save_csv(string folder_name, string file_name, float** affine_params) {
-	for (int i = 0; i < 300; i++) {
-		for (int j = 0; j < 12; j++) {
-			if (j != 11) {
-				cout << affine_params[i][j] << ",";
-			}
-			else {
-				cout << affine_params[i][j];
-			}
-
+void save_csv(string folder_name, string file_name, float** affine_params, int num_triangles) {
+	ofstream csv_file;
+	string full_path = "../data_store/" + folder_name + "/" + file_name;
+	csv_file.open(full_path);
+	for (int i = 0; i < num_triangles; i++) {
+		// affine parameters (12 values, 6 forward, 6 reverse)
+		int num_affine_params = 12;
+		for (int j = 0; j < num_affine_params; j++) {
+			csv_file << affine_params[i][j] << ",";
 		}
-		cout << "\n";
+		csv_file << "\n";
 	}
+	csv_file.close();
 }
 
 float** read_csv(string folder_name, string file_name) {
@@ -64,17 +63,18 @@ short** read_frame_t(string folder_name, string file_name) {
 
 int io_test() {
 	// header is 64 bytes
+	int num_triangles = 300;
+	int num_affine_params = 12;
 
-	
-	float** floats = new float*[300];
-	for (int i = 0; i < 300; i++) {
-		floats[i] = new float[12];
-		for (int j = 0; j < 12; j++) {
+	float** floats = new float*[num_triangles];
+	for (int i = 0; i < num_triangles; i++) {
+		floats[i] = new float[num_affine_params];
+		for (int j = 0; j < num_affine_params; j++) {
 			floats[i][j] = (float)i * 0.3425 * (float)j;
 		}
 	}
 
-	save_csv("", "", floats);
+	save_csv("csv", "triangles.csv", floats, num_triangles);
 
 	return 0;
 }
