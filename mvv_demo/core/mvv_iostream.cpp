@@ -34,8 +34,8 @@ float** read_csv(string folder_name, string file_name) {
 	// will read entire csv file
 	// csv[triangle#][12floats]
 
-	int length = 300;
-	float** params = new float*[length];
+
+	
 
 	string full_path = "../data_store/" + folder_name + "/" + file_name;
 
@@ -48,17 +48,26 @@ float** read_csv(string folder_name, string file_name) {
 
 	int triangles;
 	string line;
+	getline(str_stream, line);
+	triangles = stoi(line);
+	float** params = new float*[triangles];
 
-	std::getline(str_stream, line) >> triangles;
-
-
-	while (std::getline(str_stream, line)) {
-		std::cout << line << std::endl;
+	for (int i = 0; i < triangles; i++) {
+		float* param_list = new float[12];
+		getline(str_stream, line);
+		std::stringstream  lineStream(line);
+		std::string        cell;
+		int j = 0;
+		while (std::getline(lineStream, cell, ','))
+		{
+			const char *char_cell = cell.c_str();
+			float f = atof(char_cell);
+			param_list[j] = f;
+			j++;
+		}
+		params[i] = param_list;
 	}
-	// conversion between C-style character array and float**
 
-
-	// 
 	return params;
 }
 
@@ -96,19 +105,21 @@ int io_test() {
 			floats[i][j] = (float)i * 0.3425 * (float)j;
 		}
 	}
-	save_csv("csv", "triangles.csv", floats, num_triangles);
+	//save_csv("csv", "triangles.csv", floats, num_triangles);
 
-	//read_csv("csv", "triangles.csv");
-	/*
+
+
 	float** result = read_csv("csv", "triangles.csv");
 
+	
 	for (int i = 0; i < 300; i++) {
 		for (int j = 0; j < 12; j++) {
-			cout << result[i][j] << endl;
+			float test = result[i][j];
+			cout << result[i][j] << ",";
 		}
 		cout << "\n";
 	}
-	*/
+	
 
 	return 0;
 }
