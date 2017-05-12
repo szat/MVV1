@@ -72,11 +72,14 @@ __global__ void rowOperation(float * d_matrix1D_out, float * d_matrix1D_in, int 
 	}
 }
 
-__global__ void image_to_inter_1C(int * d_matrix1D_out, int * d_matrix1D_in, int * d_matrixTriangles1D_in, int numRows, int numCols, float * d_triangleData1D_in, float tau) {
-	int rowIdx = blockIdx.x; //give a row per block
-	int colIdx = threadIdx.x; //give a col per thread, thus a pixel per thread
+__global__ void image_to_inter_1C(unsigned char * d_matrix1D_out, unsigned char * d_matrix1D_in, int numRows, int numCols, float tau) {
+	int rowIdx = blockIdx.x; //give a row per block ==> numRows
+	int colIdx = threadIdx.x; //give a col per thread, thus a pixel per thread ==> numCols
 	if (rowIdx < numRows && colIdx < numCols && 0 <= tau && tau <= 1) {
 		int idx2D_in[] = { rowIdx, colIdx };
+		int matIdx_in = flatten_idx_gpu(idx2D_in, numRows, numCols);
+		d_matrix1D_out[matIdx_in] = (unsigned char) (tau * (short) d_matrix1D_in[matIdx_in]);
+		/*
 		int matIdx_in = flatten_idx_gpu(idx2D_in, numRows, numCols);
 		int triangleIdx = d_matrixTriangles1D_in[matIdx_in];
 		if (triangleIdx != -1) {
@@ -87,6 +90,7 @@ __global__ void image_to_inter_1C(int * d_matrix1D_out, int * d_matrix1D_in, int
 			int matIdx_out = flatten_idx_gpu(idx2D_out, numRows, numCols);
 			d_matrix1D_out[matIdx_out] = d_matrix1D_in[matIdx_in];
 		}
+		*/
 	}
 }
 
@@ -116,119 +120,74 @@ int * unflatten_idx(int arrayIdx, int numRows, int numCols) {
 
 int main(int argc, char ** argv) {
 	cout << "Welcome to cuda_demo testing unit!" << endl;
-	cout << "Loading two images with openCV!" << endl;
+	cout << "Loading one image with openCV! (grayscale)" << endl;
 
-	string address1 = "..\\data_store\\david_1.jpg";
+	string address1 = "..\\data_store\\medium_picture.jpg";
 	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
-	string address2 = "..\\data_store\\david_2_r.jpg";
-	Mat img2 = imread(address2, IMREAD_GRAYSCALE);
 
 	const int numRows = img1.rows;
 	const int numCols = img1.cols;
 
 	const int ARRAY_SIZE = numRows * numCols;
-	const int ARRAY_BYTES = ARRAY_SIZE * sizeof(float);
+	const int ARRAY_BYTES = ARRAY_SIZE * sizeof(unsigned char);
 
-	Mat img1Flat = img1.reshape(1, 1);
-	Mat img2Flat = img2.reshape(1, 1);
-
-	uchar * dataPtr1 = img1Flat.data;
-	uchar * dataPtr2 = img2Flat.data;
-
-
-	//step 1 convert opencv mat to a 1dim mat
-	//step 2 extract data
-	//step 3 do something with data
-	//step 4 recreate 1dim mat'
-	//step 5 convert to 2d mat
-	//step 6 display
-
-	for (int row = 0; row < numRows; row++) {
-		cout << endl;
-		for (int col = 0; col < numCols; col++) {
-			cout << dataPtr1[row*numCols + col] << " ";
-		}
-	}
-
-	cout << dataPtr1[numRows + numRows] << endl;
-	cout << dataPtr1[numRows + numRows + 1] << endl;
-
-	//Matrix in 1D indexing
-	float *h_matrix1D_in;
-	h_matrix1D_in = (float *)malloc(ARRAY_BYTES);
-
-	//Populate
-	printf("\n\nPopulate matrix1D(%d,%d) with double for loop, with matrix1D[row*numCols + col] (as used in flatten())...\n", numRows, numCols);
-	for (int row = 0; row < numRows; row++) {
-		for (int col = 0; col < numCols; col++) {
-			h_matrix1D_in[row*numCols + col] = row + (float)col/100;
-		}
-	}
-
-	//Visualize canonically in 1D
-	/*
-	printf("\nVisualize matrix1D_in(%d,%d) with one for loop...\n", numRows, numCols);
-	for (int i = 0; i < ARRAY_SIZE; i++) {
-		if (i % numCols == 0) printf("\n");
-		if ((int)h_matrix1D_in[i] < 10) {
-			printf(" %.2f ", h_matrix1D_in[i]);
-		}
-		else {
-			printf("%.2f ", h_matrix1D_in[i]);
-		}
-	}
-	printf("\n");
-	*/
-
-	float *h_matrix1D_out;
-	h_matrix1D_out = (float *)malloc(ARRAY_BYTES);
-
-	// declare GPU memory pointers
-	float * d_matrix1D_in;
-	float * d_matrix1D_out;
-
-	// allocate GPU memory
-	cudaMalloc((void**)&d_matrix1D_in, ARRAY_BYTES);
-	cudaMalloc((void**)&d_matrix1D_out, ARRAY_BYTES);
-
-	// transfer the array to the GPU
-	cudaMemcpy(d_matrix1D_in, h_matrix1D_in, ARRAY_BYTES, cudaMemcpyHostToDevice);
-
-	auto t1 = Clock::now();
+	unsigned char *h_img1Data_in;
+	unsigned char *h_img1Data_out;
+	h_img1Data_out = (unsigned char *)malloc(ARRAY_BYTES);
+	h_img1Data_in = (unsigned char *)malloc(ARRAY_BYTES);
 	
-	// launch the kernel
-	// rowOperation << <1, numRows >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);//77827ns for 100x100, 41000ns for 100x1000
-	// colOperation << <1, numCols >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);//31230ns for 100x100, 81000ns for 100x1000
-	rowOperation_block << <numRows, numCols >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);//56400ns for 100x100, 28800ns for 100x1000, 335012ns for 10kx10k
-	//colOperation_block << < numCols, numRows >> > (d_matrix1D_out, d_matrix1D_in, numRows, numCols);//28800ns for 100x100, 32000ns for 100x1000, 353185ns for 10kx10k
-	// cube << <1, ARRAY_SIZE >> > (d_matrix1D_out, d_matrix1D_in);
+	
+	Mat img1Flat = img1.reshape(1, 1);
+	h_img1Data_in = img1Flat.data;
+
+	//for(int i = 0; i < ARRAY_SIZE; i++) h_img1Data_out[i] = 0; //just to put something in it
+
+	unsigned char * d_img1Data_in;
+	unsigned char * d_img1Data_out;
+
+	
+
+	cudaMalloc((void**)&d_img1Data_in, ARRAY_BYTES);
+	cudaMalloc((void**)&d_img1Data_out, ARRAY_BYTES);
+
+
+	for (int i = 0; i < 30; i++) {
+		
+		
+		cudaMemcpy(d_img1Data_in, h_img1Data_in, ARRAY_BYTES, cudaMemcpyHostToDevice);
+		auto t1 = Clock::now();
+		image_to_inter_1C << <numRows, numCols >> > (d_img1Data_out, d_img1Data_in, numRows, numCols, 0.7);
+		
+		cudaMemcpy(h_img1Data_out, d_img1Data_out, ARRAY_BYTES, cudaMemcpyDeviceToHost);
+		auto t2 = Clock::now();
+		
+		std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
+	}
+
+	Mat out = Mat(1, numRows*numCols, CV_8UC1, h_img1Data_out);
+
+	cout << "out size height " << out.size().height << endl;
+	cout << "out size width " << out.size().width << endl;
+
+	out = out.reshape(1, numRows);
+
+	cout << "out size height " << out.size().height << endl;
+	cout << "out size width " << out.size().width << endl;
+
+
+
+	namedWindow("Result", WINDOW_AUTOSIZE);
+	imshow("Result", img1);
+	waitKey(0);
+	cin.ignore();
+
 	//cudaThreadSynchronize();
 
-	auto t2 = Clock::now();
-	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
+	//Free
+	cudaFree(d_img1Data_in);
+	cudaFree(d_img1Data_out);
 
-	// copy back the result array to the CPU
-	cudaMemcpy(h_matrix1D_out, d_matrix1D_out, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-
-	//Visualize canonically in 1D
-	/*
-	printf("\nVisualize matrix1D_in(%d,%d) with one for loop...\n", numRows, numCols);
-	for (int i = 0; i < ARRAY_SIZE; i++) {
-		if (i % numCols == 0) printf("\n");
-		if ((int)h_matrix1D_out[i] < 10) {
-			printf(" %.2f ", h_matrix1D_out[i]);
-		}
-		else {
-			printf("%.2f ", h_matrix1D_out[i]);
-		}
-	}
-	printf("\n");
-	*/
-
-	cudaFree(d_matrix1D_in);
-	cudaFree(d_matrix1D_out);
-
-	std::cin.ignore();
+	
 
 	return 0;
 }
