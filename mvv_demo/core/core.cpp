@@ -407,7 +407,7 @@ void save_frame_master(string img1path, string img2path) {
 	vector<Vec6f> trianglesA = geometry.sourceGeometry.triangles;
 	vector<Vec6f> trianglesB = geometry.targetGeometry.triangles;
 	
-	/*
+	
 	Rect imgBoundsA = geometry.sourceGeometry.img;
 	Rect imgBoundsB = geometry.targetGeometry.img;
 
@@ -421,10 +421,13 @@ void save_frame_master(string img1path, string img2path) {
 
 	short** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
 	short** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
-	*/
+	
 
 	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
+
+	// save affine params as .csv
+	// save image raster as grayscale .png from 0-65536 (2 images)
 
 	float** affine_params = convert_vector_params(affine_forward, affine_reverse);
 
