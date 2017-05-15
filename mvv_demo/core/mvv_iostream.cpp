@@ -112,6 +112,7 @@ void save_grayscale_t(string folder_name, string file_name, short** frame_triang
 
 short** read_grayscale_t(string folder_name, string file_name) {
 	short** frame = 0;
+
 	return frame;
 }
 

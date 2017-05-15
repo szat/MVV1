@@ -407,7 +407,8 @@ void save_frame_master(string img1path, string img2path) {
 	// save image raster as grayscale .png from 0-65536 (2 images)
 	short** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
 	short** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
-	save_grayscale_t("raster", "grayscale_A.png", gridA, widthA, heightA);
+	save_grayscale_t("raster", "grayscale_A.csv", gridA, widthA, heightA);
+	save_grayscale_t("raster", "grayscale_B.csv", gridB, widthB, heightB);
 
 	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
@@ -417,8 +418,6 @@ void save_frame_master(string img1path, string img2path) {
 
 	cout << "Finished.";
 
-	render_matched_geometry(geometry.sourceGeometry, "test1");
-	render_matched_geometry(geometry.targetGeometry, "test2");
 	cin.get();
 }
 
