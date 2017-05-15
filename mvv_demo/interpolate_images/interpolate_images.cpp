@@ -246,6 +246,7 @@ void purple_mesh_test() {
 	cout << "Purple mesh test";
 }
 
+// this code makes no sense to me -Danny
 int** convert_transforms_to_array(std::vector<cv::Mat> affine) {
 	int numTriangles = affine.size();
 	int numParameters = 6;

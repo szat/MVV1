@@ -237,8 +237,8 @@ long long pair_hash(Point2f pt) {
 	int imax = std::numeric_limits<int>::max();
 
 	pair<int, int> hash = pair<int, int>();
-	long long first = (long long) (pt.x * 1000);
-	long long second = (long long) (pt.y * 1000);
+	long long first = (long long) (pt.x * 1000000);
+	long long second = (long long) (pt.y * 1000000);
 
 	return first * (imax + 1) + second;
 }

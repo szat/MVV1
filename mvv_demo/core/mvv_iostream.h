@@ -4,19 +4,15 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 
-float** convert_vector_params(std::vector<cv::Mat> forward_params, std::vector<cv::Mat> reverse_params);
+double** convert_vector_params(std::vector<cv::Mat> forward_params, std::vector<cv::Mat> reverse_params);
 
-void save_csv(std::string folder_name, std::string file_name, float** affine_params, int num_triangles);
+void save_csv(std::string folder_name, std::string file_name, double** affine_params, int num_triangles);
 
 float** read_csv(std::string folder_name, std::string file_name);
 
-void save_frame(std::string folder_name, std::string file_name, char** img);
+void save_grayscale_t(std::string folder_name, std::string file_name, short** frame_triangle_grid, int widthA, int heightA);
 
-char** read_frame(std::string folder_name, std::string file_name);
-
-void save_frame_t(std::string folder_name, std::string file_name, short** frame_triangle_grid);
-
-short** read_frame_t(std::string folder_name, std::string file_name);
+short** read_grayscale_t(std::string folder_name, std::string file_name);
 
 int io_test();
 

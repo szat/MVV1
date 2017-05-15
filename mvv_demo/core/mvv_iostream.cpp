@@ -14,13 +14,31 @@ using namespace cv;
 
 // what IO functions should we have:
 
-float** convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_params) {
+double** convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_params) {
 	int num_triangles = forward_params.size();
-	float** params = new float*[num_triangles];
+	double** params = new double*[num_triangles];
+	for (int i = 0; i < num_triangles; i++) {
+		double* param_line = new double[12];
+		param_line[0] = forward_params[i].at<double>(0, 0);
+		param_line[1] = forward_params[i].at<double>(0, 1);
+		param_line[2] = forward_params[i].at<double>(0, 2);
+		param_line[3] = forward_params[i].at<double>(1, 0);
+		param_line[4] = forward_params[i].at<double>(1, 1);
+		param_line[5] = forward_params[i].at<double>(1, 2);
+		param_line[6] = reverse_params[i].at<double>(0, 0);
+		param_line[7] = reverse_params[i].at<double>(0, 1);
+		param_line[8] = reverse_params[i].at<double>(0, 2);
+		param_line[9] = reverse_params[i].at<double>(1, 0);
+		param_line[10] = reverse_params[i].at<double>(1, 1);
+		param_line[11] = reverse_params[i].at<double>(1, 2);
+		cout << forward_params[i].at<double>(0, 0) << ",";
+		cout << reverse_params[i].at<double>(0, 0) << ",";
+		params[i] = param_line;
+	}
 	return params;
 }
 
-void save_csv(string folder_name, string file_name, float** affine_params, int num_triangles) {
+void save_csv(string folder_name, string file_name, double** affine_params, int num_triangles) {
 	ofstream csv_file;
 	string full_path = "../data_store/" + folder_name + "/" + file_name;
 	csv_file.open(full_path);
@@ -75,24 +93,14 @@ float** read_csv(string folder_name, string file_name) {
 	return params;
 }
 
-void save_frame(string folder_name, string file_name, char** img) {
-	// this should not need to be invoked, we alraedy have the images
-}
+void save_grayscale_t(string folder_name, string file_name, short** frame_triangle_grid, int widthA, int heightA) {
 
-char** read_frame(string folder_name, string file_name) {
-	// we will need a way to quickly read out an image to a char[][]
-	// for cuda processing
 
-	// use imageMagick
-	char** test = 0;
-	return test;
-}
 
-void save_frame_t(string folder_name, string file_name, short** frame_triangle_grid) {
 	// 
 }
 
-short** read_frame_t(string folder_name, string file_name) {
+short** read_grayscale_t(string folder_name, string file_name) {
 	short** frame = 0;
 	return frame;
 }
