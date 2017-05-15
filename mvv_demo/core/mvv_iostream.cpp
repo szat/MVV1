@@ -93,11 +93,21 @@ float** read_csv(string folder_name, string file_name) {
 	return params;
 }
 
-void save_grayscale_t(string folder_name, string file_name, short** frame_triangle_grid, int widthA, int heightA) {
-
-
-
-	// 
+void save_grayscale_t(string folder_name, string file_name, short** frame_triangle_grid, int width, int height) {
+	ofstream csv_file;
+	string full_path = "../data_store/" + folder_name + "/" + file_name;
+	csv_file.open(full_path);
+	csv_file << width << "\n";
+	csv_file << height << "\n";
+	for (int i = 0; i < height; i++) {
+		// affine parameters (12 values, 6 forward, 6 reverse)
+		for (int j = 0; j < width; j++) {
+			csv_file << frame_triangle_grid[i][j] << ",";
+		}
+		csv_file << "\n";
+	}
+	csv_file.close();
+	//grid[y][x] = i;
 }
 
 short** read_grayscale_t(string folder_name, string file_name) {
