@@ -33,6 +33,8 @@
 #define CLOCKS_PER_MS (CLOCKS_PER_SEC / 1000)
 #define NUM_THREADS 16
 
+typedef std::chrono::high_resolution_clock Clock;
+
 using namespace std;
 using namespace cv;
 
@@ -423,11 +425,21 @@ void save_frame_master(string img1path, string img2path) {
 
 int danny_test() {
 	// master function for constructing and saving a frame
-	
+	/*
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
 	save_frame_master(img1path, img2path);
-	
+	*/
+
+	auto t1 = Clock::now();
+
+	int** result = read_grayscale_t("raster", "grayscale_A.csv");
+
+	auto t2 = Clock::now();
+	std::cout << "Delta t2-t1: "
+		<< std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count()
+		<< " nanoseconds" << std::endl;
+
 
 	return 0;
 }

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <chrono>
 #include <vector>
@@ -110,8 +111,38 @@ void save_grayscale_t(string folder_name, string file_name, short** frame_triang
 	//grid[y][x] = i;
 }
 
-short** read_grayscale_t(string folder_name, string file_name) {
-	short** frame = 0;
+int** read_grayscale_t(string folder_name, string file_name) {
+	// this is very inefficient
+
+	string full_path = "../data_store/" + folder_name + "/" + file_name;
+
+	ifstream csv_file;
+	csv_file.open(full_path);//open the input file
+
+	stringstream str_stream;
+	str_stream << csv_file.rdbuf();//read the file
+								   //string str = strStream.str();//str holds the content of the file
+	string str = str_stream.str();
+	istringstream iss(str);
+	string token;
+
+	getline(iss, token, '\n');
+	int width = atoi(token.c_str());
+	getline(iss, token, '\n');
+	int height = atoi(token.c_str());
+
+	int ** frame = new int*[height];
+	for (int i = 0; i < height; i++) {
+		int * frame_line = new int[width];
+		getline(iss, token, '\n');
+		istringstream istringstream_sub(token);
+		string sub_token;
+		for (int j = 0; j < width; j++) {
+			getline(istringstream_sub, sub_token, ',');
+			int cell = atoi(sub_token.c_str());
+			frame_line[j] = cell;
+		}
+	}
 
 	return frame;
 }
