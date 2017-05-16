@@ -149,7 +149,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="binary_io.h" />
-    <ClInclude Include="mvv_iostream.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -157,7 +156,6 @@
   <ItemGroup>
     <ClCompile Include="binary_io.cpp" />
     <ClCompile Include="core.cpp" />
-    <ClCompile Include="mvv_iostream.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@
 #include <string>
 
 using namespace std;
-
+using namespace cv;
 // Note about all of this:
 // OS-dependent! This will not work on other architectures (for now).
 
@@ -42,10 +42,7 @@ void write_short_array(string full_path, short * input, int length) {
 	for (int k = 0; k < 4; k++) {
 		length_array[k] = (length >> k * 8) & 0xFF;
 	}
-	for (int i = 0; i < length; i++) {
-		char_input[i * 2] = input[i] & 0xFF;
-		char_input[i * 2 + 1] = (input[i] >> 8) & 0xFF;
-	}
+	memcpy(char_input, input, length * 2);
 	ofile.write(length_array, 4);
 	ofile.write(char_input, length * 2);
 }
@@ -61,10 +58,7 @@ short * read_short_array(string full_path, int &length) {
 	char * result = new char[length * 2];
 	ifile.read(result, length * 2);
 	short * short_result = new short[length];
-	for (int i = 0; i < length; i++) {
-		short_result[i] = (result[i * 2 + 1] << 8) + (unsigned char)result[i * 2];
-	}
-
+	memcpy(short_result, result, length * 2);
 	return short_result;
 }
 
@@ -155,10 +149,30 @@ void save_raster(string full_path, short ** raster, int width, int height) {
 	write_short_array(full_path, raster_1D, size);
 }
 
+float* convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_params) {
+	int num_triangles = forward_params.size();
+	float* params = new float[num_triangles * 12];
+	for (int i = 0; i < num_triangles; i++) {
+		int inc = 12 * i;
+		params[inc] = (float)forward_params[i].at<double>(0, 0);
+		params[inc + 1] = (float)forward_params[i].at<double>(0, 1);
+		params[inc + 2] = (float)forward_params[i].at<double>(0, 2);
+		params[inc + 3] = (float)forward_params[i].at<double>(1, 0);
+		params[inc + 4] = (float)forward_params[i].at<double>(1, 1);
+		params[inc + 5] = (float)forward_params[i].at<double>(1, 2);
+		params[inc + 6] = (float)reverse_params[i].at<double>(0, 0);
+		params[inc + 7] = (float)reverse_params[i].at<double>(0, 1);
+		params[inc + 8] = (float)reverse_params[i].at<double>(0, 2);
+		params[inc + 9] = (float)reverse_params[i].at<double>(1, 0);
+		params[inc + 10] = (float)reverse_params[i].at<double>(1, 1);
+		params[inc + 11] = (float)reverse_params[i].at<double>(1, 2);
+	}
+	return params;
+}
+
+
 void test_binary() {
 	cout << "Test binary";
-
-
 	timing();
 	cout << "Testing";
 	// test time for 1 million char, 1 million short
