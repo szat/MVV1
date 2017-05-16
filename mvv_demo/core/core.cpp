@@ -7,13 +7,13 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 #include <ctime>
-#include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <chrono>
 #include <fstream>
 
 #include "mvv_iostream.h"
+#include "binary_io.h"
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -430,7 +430,7 @@ int danny_test() {
 	string img2path = "david_2.jpg";
 	save_frame_master(img1path, img2path);
 	*/
-
+	/*
 	auto t1 = Clock::now();
 
 	int** result = read_grayscale_t("raster", "grayscale_A.csv");
@@ -439,7 +439,9 @@ int danny_test() {
 	std::cout << "Delta t2-t1: "
 		<< std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count()
 		<< " nanoseconds" << std::endl;
+	*/
 
+	test_binary();
 
 	return 0;
 }
