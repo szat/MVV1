@@ -57,7 +57,6 @@ the use of this software, even if advised of the possibility of such damage.
 #include <iostream>
 #include <vector>
 #include <ctime>
-#include <stdio.h>
 #include <unordered_map>
 #include <limits>
 #include <stdlib.h>

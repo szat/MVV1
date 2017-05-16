@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
-#include <stdio.h>
 
 static void draw_subdiv_point(cv::Mat& img, cv::Point2f fp, cv::Scalar color);
 

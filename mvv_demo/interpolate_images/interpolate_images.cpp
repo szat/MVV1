@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
-#include <stdio.h>
 
 #include "interpolate_images.h"
 
