@@ -61,7 +61,7 @@ short * read_short_array(string full_path, int &length) {
 	ifile.read(result, length * 2);
 	short * short_result = new short[length];
 	for (int i = 0; i < length; i++) {
-		short_result[i] = (result[i * 2 + 1] >> 8) ^ result[i * 2];
+		short_result[i] = (result[i * 2 + 1] << 8) + (unsigned char)result[i * 2];
 	}
 
 	return short_result;
@@ -126,21 +126,7 @@ void test_binary() {
 	//b[0] = si & 0xff;
 	//b[1] = (si >> 8) & 0xff;
 
-	int len = 20000;
-
-	short * stuff = new short[len];
-	for (int i = 0; i < len; i++) {
-		stuff[i] = (short)i;
-	}
-
-	string full_path = "../data_store/foobar.bin";
-	write_short_array(full_path, stuff, len);
-
-	int length = 0;
-	short *result = read_short_array(full_path, length);
-
-	short result25 = result[25];
-	short result1000 = result[1000];
+	timing();
 	cout << "Testing";
 	// test time for 1 million char, 1 million short
 };
