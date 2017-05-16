@@ -42,6 +42,7 @@ user_debug.txt
 *.svg
 
 # Visual studio generated files
+*.cache
 *.db
 *.opendb
 *.sdf
