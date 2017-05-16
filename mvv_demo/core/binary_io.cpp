@@ -5,19 +5,30 @@
 using namespace std;
 
 
+
+
 void write_char_array(string full_path, char * input, int length) {
 	ofstream ofile(full_path, ios::binary);
-
+	char * length_array = new char[4];
+	for (int k = 0; k < 4; k++) {
+		length_array[k] = (length >> k * 8) & 0xFF;
+	}
+	ofile.write(length_array, 4);
 	ofile.write(input, length);
-	ofile.write((char*)length, 4);
 	ofile.close();
 }
 
 char * read_char_array(string full_path, int &length) {
 	// modifies length, returns char array
-	char * result = new char[200];
 	ifstream ifile(full_path, ios::binary);
-	ifile.read(result, 200);
+	char * int_array = new char[4];
+	ifile.read(int_array, 4);
+	for (int k = 0; k < 4; k++) {
+		unsigned char len_char = (unsigned char)int_array[k];
+		length += len_char << k * 8;
+	}
+	char * result = new char[length];
+	ifile.read(result, length);
 	return result;
 }
 
@@ -54,8 +65,10 @@ void test_binary() {
 
 
 	string full_path = "../data_store/foobar.bin";
-	write_char_array(full_path, stuff, 200);
+	//write_char_array(full_path, stuff, 200);
+	int length = 0;
+	read_char_array(full_path, length);
 
-
+	cout << "Testing";
 	// test time for 1 million char, 1 million short
 };
