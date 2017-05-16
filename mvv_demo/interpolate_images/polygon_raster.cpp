@@ -148,7 +148,7 @@ short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 		grid[h] = new short[width];
 		for (int w = 0; w < width; w++)
 		{
-			grid[h][w] = -1;
+			grid[h][w] = 0;
 		}
 	}
 

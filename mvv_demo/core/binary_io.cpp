@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <string>
 
 using namespace std;
 
@@ -118,6 +119,17 @@ void timing() {
 	std::cout << "read char took "
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count()
 		<< " milliseconds\n";
+}
+
+void save_raster(string full_path, short ** raster, int width, int height) {
+	int size = width * height;
+	short * raster_1D = new short[size];
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			raster_1D[i * width + j] = raster[i][j];
+		}
+	}
+	write_short_array(full_path, raster_1D, size);
 }
 
 void test_binary() {
