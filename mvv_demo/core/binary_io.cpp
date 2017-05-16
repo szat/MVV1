@@ -69,8 +69,31 @@ short * read_short_array(string full_path, int &length) {
 }
 
 void write_float_array(string full_path, float * input, int length) {
+	char * char_input = new char[length * 4];
+	ofstream ofile(full_path, ios::binary);
+	char * length_array = new char[4];
+	for (int k = 0; k < 4; k++) {
+		length_array[k] = (length >> k * 8) & 0xFF;
+	}
+	ofile.write(length_array, 4);
+	memcpy(char_input, input, length * 4);
+	ofile.write(char_input, length * 4);
 }
 
+float * read_float_array(string full_path, int &length) {
+	ifstream ifile(full_path, ios::binary);
+	char * int_array = new char[4];
+	ifile.read(int_array, 4);
+	for (int k = 0; k < 4; k++) {
+		unsigned char len_char = (unsigned char)int_array[k];
+		length += len_char << k * 8;
+	}
+	float * result = new float[length];
+	char * char_result = new char[length * 4];
+	ifile.read(char_result, length * 4);
+	memcpy(result, char_result, length * 4);
+	return result;
+}
 
 void timing() {
 	int len = 1000000;
@@ -135,8 +158,6 @@ void save_raster(string full_path, short ** raster, int width, int height) {
 void test_binary() {
 	cout << "Test binary";
 
-	//b[0] = si & 0xff;
-	//b[1] = (si >> 8) & 0xff;
 
 	timing();
 	cout << "Testing";

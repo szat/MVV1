@@ -415,8 +415,8 @@ void save_frame_master(string img1path, string img2path) {
 	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
 
-	double** affine_params = convert_vector_params(affine_forward, affine_reverse);
-	save_csv("csv", "triangles.csv", affine_params, trianglesA.size());
+	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
+	write_float_array("../data_store/affine/affine_1.bin", affine_params, trianglesA.size() * 12);
 
 	cout << "Finished.";
 
@@ -426,12 +426,12 @@ void save_frame_master(string img1path, string img2path) {
 int danny_test() {
 	// master function for constructing and saving a frame
 
-	string img1path = "david_1.jpg";
-	string img2path = "david_2.jpg";
-	save_frame_master(img1path, img2path);
+	//string img1path = "david_1.jpg";
+	//string img2path = "david_2.jpg";
+	//save_frame_master(img1path, img2path);
 
 
-	//test_binary();
+	test_binary();
 
 	return 0;
 }
