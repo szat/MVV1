@@ -36,15 +36,24 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 }
 
 __global__
-void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_affineData, int subDiv)
+void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv)
 {
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
 	uchar input = d_input[i];
 
+
+
 	if ((r >= h) || (c >= w)) return;
 
+	short raster_index = d_raster1[i];
+
+	if (raster_index != 0) {
+		d_output[i] = input;
+	}
+
+	/*
 	float diff = 1 / (float)subDiv;
 
 	for (int i = 0; i < subDiv; i++) {
@@ -56,6 +65,7 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_af
 			d_output[new_i] = input;
 		}
 	}
+	*/
 }
 
 int main(int argc, char ** argv) {
@@ -76,8 +86,8 @@ int main(int argc, char ** argv) {
 	int num_pixels_1 = 0;
 	int num_pixels_2 = 0;
 	// look into this memory allocation later
-	short *raster1 = read_short_array(raster1_path, num_pixels_1);
-	short *raster2 = read_short_array(raster2_path, num_pixels_2);
+	short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
+	short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
 
 	string affine_path = "../../data_store/affine/affine_1.bin";
 
@@ -108,6 +118,10 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
 	cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
 
+	short *d_raster1;
+	cudaMalloc((void**)&d_raster1, W * H * sizeof(short));
+	cudaMemcpy(d_raster1, h_raster1, W * H * sizeof(short), cudaMemcpyHostToDevice);
+
 	uchar * d_img1In;
 	cudaMalloc((void**)&d_img1In, W*H * sizeof(uchar));
 	cudaMemcpy(d_img1In, h_img1In, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
@@ -124,7 +138,7 @@ int main(int argc, char ** argv) {
 
 	cout << "starting image transformation..." << endl;
 	auto t1 = Clock::now();
-	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affine_data, 4);	
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4);	
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
 
