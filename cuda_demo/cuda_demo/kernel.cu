@@ -82,7 +82,7 @@ int main(int argc, char ** argv) {
 	string affine_path = "../../data_store/affine/affine_1.bin";
 
 	int num_floats = 0;
-	float *affine_params = read_float_array(affine_path, num_floats);
+	float *h_affine_data = read_float_array(affine_path, num_floats);
 
 	int num_triangles = num_floats / 12;
 
@@ -101,14 +101,12 @@ int main(int argc, char ** argv) {
 	h_img1Out = (uchar*)malloc(W*H * sizeof(uchar));
 	for (int j = 0; j < W*H; j++) h_img1Out[j] = 0;
 
-	float h_affineData[6] = {0.966, -0.359, 5, 0.159, 0.966, -5};
-
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
 
-	float * d_affineData;
-	cudaMalloc((void**)&d_affineData, 6 * sizeof(float));
-	cudaMemcpy(d_affineData, h_affineData, 6 * sizeof(float), cudaMemcpyHostToDevice);
+	float * d_affine_data;
+	cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
+	cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
 
 	uchar * d_img1In;
 	cudaMalloc((void**)&d_img1In, W*H * sizeof(uchar));
@@ -126,7 +124,7 @@ int main(int argc, char ** argv) {
 
 	cout << "starting image transformation..." << endl;
 	auto t1 = Clock::now();
-	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData, 4);	
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affine_data, 4);	
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
 
@@ -135,7 +133,7 @@ int main(int argc, char ** argv) {
 
 	cudaFree(d_img1In);
 	cudaFree(d_img1Out);
-	cudaFree(d_affineData);
+	cudaFree(d_affine_data);
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);

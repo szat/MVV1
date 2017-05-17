@@ -408,14 +408,14 @@ void save_frame_master(string img1path, string img2path) {
 	// save image raster as grayscale .png from 0-65536 (2 images)
 	short** gridA = grid_from_raster(widthA, heightA, rasteredTrianglesA);
 	short** gridB = grid_from_raster(widthB, heightB, rasteredTrianglesB);
-	save_raster("../data_store/raster/rasterA.bin", gridA, widthA, heightA);
-	save_raster("../data_store/raster/rasterB.bin", gridB, widthB, heightB);
+	save_raster("../../data_store/raster/rasterA.bin", gridA, widthA, heightA);
+	save_raster("../../data_store/raster/rasterB.bin", gridB, widthB, heightB);
 
 	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
 	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
-	write_float_array("../data_store/affine/affine_1.bin", affine_params, trianglesA.size() * 12);
+	write_float_array("../../data_store/affine/affine_1.bin", affine_params, trianglesA.size() * 12);
 
 	cout << "Finished.";
 

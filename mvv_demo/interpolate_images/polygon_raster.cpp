@@ -143,6 +143,7 @@ short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 	short** grid = new short*[height];
 	// Initializing arrays to default -1 value, which indicates no triangulation in this region.
 
+	
 	for (int h = 0; h < height; h++)
 	{
 		grid[h] = new short[width];
