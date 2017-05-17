@@ -35,7 +35,7 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 }
 
 __global__
-void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_affineData)
+void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_affineData, int nbSub)
 {
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -43,21 +43,14 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_af
 
 	if ((r >= h) || (c >= w)) return;
 
-	//going for subpixel accuracy
-	float rowStep = 10;
-	float colStep = 10;
-	float dRow = 1 / rowStep;
-	float dCol = 1 / colStep;
-	int new_c;
-	int new_r;
+	float dRow = 1 / nbSub;
+	float dCol = 1 / nbSub;
 
-	for (int row = 0; row < rowStep; row++) {
-		for (int col = 0; col < colStep; col++) {
-			float sub_c = (float)c + dCol*(float)col;
-			float sub_r = (float)r + dRow*(float)row;
-			int new_c = (int)(d_affineData[0] * sub_c + d_affineData[1] * sub_r + d_affineData[4]);
-			int new_r = (int)(d_affineData[2] * sub_c + d_affineData[3] * sub_r + d_affineData[5]);
-
+	for (int row = 0; row < nbSub; row++) {
+		for (int col = 0; col < nbSub; col++) {
+			int new_c = (int)(d_affineData[0] * (c + dCol * col) + d_affineData[1] * (r + dRow + row) + d_affineData[2]);
+			int new_r = (int)(d_affineData[3] * (c + dCol * col) + d_affineData[4] * (r + dRow + row) + d_affineData[5]);
+			
 			if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) continue;
 
 			int new_i = new_r * w + new_c;
@@ -88,7 +81,7 @@ int main(int argc, char ** argv) {
 	h_img1Out = (uchar*)malloc(W*H * sizeof(uchar));
 	for (int j = 0; j < W*H; j++) h_img1Out[j] = 0;
 
-	float h_affineData[6] = {0.966, -0.259, 0, 0.259, 0.966, 0};
+	float h_affineData[6] = {0.966, -0.359, 5, 0.159, 0.966, -5};
 
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
@@ -113,7 +106,7 @@ int main(int argc, char ** argv) {
 
 	cout << "starting image transformation..." << endl;
 	auto t1 = Clock::now();
-	kernel2D<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData);	
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData, 4);	
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
 
