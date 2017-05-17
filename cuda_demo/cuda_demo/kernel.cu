@@ -38,6 +38,8 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 __global__
 void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
+	if (tau >= 1 || tau < 0) return;
+
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
@@ -65,29 +67,22 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 }
 
 __global__
-void kernel2D_subpix_reverse(uchar* d_output, uchar* d_input, short* d_raster2, int w, int h, float * d_affineData, int subDiv, float tau)
-{
+void kernel2D_add(uchar* d_output, uchar* d_input_1, uchar* d_input_2, int w, int h, float tau) {
+	//tau is from a to b
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
-	uchar input = d_input[i];
 
 	if ((r >= h) || (c >= w)) return;
 
-	short reversal_offset = 6;
-	short affine_index = d_raster2[i];
-	short offset = affine_index * 12 + reversal_offset;
-	if (affine_index != 0) {
-		float diff = 1 / (float)subDiv;
-		for (int i = 0; i < subDiv; i++) {
-			for (int j = 0; j < subDiv; j++) {
-				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(c - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
-				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
-				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
-				int new_i = new_r * w + new_c;
-				d_output[new_i] = input;
-			}
-		}
+	if (d_input_1[i] == 0) {
+		d_output[i] = d_input_2[i];
+	}
+	else if (d_input_2[i] == 0) {
+		d_output[i] = d_input_1[i];
+	}
+	else {
+		d_output[i] = tau*d_input_1[i] + (1-tau)*d_input_2[i];
 	}
 }
 
@@ -128,6 +123,7 @@ int main(int argc, char ** argv) {
 	uchar *h_img1Out;
 	uchar *h_img2In;
 	uchar *h_img2Out;
+	uchar *h_imgSum;
 	
 	h_img1In = (uchar*)malloc(W*H * sizeof(uchar));
 	Mat img1Flat = img1.reshape(1, 1);
@@ -142,6 +138,9 @@ int main(int argc, char ** argv) {
 
 	h_img2Out = (uchar*)malloc(W*H * sizeof(uchar));
 	for (int j = 0; j < W*H; j++) h_img2Out[j] = 0;
+
+	h_imgSum = (uchar*)malloc(W*H * sizeof(uchar));
+	for (int j = 0; j < W*H; j++) h_imgSum[j] = 0;
 
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
@@ -174,6 +173,9 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_img2Out, W*H * sizeof(uchar));
 	cudaMemcpy(d_img2Out, h_img2Out, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
+	uchar * d_imgSum;
+	cudaMalloc((void**)&d_imgSum, W*H * sizeof(uchar));
+	cudaMemcpy(d_imgSum, h_imgSum, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
 	//--GPU variables
 	dim3 blockSize(32, 32);
@@ -195,18 +197,26 @@ int main(int argc, char ** argv) {
 
 	cudaMemcpy(h_img2Out, d_img2Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 
+	kernel2D_add << <gridSize, blockSize >> > (d_imgSum, d_img1Out, d_img2Out, W, H, tau);
+
+	cudaMemcpy(h_imgSum, d_imgSum, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+
 	cudaFree(d_img1In);
 	cudaFree(d_img1Out);
 	cudaFree(d_affine_data);
 	cudaFree(d_img2In);
 	cudaFree(d_img2Out);
 	cudaFree(d_affine_data);
+	cudaFree(d_imgSum);
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);
 
 	Mat render2 = Mat(1, W*H, CV_8UC1, h_img2Out);
 	render2 = render2.reshape(1, H);
+
+	Mat renderSum = Mat(1, W*H, CV_8UC1, h_imgSum);
+	renderSum = renderSum.reshape(1, H);
 
 	return 0;
 }
