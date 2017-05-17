@@ -36,7 +36,7 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 }
 
 __global__
-void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau)
+void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -47,6 +47,9 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 
 	short affine_index = d_raster1[i];
 	short offset = affine_index * 12;
+	if (reverse) {
+		offset += 6;
+	}
 	if (affine_index != 0) {
 		float diff = 1 / (float)subDiv;
 		for (int i = 0; i < subDiv; i++) {
@@ -182,22 +185,28 @@ int main(int argc, char ** argv) {
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 
-	kernel2D_subpix_reverse << <gridSize, blockSize >> >(d_img2Out, d_img2In, d_raster2, W, H, d_affine_data, 4, reverse_tau);
-	Mat render2 = Mat(1, W*H, CV_8UC1, h_img2Out);
-	render2 = render2.reshape(1, H);
-	/*
 
-	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4, tau);	
+	kernel2D_subpix << <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4, tau, false);
 
 	//--Send data back to the host from the GPU and free memory
 	cudaMemcpy(h_img1Out, d_img1Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 
+	kernel2D_subpix << <gridSize, blockSize >> >(d_img2Out, d_img2In, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
+
+	cudaMemcpy(h_img2Out, d_img2Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+
 	cudaFree(d_img1In);
 	cudaFree(d_img1Out);
+	cudaFree(d_affine_data);
+	cudaFree(d_img2In);
+	cudaFree(d_img2Out);
 	cudaFree(d_affine_data);
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);
-	*/
+
+	Mat render2 = Mat(1, W*H, CV_8UC1, h_img2Out);
+	render2 = render2.reshape(1, H);
+
 	return 0;
 }
