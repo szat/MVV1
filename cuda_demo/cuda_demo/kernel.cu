@@ -61,7 +61,7 @@ int main(int argc, char ** argv) {
 	cout << "welcome to cuda_demo testing unit!" << endl;
 	cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
 
-	string address1 = "..\\data_store\\mona_lisa_1.jpg";
+	string address1 = "../../data_store/images/david_1.jpg";
 	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
 	cout << "loaded img1: " << address1 << endl;
 
@@ -104,7 +104,7 @@ int main(int argc, char ** argv) {
 
 	cout << "starting image transformation..." << endl;
 	auto t1 = Clock::now();
-	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData, 10);	
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData, 4);	
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
 
