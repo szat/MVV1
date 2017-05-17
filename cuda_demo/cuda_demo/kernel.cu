@@ -36,36 +36,56 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 }
 
 __global__
-void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv)
+void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau)
 {
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
 	uchar input = d_input[i];
 
+	if ((r >= h) || (c >= w)) return;
 
+	short affine_index = d_raster1[i];
+	short offset = affine_index * 12;
+	if (affine_index != 0) {
+		float diff = 1 / (float)subDiv;
+		for (int i = 0; i < subDiv; i++) {
+			for (int j = 0; j < subDiv; j++) {
+				int new_c = (int)(((1-tau) + tau*d_affineData[offset]) * (float)(c - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
+				int new_i = new_r * w + new_c;
+				d_output[new_i] = input;
+			}
+		}
+	}
+}
+
+__global__
+void kernel2D_subpix_reverse(uchar* d_output, uchar* d_input, short* d_raster2, int w, int h, float * d_affineData, int subDiv, float tau)
+{
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	uchar input = d_input[i];
 
 	if ((r >= h) || (c >= w)) return;
 
-	short raster_index = d_raster1[i];
-
-	if (raster_index != 0) {
-		d_output[i] = input;
-	}
-
-	/*
-	float diff = 1 / (float)subDiv;
-
-	for (int i = 0; i < subDiv; i++) {
-		for (int j = 0; j < subDiv; j++) {
-			int new_c = (int)(d_affineData[0] * (float)(c - 0.5 + (diff * i)) + d_affineData[1] * (float)(r - 0.5 + (diff * j)) + d_affineData[2]);
-			int new_r = (int)(d_affineData[3] * (float)(c - 0.5 + (diff * i)) + d_affineData[4] * (float)(r - 0.5 + (diff * j)) + d_affineData[5]);
-			if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
-			int new_i = new_r * w + new_c;
-			d_output[new_i] = input;
+	short reversal_offset = 6;
+	short affine_index = d_raster2[i];
+	short offset = affine_index * 12 + reversal_offset;
+	if (affine_index != 0) {
+		float diff = 1 / (float)subDiv;
+		for (int i = 0; i < subDiv; i++) {
+			for (int j = 0; j < subDiv; j++) {
+				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(c - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
+				int new_i = new_r * w + new_c;
+				d_output[new_i] = input;
+			}
 		}
 	}
-	*/
 }
 
 int main(int argc, char ** argv) {
@@ -103,6 +123,8 @@ int main(int argc, char ** argv) {
 	cout << "declaring host data-structures..." << endl;
 	uchar *h_img1In;
 	uchar *h_img1Out;
+	uchar *h_img2In;
+	uchar *h_img2Out;
 	
 	h_img1In = (uchar*)malloc(W*H * sizeof(uchar));
 	Mat img1Flat = img1.reshape(1, 1);
@@ -110,6 +132,13 @@ int main(int argc, char ** argv) {
 
 	h_img1Out = (uchar*)malloc(W*H * sizeof(uchar));
 	for (int j = 0; j < W*H; j++) h_img1Out[j] = 0;
+
+	h_img2In = (uchar*)malloc(W*H * sizeof(uchar));
+	Mat img2Flat = img2.reshape(1, 1);
+	h_img2In = img2Flat.data;
+
+	h_img2Out = (uchar*)malloc(W*H * sizeof(uchar));
+	for (int j = 0; j < W*H; j++) h_img2Out[j] = 0;
 
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
@@ -122,6 +151,10 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_raster1, W * H * sizeof(short));
 	cudaMemcpy(d_raster1, h_raster1, W * H * sizeof(short), cudaMemcpyHostToDevice);
 
+	short *d_raster2;
+	cudaMalloc((void**)&d_raster2, W * H * sizeof(short));
+	cudaMemcpy(d_raster2, h_raster2, W * H * sizeof(short), cudaMemcpyHostToDevice);
+
 	uchar * d_img1In;
 	cudaMalloc((void**)&d_img1In, W*H * sizeof(uchar));
 	cudaMemcpy(d_img1In, h_img1In, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
@@ -130,17 +163,31 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_img1Out, W*H * sizeof(uchar));
 	cudaMemcpy(d_img1Out, h_img1Out, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
+	uchar * d_img2In;
+	cudaMalloc((void**)&d_img2In, W*H * sizeof(uchar));
+	cudaMemcpy(d_img2In, h_img2In, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+
+	uchar * d_img2Out;
+	cudaMalloc((void**)&d_img2Out, W*H * sizeof(uchar));
+	cudaMemcpy(d_img2Out, h_img2Out, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+
+
 	//--GPU variables
 	dim3 blockSize(32, 32);
 	int bx = (W + 32 - 1) / 32;
 	int by = (H + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
-	cout << "starting image transformation..." << endl;
-	auto t1 = Clock::now();
-	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4);	
-	auto t2 = Clock::now();
-	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
+	float tau = 0.6f;
+	float reverse_tau = 1.0f - tau;
+	int reversal_offset = 0;
+
+	kernel2D_subpix_reverse << <gridSize, blockSize >> >(d_img2Out, d_img2In, d_raster2, W, H, d_affine_data, 4, reverse_tau);
+	Mat render2 = Mat(1, W*H, CV_8UC1, h_img2Out);
+	render2 = render2.reshape(1, H);
+	/*
+
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4, tau);	
 
 	//--Send data back to the host from the GPU and free memory
 	cudaMemcpy(h_img1Out, d_img1Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
@@ -151,6 +198,6 @@ int main(int argc, char ** argv) {
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);
-
+	*/
 	return 0;
 }
