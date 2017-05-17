@@ -67,6 +67,9 @@ int main(int argc, char ** argv) {
 	Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
 	Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
 
+	Size desiredSize = img2.size();
+	resize(img1, img1, desiredSize);
+
 	string raster1_path = "../../data_store/raster/rasterA.bin";
 	string raster2_path = "../../data_store/raster/rasterB.bin";
 
