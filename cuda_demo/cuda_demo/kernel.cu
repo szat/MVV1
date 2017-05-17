@@ -40,28 +40,17 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_af
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
+	uchar input = d_input[i];
 
 	if ((r >= h) || (c >= w)) return;
 
-	//going for subpixel accuracy
-	int rowStep = 10;
-	int colStep = 10;
-	float dRow = 1 / rowStep;
-	float dCol = 1 / colStep;
-	int new_c;
-	int new_r;
-
-	for (int row = 0; row < rowStep; row++) {
-		for (int col = 0; col < colStep; col++) {
-			float sub_c = (float)c + dCol*(float)col;
-			float sub_r = (float)r + dRow*(float)row;
-			int new_c = (int)(d_affineData[0] * sub_c + d_affineData[1] * sub_r + d_affineData[4]);
-			int new_r = (int)(d_affineData[2] * sub_c + d_affineData[3] * sub_r + d_affineData[5]);
-
-			if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) continue;
-
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			int new_c = (int)(d_affineData[0] * (float)(c - 0.5 + (0.25 * i)) + d_affineData[1] * (float)(r - 0.5 + (0.25 * j)) + d_affineData[2]);
+			int new_r = (int)(d_affineData[3] * (float)(c - 0.5 + (0.25 * i)) + d_affineData[4] * (float)(r - 0.5 + (0.25 * j)) + d_affineData[5]);
+			if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 			int new_i = new_r * w + new_c;
-			d_output[new_i] = d_input[i];
+			d_output[new_i] = input;
 		}
 	}
 }
@@ -113,7 +102,7 @@ int main(int argc, char ** argv) {
 
 	cout << "starting image transformation..." << endl;
 	auto t1 = Clock::now();
-	kernel2D<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData);	
+	kernel2D_subpix<< <gridSize, blockSize >> >(d_img1Out, d_img1In, W, H, d_affineData);	
 	auto t2 = Clock::now();
 	std::cout << "delta time " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << std::endl;
 
