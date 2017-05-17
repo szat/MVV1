@@ -44,8 +44,8 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_af
 	if ((r >= h) || (c >= w)) return;
 
 	//going for subpixel accuracy
-	float rowStep = 10;
-	float colStep = 10;
+	int rowStep = 10;
+	int colStep = 10;
 	float dRow = 1 / rowStep;
 	float dCol = 1 / colStep;
 	int new_c;
