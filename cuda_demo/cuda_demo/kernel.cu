@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include "binary_io.h"
 
 using namespace std;
 using namespace cv;
@@ -61,9 +62,27 @@ int main(int argc, char ** argv) {
 	cout << "welcome to cuda_demo testing unit!" << endl;
 	cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
 
-	string address1 = "../../data_store/images/david_1.jpg";
-	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
-	cout << "loaded img1: " << address1 << endl;
+	string img1_path = "../../data_store/images/david_1.jpg";
+	string img2_path = "../../data_store/images/david_2.jpg";
+	Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
+	Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
+
+	string raster1_path = "../../data_store/raster/rasterA.bin";
+	string raster2_path = "../../data_store/raster/rasterB.bin";
+
+	int num_pixels_1 = 0;
+	int num_pixels_2 = 0;
+	// look into this memory allocation later
+	short *raster1 = read_short_array(raster1_path, num_pixels_1);
+	short *raster2 = read_short_array(raster2_path, num_pixels_2);
+
+	string affine_path = "../../data_store/affine/affine_1.bin";
+
+	int num_floats = 0;
+	float *affine_params = read_float_array(affine_path, num_floats);
+
+	int num_triangles = num_floats / 12;
+
 
 	int W = img1.size().width;
 	int H = img1.size().height;
