@@ -25,8 +25,8 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 
 	if ((r >= h) || (c >= w)) return;
 
-	int new_c = (int)(d_affineData[0] * (float)c + d_affineData[1] * (float)r + d_affineData[4]);
-	int new_r = (int)(d_affineData[2] * (float)c + d_affineData[3] * (float)r + d_affineData[5]);
+	int new_c = (int)(d_affineData[0] * (float)c + d_affineData[1] * (float)r + d_affineData[2]);
+	int new_r = (int)(d_affineData[3] * (float)c + d_affineData[4] * (float)r + d_affineData[5]);
 
 	if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 
@@ -58,7 +58,7 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, int w, int h, float * d_af
 			int new_c = (int)(d_affineData[0] * sub_c + d_affineData[1] * sub_r + d_affineData[4]);
 			int new_r = (int)(d_affineData[2] * sub_c + d_affineData[3] * sub_r + d_affineData[5]);
 
-			if ((new_r >= h) || (new_c >= w)) continue;
+			if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) continue;
 
 			int new_i = new_r * w + new_c;
 			d_output[new_i] = d_input[i];
@@ -88,7 +88,7 @@ int main(int argc, char ** argv) {
 	h_img1Out = (uchar*)malloc(W*H * sizeof(uchar));
 	for (int j = 0; j < W*H; j++) h_img1Out[j] = 0;
 
-	float h_affineData[6] = {0.966, -0.259, 0.259, 0.966, 0, 0};
+	float h_affineData[6] = {0.966, -0.259, 0, 0.259, 0.966, 0};
 
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
