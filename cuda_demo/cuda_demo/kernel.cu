@@ -101,6 +101,16 @@ int main(int argc, char ** argv) {
 	string raster1_path = "../../data_store/raster/rasterA.bin";
 	string raster2_path = "../../data_store/raster/rasterB.bin";
 
+	// Initializing CUDA
+	uchar *h_tester = new uchar[1];
+	h_tester[0] = (uchar)0;
+	uchar *d_tester;
+	cudaMalloc((void**)&d_tester, sizeof(uchar));
+	cudaMemcpy(d_tester, h_tester, sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaFree(d_tester);
+
+	auto t1 = std::chrono::high_resolution_clock::now();
+
 	int num_pixels_1 = 0;
 	int num_pixels_2 = 0;
 	// look into this memory allocation later
@@ -177,6 +187,9 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_imgSum, W*H * sizeof(uchar));
 	cudaMemcpy(d_imgSum, h_imgSum, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
+
+
+
 	//--GPU variables
 	dim3 blockSize(32, 32);
 	int bx = (W + 32 - 1) / 32;
@@ -187,18 +200,16 @@ int main(int argc, char ** argv) {
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 
+	
 
 	kernel2D_subpix << <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4, tau, false);
-
-	//--Send data back to the host from the GPU and free memory
-	cudaMemcpy(h_img1Out, d_img1Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-
 	kernel2D_subpix << <gridSize, blockSize >> >(d_img2Out, d_img2In, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
-
-	cudaMemcpy(h_img2Out, d_img2Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-
 	kernel2D_add << <gridSize, blockSize >> > (d_imgSum, d_img1Out, d_img2Out, W, H, tau);
 
+
+
+	cudaMemcpy(h_img1Out, d_img1Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_img2Out, d_img2Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_imgSum, d_imgSum, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 
 	cudaFree(d_img1In);
@@ -208,6 +219,11 @@ int main(int argc, char ** argv) {
 	cudaFree(d_img2Out);
 	cudaFree(d_affine_data);
 	cudaFree(d_imgSum);
+
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "write short took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);
