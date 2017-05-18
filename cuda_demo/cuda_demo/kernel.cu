@@ -126,6 +126,8 @@ int color_display() {
 	cudaMemcpy(d_tester, h_tester, sizeof(uchar), cudaMemcpyHostToDevice);
 	cudaFree(d_tester);
 
+	auto t1 = std::chrono::high_resolution_clock::now();
+
 	string img1_path = "../../data_store/images/david_1.jpg";
 	string img2_path = "../../data_store/images/david_2.jpg";
 
@@ -139,6 +141,8 @@ int color_display() {
 	Mat channel_img_2[3];
 	split(img_color_1, channel_img_1);
 	split(img_color_2, channel_img_2);
+
+
 
 	//channel_img_1[0] = Mat::zeros(img_color_1.rows, img_color_1.cols, CV_8UC1);
 	//channel_img_1[1] = Mat::zeros(img_color_1.rows, img_color_1.cols, CV_8UC1);
@@ -186,8 +190,8 @@ int color_display() {
 	Mat img_1_G_flat = channel_img_1[1].reshape(1, 1);
 	Mat img_1_R_flat = channel_img_1[2].reshape(1, 1);
 	h_img_1_in_B = img_1_B_flat.data;
-	h_img_1_in_G = img_1_B_flat.data;
-	h_img_1_in_R = img_1_B_flat.data;
+	h_img_1_in_G = img_1_G_flat.data;
+	h_img_1_in_R = img_1_R_flat.data;
 
 	h_img_1_out_B = (uchar*)malloc(W*H * sizeof(uchar));
 	h_img_1_out_G = (uchar*)malloc(W*H * sizeof(uchar));
@@ -204,8 +208,8 @@ int color_display() {
 	Mat img_2_G_flat = channel_img_2[1].reshape(1, 1);
 	Mat img_2_R_flat = channel_img_2[2].reshape(1, 1);
 	h_img_2_in_B = img_1_B_flat.data;
-	h_img_2_in_G = img_1_B_flat.data;
-	h_img_2_in_R = img_1_B_flat.data;
+	h_img_2_in_G = img_1_G_flat.data;
+	h_img_2_in_R = img_1_R_flat.data;
 
 	h_img_2_out_B = (uchar*)malloc(W*H * sizeof(uchar));
 	h_img_2_out_G = (uchar*)malloc(W*H * sizeof(uchar));
@@ -266,11 +270,19 @@ int color_display() {
 	int reversal_offset = 0;
 
 	kernel2D_subpix_color<<<gridSize, blockSize >>>(d_img_1_out_B, d_img_1_in_B, d_raster1, W, H, d_affine_data, 4, tau, false);
+	kernel2D_subpix_color<<<gridSize, blockSize >>>(d_img_1_out_G, d_img_1_in_G, d_raster1, W, H, d_affine_data, 4, tau, false);
+	kernel2D_subpix_color<<<gridSize, blockSize >>>(d_img_1_out_R, d_img_1_in_R, d_raster1, W, H, d_affine_data, 4, tau, false);
 
 	cudaMemcpy(h_img_1_out_B, d_img_1_out_B, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_img_1_out_G, d_img_1_out_G, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_img_1_out_R, d_img_1_out_R, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 
-	Mat render1 = Mat(1, W*H, CV_8UC1, h_img_1_out_B);
-	render1 = render1.reshape(1, H);
+	Mat img1_B = Mat(1, W*H, CV_8UC1, h_img_1_out_B);
+	Mat img1_G = Mat(1, W*H, CV_8UC1, h_img_1_out_G);
+	Mat img1_R = Mat(1, W*H, CV_8UC1, h_img_1_out_R);
+	img1_B = img1_B.reshape(1, H);
+	img1_G = img1_G.reshape(1, H);
+	img1_R = img1_R.reshape(1, H);
 
 	/*
 	Mat img1_post_B = Mat(1, W*H, CV_8UC1, h_img_1_in_B);
@@ -280,13 +292,21 @@ int color_display() {
 	img1_post_G = img1_post_B.reshape(1, H);
 	img1_post_R = img1_post_B.reshape(1, H);
 	*/
+
+
+
 	Mat final_channel_1[3];
-	final_channel_1[0] = render1;
-	final_channel_1[1] = Mat::zeros(Size(W, H), CV_8UC1);
-	final_channel_1[2] = Mat::zeros(Size(W, H), CV_8UC1);
+	final_channel_1[0] = img1_B;
+	final_channel_1[1] = img1_G;
+	final_channel_1[2] = img1_R;
 
 	merge(final_channel_1, 3, img_color_1);
 	
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "write short took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
+
 	return -1;
 }
 
