@@ -425,12 +425,12 @@ void save_frame_master(string img1path, string img2path) {
 int danny_test() {
 	// master function for constructing and saving a frame
 
+	
 	string img1path = "david_1.jpg";
 	string img2path = "david_2.jpg";
 	save_frame_master(img1path, img2path);
+	
 
-
-	//test_binary();
 
 	return 0;
 }
