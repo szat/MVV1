@@ -86,9 +86,136 @@ void kernel2D_add(uchar* d_output, uchar* d_input_1, uchar* d_input_2, int w, in
 	}
 }
 
+int color_display() {
+	// Initializing CUDA
+	uchar *h_tester = new uchar[1];
+	h_tester[0] = (uchar)0;
+	uchar *d_tester;
+	cudaMalloc((void**)&d_tester, sizeof(uchar));
+	cudaMemcpy(d_tester, h_tester, sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaFree(d_tester);
+
+	string img1_path = "../../data_store/images/david_1.jpg";
+	string img2_path = "../../data_store/images/david_2.jpg";
+
+	Mat img_color_1 = imread(img1_path, CV_LOAD_IMAGE_COLOR);
+	Mat img_color_2 = imread(img2_path, CV_LOAD_IMAGE_COLOR);
+
+	Size desired_size = img_color_2.size();
+	resize(img_color_1, img_color_1, desired_size);
+
+	Mat channel_img_1[3];
+	Mat channel_img_2[3];
+	split(img_color_1, channel_img_1);
+	split(img_color_2, channel_img_2);
+
+	//channel_img_1[0] = Mat::zeros(img_color_1.rows, img_color_1.cols, CV_8UC1);
+	//channel_img_1[1] = Mat::zeros(img_color_1.rows, img_color_1.cols, CV_8UC1);
+
+	string raster1_path = "../../data_store/raster/rasterA.bin";
+	string raster2_path = "../../data_store/raster/rasterB.bin";
+
+	int num_pixels_1 = 0;
+	int num_pixels_2 = 0;
+	// look into this memory allocation later
+	short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
+	short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
+
+	string affine_path = "../../data_store/affine/affine_1.bin";
+
+	int num_floats = 0;
+	float *h_affine_data = read_float_array(affine_path, num_floats);
+
+	int num_triangles = num_floats / 12;
+
+
+	int W = img_color_1.size().width;
+	int H = img_color_1.size().height;
+
+	uchar *h_img_1_in_B;
+	uchar *h_img_1_in_G;
+	uchar *h_img_1_in_R;
+	uchar *h_img_1_out_B;
+	uchar *h_img_1_out_G;
+	uchar *h_img_1_out_R;
+	uchar *h_img_2_in_B;
+	uchar *h_img_2_in_G;
+	uchar *h_img_2_in_R;
+	uchar *h_img_2_out_B;
+	uchar *h_img_2_out_G;
+	uchar *h_img_2_out_R;
+	uchar *h_img_sum_B;
+	uchar *h_img_sum_G;
+	uchar *h_img_sum_R;
+
+	h_img_1_in_B = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_1_in_G = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_1_in_R = (uchar*)malloc(W*H * sizeof(uchar));
+	Mat img_1_B_flat = channel_img_1[0].reshape(1, 1);
+	Mat img_1_G_flat = channel_img_1[1].reshape(1, 1);
+	Mat img_1_R_flat = channel_img_1[2].reshape(1, 1);
+	h_img_1_in_B = img_1_B_flat.data;
+	h_img_1_in_G = img_1_B_flat.data;
+	h_img_1_in_R = img_1_B_flat.data;
+
+	h_img_1_out_B = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_1_out_G = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_1_out_R = (uchar*)malloc(W*H * sizeof(uchar));
+	for (int j = 0; j < W*H; j++) h_img_1_out_B[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_1_out_G[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_1_out_R[j] = 0;
+
+
+	h_img_2_in_B = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_2_in_G = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_2_in_R = (uchar*)malloc(W*H * sizeof(uchar));
+	Mat img_2_B_flat = channel_img_2[0].reshape(1, 1);
+	Mat img_2_G_flat = channel_img_2[1].reshape(1, 1);
+	Mat img_2_R_flat = channel_img_2[2].reshape(1, 1);
+	h_img_2_in_B = img_1_B_flat.data;
+	h_img_2_in_G = img_1_B_flat.data;
+	h_img_2_in_R = img_1_B_flat.data;
+
+	h_img_2_out_B = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_2_out_G = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_2_out_R = (uchar*)malloc(W*H * sizeof(uchar));
+	for (int j = 0; j < W*H; j++) h_img_2_out_B[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_2_out_G[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_2_out_R[j] = 0;
+
+
+	h_img_sum_B = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_sum_G = (uchar*)malloc(W*H * sizeof(uchar));
+	h_img_sum_R = (uchar*)malloc(W*H * sizeof(uchar));
+	for (int j = 0; j < W*H; j++) h_img_sum_B[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_sum_G[j] = 0;
+	for (int j = 0; j < W*H; j++) h_img_sum_R[j] = 0;
+
+
+	Mat img1_post_B = Mat(1, W*H, CV_8UC1, h_img_1_in_B);
+	Mat img1_post_G = Mat(1, W*H, CV_8UC1, h_img_1_in_G);
+	Mat img1_post_R = Mat(1, W*H, CV_8UC1, h_img_1_in_R);
+	img1_post_B = img1_post_B.reshape(1, H);
+	img1_post_G = img1_post_B.reshape(1, H);
+	img1_post_R = img1_post_B.reshape(1, H);
+
+    
+	Mat final_channel_1[3];
+	final_channel_1[0] = img1_post_B;
+	final_channel_1[0] = img1_post_G;
+	final_channel_1[0] = img1_post_R;
+
+	Mat final_img_1;
+	merge(channel_img_1, 3, final_img_1);
+
+	return -1;
+}
+
 int main(int argc, char ** argv) {
 	cout << "welcome to cuda_demo testing unit!" << endl;
 	cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
+
+	color_display();
 
 	string img1_path = "../../data_store/images/david_1.jpg";
 	string img2_path = "../../data_store/images/david_2.jpg";
