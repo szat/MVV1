@@ -361,8 +361,6 @@ int danny_test() {
 	string img2_path = "david_2.jpg";
 	save_frame_master(img1_path, img2_path);
 
-	//test_binary();
-
 	return 0;
 }
 
