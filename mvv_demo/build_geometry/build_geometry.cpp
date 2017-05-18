@@ -77,16 +77,15 @@ static void draw_subdiv_point(Mat& img, Point2f fp, Scalar color)
 
 static void draw_subdiv(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color)
 {
-#if 1
-	vector<Vec6f> triangleList;
-	subdiv.getTriangleList(triangleList);
+	vector<Vec6f> triangle_list;
+	subdiv.getTriangleList(triangle_list);
 	vector<Point> pt(3);
 
-	int numTriangles = triangleList.size();
+	int num_triangles = triangle_list.size();
 
-	for (size_t i = 0; i < numTriangles; i++)
+	for (size_t i = 0; i < num_triangles; i++)
 	{
-		Vec6f t = triangleList[i];
+		Vec6f t = triangle_list[i];
 		pt[0] = Point(cvRound(t[0]), cvRound(t[1]));
 		pt[1] = Point(cvRound(t[2]), cvRound(t[3]));
 		pt[2] = Point(cvRound(t[4]), cvRound(t[5]));
@@ -94,17 +93,7 @@ static void draw_subdiv(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color)
 		line(img, pt[1], pt[2], delaunay_color, 1, LINE_AA, 0);
 		line(img, pt[2], pt[0], delaunay_color, 1, LINE_AA, 0);
 	}
-#else
-	vector<Vec4f> edgeList;
-	subdiv.getEdgeList(edgeList);
-	for (size_t i = 0; i < edgeList.size(); i++)
-	{
-		Vec4f e = edgeList[i];
-		Point pt0 = Point(cvRound(e[0]), cvRound(e[1]));
-		Point pt1 = Point(cvRound(e[2]), cvRound(e[3]));
-		line(img, pt0, pt1, delaunay_color, 1, LINE_AA, 0);
-	}
-#endif
+
 }
 
 static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_color)
@@ -129,11 +118,11 @@ static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_c
 	draw_subdiv_point(img, fp, active_color);
 }
 
-Subdiv2D graphical_triangulation(vector<Point2f> points, Rect sourceImageBoundingBox) {
+Subdiv2D graphical_triangulation(vector<Point2f> points, Rect source_image_box) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 
-	Subdiv2D subdiv(sourceImageBoundingBox);
-	Mat img(sourceImageBoundingBox.size(), CV_8UC3);
+	Subdiv2D subdiv(source_image_box);
+	Mat img(source_image_box.size(), CV_8UC3);
 
 	img = Scalar::all(0);
 	string win = "Delaunay Demo";
@@ -160,8 +149,8 @@ Subdiv2D graphical_triangulation(vector<Point2f> points, Rect sourceImageBoundin
 
 Subdiv2D raw_triangulation(vector<Point2f> points, Size size) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
-	Rect boundingBox = Rect(0, 0, size.width, size.height);
-	Subdiv2D subdiv(boundingBox);
+	Rect bounding_box = Rect(0, 0, size.width, size.height);
+	Subdiv2D subdiv(bounding_box);
 	int numPoints = points.size();
 
 	for (int i = 0; i < numPoints; i++) {
@@ -171,41 +160,41 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Size size) {
 	return subdiv;
 }
 
-vector<Vec6f> construct_triangles(vector<Point2f> sourceImagePoints, Size sourceSize) {
+vector<Vec6f> construct_triangles(vector<Point2f> source_image_points, Size source_size) {
 	// Constructing triangulation of first image
 
 	Subdiv2D subdiv;
-	subdiv = raw_triangulation(sourceImagePoints, sourceSize);
+	subdiv = raw_triangulation(source_image_points, source_size);
 	vector<Vec6f> triangles = vector<Vec6f>();
 	subdiv.getTriangleList(triangles);
 
-	int numExteriorPoints = 4;
-	vector<Point2f> excludedVertices = vector<Point2f>();
-	for (int i = 0; i < numExteriorPoints; i++) {
-		excludedVertices.push_back(subdiv.getVertex(i));
+	int num_exterior_points = 4;
+	vector<Point2f> excluded_vertices = vector<Point2f>();
+	for (int i = 0; i < num_exterior_points; i++) {
+		excluded_vertices.push_back(subdiv.getVertex(i));
 	}
 
-	vector<Vec6f> filteredTriangles = vector<Vec6f>();
+	vector<Vec6f> filtered_triangles = vector<Vec6f>();
 	// Is there an alternative to a 3-deep nested loop?
 
-	int numTriangles = triangles.size();
-	for (int i = 0; i < numTriangles; i++) {
+	int num_triangles = triangles.size();
+	for (int i = 0; i < num_triangles; i++) {
 		bool exclude = false;
-		for (int j = 0; j < numExteriorPoints; j++) {
-			Point2f excludedVertex = excludedVertices[j];
+		for (int j = 0; j < num_exterior_points; j++) {
+			Point2f excluded_vertex = excluded_vertices[j];
 			for (int k = 0; k < 3; k++) {
 				float x_0 = triangles[i][k * 2];
 				float y_0 = triangles[i][k * 2 + 1];
-				if (x_0 == excludedVertex.x && y_0 == excludedVertex.y) {
+				if (x_0 == excluded_vertex.x && y_0 == excluded_vertex.y) {
 					exclude = true;
 				}
 			}
 		}
 		if (!exclude) {
-			filteredTriangles.push_back(triangles[i]);
+			filtered_triangles.push_back(triangles[i]);
 		}
 	}
-	return filteredTriangles;
+	return filtered_triangles;
 }
 
 void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
@@ -223,11 +212,11 @@ void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
 	waitKey(1);
 }
 
-vector<Point2f> convert_key_points(vector<KeyPoint> keyPoints) {
-	int len = keyPoints.size();
+vector<Point2f> convert_key_points(vector<KeyPoint> key_points) {
+	int len = key_points.size();
 	vector<Point2f> result = vector<Point2f>();
 	for (int i = 0; i < len; i++) {
-		result.push_back(keyPoints[i].pt);
+		result.push_back(key_points[i].pt);
 	}
 	return result;
 }
@@ -242,43 +231,43 @@ long long pair_hash(Point2f pt) {
 	return first * (imax + 1) + second;
 }
 
-vector<Vec6f> triangulate_target(vector<Point2f> imgPointsA, vector<Point2f> imgPointsB, vector<Vec6f> trianglesA) {
+vector<Vec6f> triangulate_target(vector<Point2f> img_points_A, vector<Point2f> img_points_B, vector<Vec6f> triangles_A) {
 	std::clock_t start;
 	double duration;
 	start = clock();
 
 
-	vector<Vec6f> trianglesB = vector<Vec6f>();
+	vector<Vec6f> triangles_B = vector<Vec6f>();
 
 	// build up correspondence hashtable
-	std::unordered_map<long long, Point2f> pointDict;
+	std::unordered_map<long long, Point2f> point_dict;
 	
-	int numTriangles = trianglesA.size();
-	int numPoints = imgPointsA.size();
+	int numTriangles = triangles_A.size();
+	int numPoints = img_points_A.size();
 
 	for (int i = 0; i < numPoints; i++) {
-		long long hash = pair_hash(imgPointsA[i]);
-		pointDict.insert(make_pair(hash, imgPointsB[i]));
+		long long hash = pair_hash(img_points_A[i]);
+		point_dict.insert(make_pair(hash, img_points_B[i]));
 	}
-	Point2f testPoint = pointDict[pair_hash(imgPointsA[0])];
+	Point2f test_point = point_dict[pair_hash(img_points_A[0])];
 
 	duration = (clock() - start) / (double)CLOCKS_PER_MS;
 	cout << "built dictionary in " << duration << " ms" << endl;
 
 	for (int i = 0; i < numTriangles; i++) {
-		Vec6f currentTriangleA = trianglesA[i];
-		Point2f vertex1 = Point2f(currentTriangleA[0], currentTriangleA[1]);
-		Point2f vertex2 = Point2f(currentTriangleA[2], currentTriangleA[3]);
-		Point2f vertex3 = Point2f(currentTriangleA[4], currentTriangleA[5]);
+		Vec6f current_triangle_A = triangles_A[i];
+		Point2f vertex1 = Point2f(current_triangle_A[0], current_triangle_A[1]);
+		Point2f vertex2 = Point2f(current_triangle_A[2], current_triangle_A[3]);
+		Point2f vertex3 = Point2f(current_triangle_A[4], current_triangle_A[5]);
 	
-		Point2f newVertex1 = pointDict[pair_hash(vertex1)];
-		Point2f newVertex2 = pointDict[pair_hash(vertex2)];
-		Point2f newVertex3 = pointDict[pair_hash(vertex3)];
+		Point2f new_vertex_1 = point_dict[pair_hash(vertex1)];
+		Point2f new_vertex_2 = point_dict[pair_hash(vertex2)];
+		Point2f new_vertex_3 = point_dict[pair_hash(vertex3)];
 
-		Vec6f triangleB = Vec6f(newVertex1.x, newVertex1.y, newVertex2.x, newVertex2.y, newVertex3.x, newVertex3.y);
-		trianglesB.push_back(triangleB);
+		Vec6f triangle_B = Vec6f(new_vertex_1.x, new_vertex_1.y, new_vertex_2.x, new_vertex_2.y, new_vertex_3.x, new_vertex_3.y);
+		triangles_B.push_back(triangle_B);
 	}
 
-	return trianglesB;
+	return triangles_B;
 }
 
