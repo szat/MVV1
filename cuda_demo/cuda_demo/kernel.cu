@@ -67,6 +67,37 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 }
 
 __global__
+void kernel2D_subpix_color(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+{
+	if (tau >= 1 || tau < 0) return;
+
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	uchar input = d_input[i];
+
+	if ((r >= h) || (c >= w)) return;
+
+	short affine_index = d_raster1[i];
+	short offset = affine_index * 12;
+	if (reverse) {
+		offset += 6;
+	}
+	if (affine_index != 0) {
+		float diff = 1 / (float)subDiv;
+		for (int i = 0; i < subDiv; i++) {
+			for (int j = 0; j < subDiv; j++) {
+				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(c - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
+				int new_i = new_r * w + new_c;
+				d_output[new_i] = input;
+			}
+		}
+	}
+}
+
+__global__
 void kernel2D_add(uchar* d_output, uchar* d_input_1, uchar* d_input_2, int w, int h, float tau) {
 	//tau is from a to b
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
@@ -192,14 +223,51 @@ int color_display() {
 	for (int j = 0; j < W*H; j++) h_img_sum_R[j] = 0;
 
 
+	float * d_affine_data;
+	cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
+	cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
+
+	short *d_raster1;
+	cudaMalloc((void**)&d_raster1, W * H * sizeof(short));
+	cudaMemcpy(d_raster1, h_raster1, W * H * sizeof(short), cudaMemcpyHostToDevice);
+
+	short *d_raster2;
+	cudaMalloc((void**)&d_raster2, W * H * sizeof(short));
+	cudaMemcpy(d_raster2, h_raster2, W * H * sizeof(short), cudaMemcpyHostToDevice);
+
+	uchar * d_img_1_in_B;
+	cudaMalloc((void**)&d_img_1_in_B, W*H * sizeof(uchar));
+	cudaMemcpy(d_img_1_in_B, h_img_1_in_B, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+
+	uchar * d_img_1_out_B;
+	cudaMalloc((void**)&d_img_1_out_B, W*H * sizeof(uchar));
+	cudaMemcpy(d_img_1_out_B, d_img_1_out_B, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+
+	//--GPU variables
+	dim3 blockSize(32, 32);
+	int bx = (W + 32 - 1) / 32;
+	int by = (H + 32 - 1) / 32;
+	dim3 gridSize = dim3(bx, by);
+
+	float tau = 0.5f;
+	float reverse_tau = 1.0f - tau;
+	int reversal_offset = 0;
+
+	kernel2D_subpix_color<<<gridSize, blockSize >>>(d_img_1_out_B, d_img_1_in_B, d_raster1, W, H, d_affine_data, 4, tau, false);
+
+	cudaMemcpy(h_img_1_out_B, d_img_1_out_B, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+
+	Mat render1 = Mat(1, W*H, CV_8UC1, h_img_1_out_B);
+	render1 = render1.reshape(1, H);
+
+	/*
 	Mat img1_post_B = Mat(1, W*H, CV_8UC1, h_img_1_in_B);
 	Mat img1_post_G = Mat(1, W*H, CV_8UC1, h_img_1_in_G);
 	Mat img1_post_R = Mat(1, W*H, CV_8UC1, h_img_1_in_R);
 	img1_post_B = img1_post_B.reshape(1, H);
 	img1_post_G = img1_post_B.reshape(1, H);
 	img1_post_R = img1_post_B.reshape(1, H);
-
-    
+	
 	Mat final_channel_1[3];
 	final_channel_1[0] = img1_post_B;
 	final_channel_1[0] = img1_post_G;
@@ -207,7 +275,7 @@ int color_display() {
 
 	Mat final_img_1;
 	merge(channel_img_1, 3, final_img_1);
-
+	*/
 	return -1;
 }
 
