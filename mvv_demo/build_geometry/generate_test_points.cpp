@@ -83,7 +83,7 @@ vector<Point2f> get_sample_points() {
 	return points;
 }
 
-vector<Point2f> get_n_random_points(Rect boundingBox, int n) {
+vector<Point2f> get_n_random_points(Rect bounding_box, int n) {
 	vector<Point2f> random_points = vector<Point2f>();
 
 	if (n < 0) {
@@ -91,23 +91,23 @@ vector<Point2f> get_n_random_points(Rect boundingBox, int n) {
 		exit(-1);
 	}
 
-	int width = boundingBox.width;
-	int height = boundingBox.height;
+	int width = bounding_box.width;
+	int height = bounding_box.height;
 
 	srand(time(0));
 	// Can be easily changed if we want a box offset from the origin (0,0)
-	int xMin = 0;
-	int xMax = width;
-	int yMin = 0;
-	int yMax = height;
+	int x_min = 0;
+	int x_max = width;
+	int y_min = 0;
+	int y_max = height;
 
 	int random_x = -1;
 	int random_y = -1;
 
-	for (size_t i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
-		random_x = xMin + rand() % ((xMax - xMin));
-		random_y = yMin + rand() % ((yMax - yMin));
+		random_x = x_min + rand() % ((x_max - x_min));
+		random_y = y_min + rand() % ((y_max - y_min));
 		random_points.push_back(Point2f(random_x, random_y));
 	}
 
