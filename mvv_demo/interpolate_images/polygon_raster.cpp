@@ -168,22 +168,3 @@ short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 	// possible memory leak if this gets called a bunch and the arrays are never deleted
 	return grid;
 }
-
-void check_grid(int** grid, Rect imgBounds) {
-	int width = imgBounds.width;
-	int height = imgBounds.height;
-	int count = 0;
-	int invalidCount = 0;
-	for (int h = 0; h < height + 1; h++)
-	{
-		for (int w = 0; w < width + 1; w++)
-		{
-			if (grid[h][w] == -1) {
-				invalidCount++;
-			}
-			count++;
-		}
-	}
-	cout << "Invalid count: " << invalidCount << endl;
-	cout << "Total count: " << count << endl;
-}

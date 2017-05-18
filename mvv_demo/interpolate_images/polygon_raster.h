@@ -11,5 +11,3 @@ std::vector<std::vector<cv::Point>> raster_triangulation(std::vector<cv::Vec6f> 
 void render_rasterization(std::vector<std::vector<cv::Point>> raster, cv::Rect imgBounds);
 
 short** grid_from_raster(int width, int height, std::vector<std::vector<cv::Point>> raster);
-
-void check_grid(int** grid, cv::Rect imgBounds);
