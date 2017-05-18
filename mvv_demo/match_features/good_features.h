@@ -19,4 +19,4 @@ void changeCornersMinDistance(int minDistanceInt, void *userdata);
 //Useless method unless useHarrisDetector == true
 void changeCornersKInt(int kInt, void *userdata);
 
-int trackbarCorners(std::string imagePath, std::vector<cv::Point2f>& corners);
+int trackbar_corners(std::string imagePath, std::vector<cv::Point2f>& corners);

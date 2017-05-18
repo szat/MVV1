@@ -196,7 +196,7 @@ int main(int argc, char ** argv) {
 	int by = (H + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
-	float tau = 0.1f;
+	float tau = 0.5f;
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 

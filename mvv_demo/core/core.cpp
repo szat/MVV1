@@ -44,7 +44,7 @@ int corner_points_test() {
 	string image_path = "..\\data_store\\david_1.jpg";
 	Mat src1 = imread(image_path, IMREAD_GRAYSCALE); 
 	vector<Point2f> corners;
-	trackbarCorners(image_path, corners);
+	trackbar_corners(image_path, corners);
 
 
 	Rect test_rect = Rect(0, 0, src1.size().width, src1.size().height);
@@ -96,12 +96,6 @@ int test_matching() {
 	return 0;
 }
 
-void image_diagnostics(Mat img) {
-	Size size = img.size();
-	cout << "Image width: " << size.width << endl;
-	cout << "Image height: " << size.height << endl;
-}
-
 struct GeometricSlice {
 	Rect img;
 	vector<Vec6f> triangles;
@@ -111,23 +105,6 @@ struct MatchedGeometry {
 	GeometricSlice source_geometry;
 	GeometricSlice target_geometry;
 };
-
-vector<Vec6f> split_trapezoids(vector<pair<Vec4f, Vec4f>> trapezoids) {
-	vector<Vec6f> triangles = vector<Vec6f>();
-	int size = trapezoids.size();
-	for (int i = 0; i < size; i++) {
-		Point2f pointA = Point2f(trapezoids[i].first[0], trapezoids[i].second[0]);
-		Point2f pointB = Point2f(trapezoids[i].first[1], trapezoids[i].second[1]);
-		Point2f pointC = Point2f(trapezoids[i].first[2], trapezoids[i].second[2]);
-		Point2f pointD = Point2f(trapezoids[i].first[3], trapezoids[i].second[3]);
-		// ABC, ACD triangles
-		Vec6f triangleA = Vec6f(pointA.x, pointA.y, pointB.x, pointB.y, pointC.x, pointC.y);
-		Vec6f triangleB = Vec6f(pointA.x, pointA.y, pointC.x, pointC.y, pointD.x, pointD.y);
-		triangles.push_back(triangleA);
-		triangles.push_back(triangleB);
-	}
-	return triangles;
-}
 
 MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Point2f> imgB_points, Size size) {
 	// triangulate source interior
@@ -203,120 +180,6 @@ void render_matched_geometry(GeometricSlice slice, string window_name) {
 	waitKey(1);
 	// Triangles in white (second)
 	// Border (convex hull in blue) (last)
-}
-
-vector<Point2f> parametrized_interpolation(float t, vector<Point2f> points, double a00, double a01, double a10, double a11, double b00, double b01) {
-	vector<Point2f> param_points = vector<Point2f>();
-	for (int i = 0; i < 3; i++) {
-		float xP = (1 - t + a00 * t) * points[i].x + (a01 * t) * points[i].y + (b00 * t);
-		float yP = (a10 * t) * points[i].x + (1 - t + a11 * t) * points[i].y + (b01 * t);
-		param_points.push_back(Point2f(xP, yP));
-	}
-	return param_points;
-}
-
-void set_mask_to_triangle(Mat &mask, Vec6f t) {
-	Point pts[3] = {
-		Point(t[0],t[1]),
-		Point(t[2],t[3]),
-		Point(t[4],t[5]),
-	};
-	fillConvexPoly(mask, pts, 3, Scalar(1));
-}
-
-void save_frame_at_tau(Mat &imgA, Mat &imgB, Rect img_rect,
-	vector<Mat> & affine_forward, vector<Mat> & affine_reverse, 
-	vector<Vec6f> & trianglesA, vector<Vec6f> & trianglesB, float tau) {
-
-	int x_dim = img_rect.width;
-	int y_dim = img_rect.height;
-	
-	Mat canvas = Mat::zeros(y_dim, x_dim, CV_8UC1);
-
-	// get affine
-	Mat current_maskA = cv::Mat::zeros(y_dim, x_dim, CV_8UC1);
-	Mat current_maskB = cv::Mat::zeros(y_dim, x_dim, CV_8UC1);
-
-	int num_triangles = trianglesA.size(); 
-	for (int i = 0; i < num_triangles; i++) {
-		current_maskA = Mat::zeros(y_dim, x_dim, CV_8UC1);
-		current_maskB = Mat::zeros(y_dim, x_dim, CV_8UC1);
-		set_mask_to_triangle(current_maskA, trianglesA[i]);
-		set_mask_to_triangle(current_maskB, trianglesB[i]);
-		Mat temp_imgA = Mat::zeros(y_dim, x_dim, CV_8UC1);
-		Mat temp_imgB = Mat::zeros(y_dim, x_dim, CV_8UC1);
-		Mat temp_imgC = Mat::zeros(y_dim, x_dim, CV_8UC1);
-		imgA.copyTo(temp_imgA, current_maskA);
-		imgB.copyTo(temp_imgB, current_maskB);
-		warpAffine(temp_imgA, temp_imgA, get_affine_intermediate(affine_forward[i], tau), Size(x_dim, y_dim));
-		warpAffine(temp_imgB, temp_imgB, affine_reverse[i], Size(x_dim, y_dim));
-		warpAffine(temp_imgB, temp_imgB, get_affine_intermediate(affine_forward[i], tau), Size(x_dim, y_dim));
-		addWeighted(temp_imgA, tau, temp_imgB, 1 - tau, 0.0, temp_imgC);
-		addWeighted(temp_imgC, 1, canvas, 1, 0.0, canvas);
-	}
-
-	imshow("purple", canvas);
-	waitKey(1);
-
-	cout << "mesh test";
-}
-
-void interpolate_frame(MatchedGeometry g, string imgA_path, string imgB_path) {
-
-	string root_path = "../data_store";
-	Mat imgA = cv::imread(root_path + "/" + imgA_path, IMREAD_GRAYSCALE);
-	Mat imgB = cv::imread(root_path + "/" + imgB_path, IMREAD_GRAYSCALE);
-	Size desired_size = imgB.size();
-	resize(imgA, imgA, desired_size);
-
-	Rect img_rect = Rect(0, 0, desired_size.width, desired_size.height);
-
-	vector<Vec6f> trianglesA = g.source_geometry.triangles;
-	vector<Vec6f> trianglesB = g.target_geometry.triangles;
-
-	// Forwards and reverse affine transformation parameters.
-	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
-	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
-	// should be a for loop for tau = 0 to tau = 1 with 0.01 jumps, but for now we will pick t = 0.6.
-	float tau = 0.6;
-
-	for (int i = 1; i < 10; i++) {
-		std::clock_t start;
-		double duration;
-		start = clock();
-		tau = (float)i * 0.1;
-		cout << "Getting for tau: " << tau << endl;
-		save_frame_at_tau(imgA, imgB, img_rect, affine_forward, affine_reverse, trianglesA, trianglesB, tau);
-		duration = (clock() - start) / (double)CLOCKS_PER_MS;
-		cout << "Amount of time for tau = " << tau << " : " << duration << endl;
-	}
-}
-
-
-void write_mvv_header(char *version, int widthA, int heightA, int widthB, int heightB, int num_frames) {
-	// header is 64 bytes
-
-	int version_length = 4;
-
-	std::ofstream ofile("../data_store/mvv_files/frame.mvv", std::ios::binary);
-	
-	for (int i = 0; i < version_length; i++) {
-		ofile.write((char*)&version[i], sizeof(char));
-	}
-	ofile.write((char*)&widthA, sizeof(int));
-	ofile.write((char*)&heightA, sizeof(int));
-	ofile.write((char*)&widthB, sizeof(int));
-	ofile.write((char*)&heightB, sizeof(int));
-	ofile.write((char*)&num_frames, sizeof(int));
-
-	int num_zeros = 10;
-	// numBytes = 4*numZeros
-	int zero = 0;
-	for (int j = 0; j < num_zeros; j++) {
-		ofile.write((char*)&zero, sizeof(int));
-	}
-
-	ofile.close();
 }
 
 void save_frame_master(string img1_path, string img2_path) {

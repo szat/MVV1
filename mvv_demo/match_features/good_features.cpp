@@ -146,7 +146,7 @@ void changeCornersKInt(int kInt, void *userdata) {
 	cout << "With k = " << (*((dataTrackbarCorners*)userdata)).k << ", number of corners found is " << (*((dataTrackbarCorners*)userdata)).corners.size() << endl;
 }
 
-int trackbarCorners(string imagePath, vector<Point2f>& corners)
+int trackbar_corners(string imagePath, vector<Point2f>& corners)
 {
 	Mat src1 = imread(imagePath, IMREAD_GRAYSCALE);
 	if (!src1.data) { printf("Error loading src1 \n"); return -1; }
