@@ -236,12 +236,24 @@ int color_display() {
 	cudaMemcpy(d_raster2, h_raster2, W * H * sizeof(short), cudaMemcpyHostToDevice);
 
 	uchar * d_img_1_in_B;
+	uchar * d_img_1_in_G;
+	uchar * d_img_1_in_R;
 	cudaMalloc((void**)&d_img_1_in_B, W*H * sizeof(uchar));
+	cudaMalloc((void**)&d_img_1_in_G, W*H * sizeof(uchar));
+	cudaMalloc((void**)&d_img_1_in_R, W*H * sizeof(uchar));
 	cudaMemcpy(d_img_1_in_B, h_img_1_in_B, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_img_1_in_G, h_img_1_in_G, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_img_1_in_R, h_img_1_in_R, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
 	uchar * d_img_1_out_B;
+	uchar * d_img_1_out_G;
+	uchar * d_img_1_out_R;
 	cudaMalloc((void**)&d_img_1_out_B, W*H * sizeof(uchar));
+	cudaMalloc((void**)&d_img_1_out_G, W*H * sizeof(uchar));
+	cudaMalloc((void**)&d_img_1_out_R, W*H * sizeof(uchar));
 	cudaMemcpy(d_img_1_out_B, d_img_1_out_B, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_img_1_out_G, d_img_1_out_G, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_img_1_out_R, d_img_1_out_R, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
 
 	//--GPU variables
 	dim3 blockSize(32, 32);
@@ -267,15 +279,14 @@ int color_display() {
 	img1_post_B = img1_post_B.reshape(1, H);
 	img1_post_G = img1_post_B.reshape(1, H);
 	img1_post_R = img1_post_B.reshape(1, H);
-	
-	Mat final_channel_1[3];
-	final_channel_1[0] = img1_post_B;
-	final_channel_1[0] = img1_post_G;
-	final_channel_1[0] = img1_post_R;
-
-	Mat final_img_1;
-	merge(channel_img_1, 3, final_img_1);
 	*/
+	Mat final_channel_1[3];
+	final_channel_1[0] = render1;
+	final_channel_1[1] = Mat::zeros(Size(W, H), CV_8UC1);
+	final_channel_1[2] = Mat::zeros(Size(W, H), CV_8UC1);
+
+	merge(final_channel_1, 3, img_color_1);
+	
 	return -1;
 }
 
