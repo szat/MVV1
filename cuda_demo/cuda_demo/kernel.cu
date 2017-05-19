@@ -42,8 +42,10 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = r * w + c;
-	uchar input = d_input[i];
+	int i = (r * w + c) * 3;
+	uchar channel_1 = d_input[i];
+	uchar channel_2 = d_input[i+1];
+	uchar channel_3 = d_input[i+2];
 
 	if ((r >= h) || (c >= w)) return;
 
@@ -60,7 +62,10 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 				int new_i = new_r * w + new_c;
-				d_output[new_i] = input;
+				int new_index = new_i * 3;
+				d_output[new_index] = channel_1;
+				d_output[new_index + 1] = channel_2;
+				d_output[new_index + 2] = channel_3;
 			}
 		}
 	}
@@ -113,8 +118,8 @@ int main(int argc, char ** argv) {
 	int width_2 = 0;
 	int height_1 = 0;
 	int height_2 = 0;
-	uchar * binary_img_1 = read_uchar_array(img_path_1, length_1, width_1, height_1);
-	uchar * binary_img_2 = read_uchar_array(img_path_2, length_2, width_2, height_2);
+	uchar *h_in_1 = read_uchar_array(img_path_1, length_1, width_1, height_1);
+	uchar *h_in_2 = read_uchar_array(img_path_2, length_2, width_2, height_2);
 	
 	// RASTER READ
 	int num_pixels_1 = 0;
@@ -127,34 +132,30 @@ int main(int argc, char ** argv) {
 	float *h_affine_data = read_float_array(affine_path, num_floats);
 	int num_triangles = num_floats / 12;
 
+	if (height_1 != height_2 || width_1 != width_2) {
+		cout << "Incompatible image sizes. Program will now crash.\n";
+		exit(-1);
+	}
 
-	//int W = img1.size().width;
-	//int H = img1.size().height;
-	/*
-	cout << "declaring host data-structures..." << endl;
-	uchar *h_img1In;
-	uchar *h_img1Out;
-	uchar *h_img2In;
-	uchar *h_img2Out;
-	uchar *h_imgSum;
+	int W = width_1;
+	int H = height_1;
+	int mem_alloc = W * H * 3 * sizeof(uchar);
+
+	uchar *h_out_1;
+	uchar *h_out_2;
+	uchar *h_sum;
 	
-	h_img1In = (uchar*)malloc(W*H * sizeof(uchar));
-	Mat img1Flat = img1.reshape(1, 1);
-	h_img1In = img1Flat.data;
+	// there must be a faster way to initialize these arrays to all zeros
 
-	h_img1Out = (uchar*)malloc(W*H * sizeof(uchar));
-	for (int j = 0; j < W*H; j++) h_img1Out[j] = 0;
+	h_out_1 = (uchar*)malloc(mem_alloc);
+	for (int j = 0; j < W*H; j++) h_out_1[j] = 0;
 
-	h_img2In = (uchar*)malloc(W*H * sizeof(uchar));
-	Mat img2Flat = img2.reshape(1, 1);
-	h_img2In = img2Flat.data;
+	h_out_2 = (uchar*)malloc(mem_alloc);
+	for (int j = 0; j < W*H; j++) h_out_2[j] = 0;
 
-	h_img2Out = (uchar*)malloc(W*H * sizeof(uchar));
-	for (int j = 0; j < W*H; j++) h_img2Out[j] = 0;
-
-	h_imgSum = (uchar*)malloc(W*H * sizeof(uchar));
-	for (int j = 0; j < W*H; j++) h_imgSum[j] = 0;
-
+	h_sum = (uchar*)malloc(mem_alloc);
+	for (int j = 0; j < W*H; j++) h_sum[j] = 0;
+	
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
 
@@ -170,30 +171,26 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_raster2, W * H * sizeof(short));
 	cudaMemcpy(d_raster2, h_raster2, W * H * sizeof(short), cudaMemcpyHostToDevice);
 
-	uchar * d_img1In;
-	cudaMalloc((void**)&d_img1In, W*H * sizeof(uchar));
-	cudaMemcpy(d_img1In, h_img1In, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	uchar * d_in_1;
+	cudaMalloc((void**)&d_in_1, mem_alloc);
+	cudaMemcpy(d_in_1, h_in_1, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_img1Out;
-	cudaMalloc((void**)&d_img1Out, W*H * sizeof(uchar));
-	cudaMemcpy(d_img1Out, h_img1Out, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	uchar * d_out_1;
+	cudaMalloc((void**)&d_out_1, mem_alloc);
+	cudaMemcpy(d_out_1, h_out_1, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_img2In;
-	cudaMalloc((void**)&d_img2In, W*H * sizeof(uchar));
-	cudaMemcpy(d_img2In, h_img2In, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	uchar * d_in_2;
+	cudaMalloc((void**)&d_in_2, mem_alloc);
+	cudaMemcpy(d_in_2, h_in_2, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_img2Out;
-	cudaMalloc((void**)&d_img2Out, W*H * sizeof(uchar));
-	cudaMemcpy(d_img2Out, h_img2Out, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	uchar * d_out_2;
+	cudaMalloc((void**)&d_out_2, mem_alloc);
+	cudaMemcpy(d_out_2, h_out_2, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_imgSum;
-	cudaMalloc((void**)&d_imgSum, W*H * sizeof(uchar));
-	cudaMemcpy(d_imgSum, h_imgSum, W*H * sizeof(uchar), cudaMemcpyHostToDevice);
+	uchar * d_sum;
+	cudaMalloc((void**)&d_sum, mem_alloc);
+	cudaMemcpy(d_sum, h_sum, mem_alloc, cudaMemcpyHostToDevice);
 
-
-
-
-	//--GPU variables
 	dim3 blockSize(32, 32);
 	int bx = (W + 32 - 1) / 32;
 	int by = (H + 32 - 1) / 32;
@@ -203,37 +200,25 @@ int main(int argc, char ** argv) {
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 
-	
 
-	kernel2D_subpix << <gridSize, blockSize >> >(d_img1Out, d_img1In, d_raster1, W, H, d_affine_data, 4, tau, false);
-	kernel2D_subpix << <gridSize, blockSize >> >(d_img2Out, d_img2In, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
-	kernel2D_add << <gridSize, blockSize >> > (d_imgSum, d_img1Out, d_img2Out, W, H, tau);
-
+	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
+	kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
+	//kernel2D_add << <gridSize, blockSize >> > (d_imgSum, d_img1Out, d_img2Out, W, H, tau);
 
 
-	cudaMemcpy(h_img1Out, d_img1Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-	cudaMemcpy(h_img2Out, d_img2Out, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-	cudaMemcpy(h_imgSum, d_imgSum, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
 
-	cudaFree(d_img1In);
-	cudaFree(d_img1Out);
+	cudaMemcpy(h_out_1, d_out_1, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_out_2, d_out_2, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	//cudaMemcpy(h_sum, d_sum, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+
+	cudaFree(d_in_1);
+	cudaFree(d_out_1);
+	cudaFree(d_raster1);
+	cudaFree(d_in_2);
+	cudaFree(d_out_2);
+	cudaFree(d_raster2);
 	cudaFree(d_affine_data);
-	cudaFree(d_img2In);
-	cudaFree(d_img2Out);
-	cudaFree(d_affine_data);
-	cudaFree(d_imgSum);
-
-
-
-	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
-	render1 = render1.reshape(1, H);
-
-	Mat render2 = Mat(1, W*H, CV_8UC1, h_img2Out);
-	render2 = render2.reshape(1, H);
-
-	Mat renderSum = Mat(1, W*H, CV_8UC1, h_imgSum);
-	renderSum = renderSum.reshape(1, H);
-	*/
+	cudaFree(d_sum);
 
 	auto t2 = std::chrono::high_resolution_clock::now();
 	std::cout << "write short took "
