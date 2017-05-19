@@ -1,6 +1,10 @@
 #include "kernel.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <opencv2\highgui.hpp>
+#include <opencv2\imgproc.hpp>
+#include <iostream>
+#include <string>
 
 #ifdef _WIN32
 #define WINDOWS_LEAN_AND_MEAN
@@ -14,6 +18,9 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "interactions.h"
+
+using namespace std;
+using namespace cv;
 
 // texture and pixel objects
 GLuint pbo = 0;     // OpenGL pixel buffer object
@@ -74,6 +81,43 @@ void initGLUT(int *argc, char **argv) {
  }
 
  int main(int argc, char** argv) {
+	 cout << "welcome to cuda_demo testing unit!" << endl;
+	 cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
+
+	 string img1_path = "../../data_store/images/david_1.jpg";
+	 string img2_path = "../../data_store/images/david_2.jpg";
+
+	 // Initializing CUDA
+	 Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
+	 Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
+
+	 int tex_width = img1.size().width;
+	 int tex_height = img1.size().height;
+
+	 GLuint texId;
+	 cudaGraphicsResource_t texRes;
+	 // OpenGL buffer creation...
+	 glGenTextures(1, &texId);
+	 glBindTexture(GL_TEXTURE_2D, texId);
+	 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, tex_width, tex_height, 0, GL_RGBA_INTEGER_EXT, GL_UNSIGNED_BYTE, 0);
+	 glBindTexture(GL_TEXTURE_2D, 0);
+	 
+	 // Registration with CUDA.
+	 cudaGraphicsGLRegisterImage(&texRes, texId, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard);
+
+	 cudaArray* texArray;
+	 bool done = false;
+
+	 while (!done)
+	 {
+		 cudaGraphicsMapResources(1, &texRes);
+		 cudaGraphicsSubResourceGetMappedArray(&texArray, texRes, 0, 0);
+		 //runCUDA(texArray);
+		 cudaGraphicsUnmapResources(1, &texRes);
+		 //runGL(texId);
+	 }
+
+	 /* //previous trial
 	 printInstructions();
 	 initGLUT(&argc, argv);
 	 gluOrtho2D(0, W, H, 0);
@@ -106,5 +150,7 @@ void initGLUT(int *argc, char **argv) {
 
 	 glutMainLoop();
 	 atexit(exitfunc);
+	 return 0;
+	 */
 	 return 0;
  }
