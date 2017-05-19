@@ -127,13 +127,7 @@ float* convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_par
 	return params;
 }
 
-// this next function will be to encode the images in a binary format
-// this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
-void save_img_binary(string src_path, string target_path) {
-	Mat img = imread(src_path, IMREAD_COLOR);
-	Mat channels[3];
-	split(img, channels);
-
+void save_img(string tar_path, Mat &img) {
 	Size size = img.size();
 	int height = size.height;
 	int width = size.width;
@@ -153,5 +147,17 @@ void save_img_binary(string src_path, string target_path) {
 
 	char *char_result = new char[len];
 	memcpy(char_result, pixels, len);
-	write_uchar_array(target_path, char_result, len, width, height);
+	write_uchar_array(tar_path, char_result, len, width, height);
+}
+
+// this next function will be to encode the images in a binary format
+// this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
+void save_img_binary(string src_path_1, string tar_path_1, string src_path_2, string tar_path_2) {
+	Mat img_1 = imread(src_path_1, IMREAD_COLOR);
+	Mat img_2 = imread(src_path_2, IMREAD_COLOR);
+	Size desiredSize = img_2.size();
+	resize(img_1, img_1, desiredSize);
+
+	save_img(tar_path_1, img_1);
+	save_img(tar_path_2, img_2);
 }

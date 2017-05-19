@@ -90,17 +90,6 @@ int main(int argc, char ** argv) {
 	cout << "welcome to cuda_demo testing unit!" << endl;
 	cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
 
-	string img1_path = "../../data_store/images/david_1.jpg";
-	string img2_path = "../../data_store/images/david_2.jpg";
-	Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
-	Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
-
-	Size desiredSize = img2.size();
-	resize(img1, img1, desiredSize);
-
-	string raster1_path = "../../data_store/raster/rasterA.bin";
-	string raster2_path = "../../data_store/raster/rasterB.bin";
-
 	// Initializing CUDA
 	uchar *h_tester = new uchar[1];
 	h_tester[0] = (uchar)0;
@@ -110,6 +99,22 @@ int main(int argc, char ** argv) {
 	cudaFree(d_tester);
 
 	auto t1 = std::chrono::high_resolution_clock::now();
+
+	string img1_path = "../../data_store/images/david_1.jpg";
+	string img2_path = "../../data_store/images/david_2.jpg";
+	//Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
+	//Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
+
+	//Size desiredSize = img2.size();
+	//resize(img1, img1, desiredSize);
+
+
+
+	string raster1_path = "../../data_store/raster/rasterA.bin";
+	string raster2_path = "../../data_store/raster/rasterB.bin";
+
+
+
 
 	int num_pixels_1 = 0;
 	int num_pixels_2 = 0;
@@ -125,9 +130,9 @@ int main(int argc, char ** argv) {
 	int num_triangles = num_floats / 12;
 
 
-	int W = img1.size().width;
-	int H = img1.size().height;
-
+	//int W = img1.size().width;
+	//int H = img1.size().height;
+	/*
 	cout << "declaring host data-structures..." << endl;
 	uchar *h_img1In;
 	uchar *h_img1Out;
@@ -220,10 +225,7 @@ int main(int argc, char ** argv) {
 	cudaFree(d_affine_data);
 	cudaFree(d_imgSum);
 
-	auto t2 = std::chrono::high_resolution_clock::now();
-	std::cout << "write short took "
-		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-		<< " milliseconds\n";
+
 
 	Mat render1 = Mat(1, W*H, CV_8UC1, h_img1Out);
 	render1 = render1.reshape(1, H);
@@ -233,6 +235,12 @@ int main(int argc, char ** argv) {
 
 	Mat renderSum = Mat(1, W*H, CV_8UC1, h_imgSum);
 	renderSum = renderSum.reshape(1, H);
+	*/
+
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "write short took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
 
 	return 0;
 }
