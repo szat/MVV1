@@ -218,7 +218,23 @@ void save_frame_master(string img1_path, string img2_path) {
 }
 
 void trial_binary_render(uchar *image, int length, int width, int height) {
-	// create a 
+	Mat img(height, width, CV_8UC3, Scalar(0, 0, 0));
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			int index = (i * width + j) * 3;
+
+			uchar r = image[index];
+			uchar g = image[index + 1];
+			uchar b = image[index + 2];
+
+			Vec3b color = Vec3b(r, g, b);
+
+			img.at<Vec3b>(i, j) = color;
+		}
+	}
+	Mat test2 = imread("../../data_store/images/david_2.jpg");
+	cout << "test";
 }
 
 int danny_test() {
