@@ -40,18 +40,14 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 {
 	if (tau >= 1 || tau < 0) return;
 
-	int c = blockIdx.x*blockDim.x + threadIdx.x;
-	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = (r * w + c) * 3;
-	uchar channel_1 = d_input[i];
-	uchar channel_2 = d_input[i+1];
-	uchar channel_3 = d_input[i+2];
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = (col * w + row) * 3;
+	d_output[i] = d_input[i];
+	d_output[i+1] = d_input[i+1];
+	d_output[i+2] = d_input[i+2];
 
-	if ((r >= h) || (c >= w)) return;
-
-	d_output[i] = (uchar)200;
-	d_output[i + 1] = (uchar)0;
-	d_output[i + 2] = (uchar)0;
+	//if ((r >= h) || (c >= w)) return;
 
 	/*
 	short affine_index = d_raster1[i];
@@ -236,11 +232,11 @@ int main(int argc, char ** argv) {
 	int reversal_offset = 0;
 
 
-	//kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
+	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
 	//kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
 	//kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_1, W, H, tau);
 
-	//cudaMemcpy(h_out_1, d_out_1, mem_alloc, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_out_1, d_out_1, mem_alloc, cudaMemcpyDeviceToHost);
 	//cudaMemcpy(h_out_2, d_out_2, mem_alloc, cudaMemcpyDeviceToHost);
 	//cudaMemcpy(h_sum, d_sum, mem_alloc, cudaMemcpyDeviceToHost);
 
@@ -260,7 +256,7 @@ int main(int argc, char ** argv) {
 
 	//trial_binary_render(h_sum, W, H);
 	trial_binary_render(h_in_1, W, H);
-	//trial_binary_render(h_out_2, W, H);
+	trial_binary_render(h_out_1, W, H);
 
 	return 0;
 }
