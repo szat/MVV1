@@ -100,33 +100,31 @@ int main(int argc, char ** argv) {
 
 	auto t1 = std::chrono::high_resolution_clock::now();
 
-	string img1_path = "../../data_store/images/david_1.jpg";
-	string img2_path = "../../data_store/images/david_2.jpg";
-	//Mat img1 = imread(img1_path, IMREAD_GRAYSCALE);
-	//Mat img2 = imread(img2_path, IMREAD_GRAYSCALE);
-
-	//Size desiredSize = img2.size();
-	//resize(img1, img1, desiredSize);
-
-
-
+	string img_path_1 = "../../data_store/binary/david_1.bin";
+	string img_path_2 = "../../data_store/binary/david_2.bin";
 	string raster1_path = "../../data_store/raster/rasterA.bin";
 	string raster2_path = "../../data_store/raster/rasterB.bin";
+	string affine_path = "../../data_store/affine/affine_1.bin";
 
-
-
-
+	// BINARY IMAGE READ
+	int length_1 = 0;
+	int length_2 = 0;
+	int width_1 = 0;
+	int width_2 = 0;
+	int height_1 = 0;
+	int height_2 = 0;
+	uchar * binary_img_1 = read_uchar_array(img_path_1, length_1, width_1, height_1);
+	uchar * binary_img_2 = read_uchar_array(img_path_2, length_2, width_2, height_2);
+	
+	// RASTER READ
 	int num_pixels_1 = 0;
 	int num_pixels_2 = 0;
-	// look into this memory allocation later
 	short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
 	short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
 
-	string affine_path = "../../data_store/affine/affine_1.bin";
-
+	// AFFINE READ
 	int num_floats = 0;
 	float *h_affine_data = read_float_array(affine_path, num_floats);
-
 	int num_triangles = num_floats / 12;
 
 
