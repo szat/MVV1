@@ -42,7 +42,7 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = (r * w + c) * 3;
+	int i = (c * w + r) * 3;
 	uchar channel_1 = d_input[i];
 	uchar channel_2 = d_input[i+1];
 	uchar channel_3 = d_input[i+2];
@@ -76,19 +76,48 @@ void kernel2D_add(uchar* d_output, uchar* d_input_1, uchar* d_input_2, int w, in
 	//tau is from a to b
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = r * w + c;
+	int index = (r * w + c);
 
 	if ((r >= h) || (c >= w)) return;
 
-	if (d_input_1[i] == 0) {
-		d_output[i] = d_input_2[i];
+	/*
+	for (int i = 0; i < 3; i++) {
+		if (d_input_1[index + i] == 0) {
+			d_output[index + i] = d_input_2[index + i];
+		}
+		else if (d_input_2[index + i] == 0) {
+			d_output[index + i] = d_input_1[index + i];
+		}
+		else {
+			d_output[index + i] = tau*d_input_1[index + i] + (1 - tau)*d_input_2[index + i];
+		}
 	}
-	else if (d_input_2[i] == 0) {
-		d_output[i] = d_input_1[i];
+	*/
+	d_output[index] = (uchar)200;
+	d_output[index + 1] = (uchar)200;
+	d_output[index + 2] = (uchar)200;
+
+}
+
+void trial_binary_render(uchar *image, int width, int height) {
+	Mat img(height, width, CV_8UC3, Scalar(0, 0, 0));
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			int index = (i * width + j) * 3;
+
+			uchar r = image[index];
+			uchar g = image[index + 1];
+			uchar b = image[index + 2];
+
+			Vec3b color = Vec3b(r, g, b);
+
+			img.at<Vec3b>(i, j) = color;
+		}
 	}
-	else {
-		d_output[i] = tau*d_input_1[i] + (1-tau)*d_input_2[i];
-	}
+
+	Mat test2 = imread("../../data_store/images/david_2.jpg");
+	cout << "test";
 }
 
 int main(int argc, char ** argv) {
@@ -203,13 +232,11 @@ int main(int argc, char ** argv) {
 
 	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
 	kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
-	//kernel2D_add << <gridSize, blockSize >> > (d_imgSum, d_img1Out, d_img2Out, W, H, tau);
+	kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_1, W, H, tau);
 
-
-
-	cudaMemcpy(h_out_1, d_out_1, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-	cudaMemcpy(h_out_2, d_out_2, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
-	//cudaMemcpy(h_sum, d_sum, W*H * sizeof(uchar), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_out_1, d_out_1, mem_alloc, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_out_2, d_out_2, mem_alloc, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_sum, d_sum, mem_alloc, cudaMemcpyDeviceToHost);
 
 	cudaFree(d_in_1);
 	cudaFree(d_out_1);
@@ -224,6 +251,10 @@ int main(int argc, char ** argv) {
 	std::cout << "write short took "
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds\n";
+
+	trial_binary_render(h_sum, W, H);
+	trial_binary_render(h_out_1, W, H);
+	trial_binary_render(h_out_2, W, H);
 
 	return 0;
 }
