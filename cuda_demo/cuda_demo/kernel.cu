@@ -42,9 +42,13 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = (col * w + row) * 3;
-	d_output[i] = d_input[i];
-	d_output[i+1] = d_input[i+1];
+	int i = (row * w + col) * 3;
+
+	// should not need to do this check if everything is good, must be an extra pixel
+	if (i + 2 >= w * h * 3) return;
+
+	d_output[i] = 0;
+	d_output[i + 1] = 0;
 	d_output[i+2] = d_input[i+2];
 
 	//if ((r >= h) || (c >= w)) return;
@@ -179,13 +183,13 @@ int main(int argc, char ** argv) {
 	// there must be a faster way to initialize these arrays to all zeros
 
 	h_out_1 = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H; j++) h_out_1[j] = 0;
+	for (int j = 0; j < W*H*3; j++) h_out_1[j] = 0;
 
 	h_out_2 = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H; j++) h_out_2[j] = 0;
+	for (int j = 0; j < W*H*3; j++) h_out_2[j] = 0;
 
 	h_sum = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H; j++) h_sum[j] = 0;
+	for (int j = 0; j < W*H*3; j++) h_sum[j] = 0;
 	
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
