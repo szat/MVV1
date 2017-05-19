@@ -217,12 +217,38 @@ void save_frame_master(string img1_path, string img2_path) {
 	cin.get();
 }
 
+void trial_binary_render(uchar *image, int length, int width, int height) {
+	// create a 
+}
+
 int danny_test() {
 	// master function for constructing and saving a frame
 
+	/*
 	string img1_path = "david_1.jpg";
 	string img2_path = "david_2.jpg";
 	save_frame_master(img1_path, img2_path);
+	*/
+
+	string src_path = "../../data_store/images/david_2.jpg";
+	string tar_path = "../../data_store/binary/david_2.bin";
+
+	save_img_binary(src_path, tar_path);
+
+	int len = 0;
+	int width = 0;
+	int height = 0;
+
+	auto t1 = std::chrono::high_resolution_clock::now();
+
+	uchar *result = read_uchar_array(tar_path, len, width, height);
+	
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "f() took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
+	
+	trial_binary_render(result, len, width, height);
 
 	return 0;
 }

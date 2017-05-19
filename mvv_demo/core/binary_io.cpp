@@ -1,4 +1,6 @@
 #include "binary_io.h"
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -10,28 +12,34 @@ using namespace cv;
 // OS-dependent! This will not work on other architectures (for now).
 
 
-void write_char_array(string full_path, char * input, int length) {
+void write_uchar_array(string full_path, char * input, int length, int width, int height) {
 	ofstream ofile(full_path, ios::binary);
-	char * length_array = new char[4];
-	int * int_array = new int[1];
+	char * length_array = new char[12];
+	int * int_array = new int[3];
 	int_array[0] = length;
-	memcpy(length_array, int_array, 4);
-	ofile.write(length_array, 4);
+	int_array[1] = width;
+	int_array[2] = height;
+	memcpy(length_array, int_array, 12);
+	ofile.write(length_array, 12);
 	ofile.write(input, length);
 	ofile.close();
 }
 
-char * read_char_array(string full_path, int &length) {
+uchar * read_uchar_array(string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
 	ifstream ifile(full_path, ios::binary);
-	char * length_array = new char[4];
-	int * int_array = new int[1];
-	ifile.read(length_array, 4);
-	memcpy(int_array, length_array, 4);
+	char * length_array = new char[12];
+	int * int_array = new int[3];
+	ifile.read(length_array, 12);
+	memcpy(int_array, length_array, 12);
 	length = int_array[0];
+	width = int_array[1];
+	height = int_array[2];
 	char * result = new char[length];
 	ifile.read(result, length);
-	return result;
+	uchar * result_uchar = new uchar[length];
+	memcpy(result_uchar, result, length);
+	return result_uchar;
 }
 
 void write_short_array(string full_path, short * input, int length) {
@@ -117,4 +125,33 @@ float* convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_par
 		params[inc + 11] = (float)reverse_params[i].at<double>(1, 2);
 	}
 	return params;
+}
+
+// this next function will be to encode the images in a binary format
+// this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
+void save_img_binary(string src_path, string target_path) {
+	Mat img = imread(src_path, IMREAD_COLOR);
+	Mat channels[3];
+	split(img, channels);
+
+	Size size = img.size();
+	int height = size.height;
+	int width = size.width;
+	int len = height * width * 3;
+
+	uchar *pixels = new uchar[len];
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			Vec3b data = img.at<Vec3b>(i, j);
+			int index = (i * width + j) * 3;
+			pixels[index] = data[0];
+			pixels[index + 1] = data[1];
+			pixels[index + 2] = data[2];
+		}
+	}
+
+	char *char_result = new char[len];
+	memcpy(char_result, pixels, len);
+	write_uchar_array(target_path, char_result, len, width, height);
 }
