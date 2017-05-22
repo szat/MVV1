@@ -121,7 +121,29 @@ Mat trial_binary_render(uchar *image, int width, int height) {
 	return img;
 }
 
+void uchar4_test() {
+	uchar *test_uchar = new uchar[4];
+	test_uchar[0] = (uchar)25;
+	test_uchar[1] = (uchar)50;
+	test_uchar[2] = (uchar)100;
+	test_uchar[3] = (uchar)0;
+	test_uchar[4] = (uchar)10;
+	test_uchar[5] = (uchar)20;
+	test_uchar[6] = (uchar)30;
+	test_uchar[7] = (uchar)0;
+
+	uchar4 *test_uchar4 = new uchar4[0];
+	memcpy(test_uchar4, test_uchar, 8);
+
+	uchar4 test1 = test_uchar4[0];
+	uchar4 test2 = test_uchar4[1];
+
+	cout << "test";
+}
+
 int main(int argc, char ** argv) {
+	uchar4_test();
+
 	cout << "welcome to cuda_demo testing unit!" << endl;
 	cout << "loading 2 images with openCV, processing and adding them with cuda (grayscale)." << endl;
 
@@ -150,6 +172,16 @@ int main(int argc, char ** argv) {
 	int height_2 = 0;
 	uchar *h_in_1 = read_uchar_array(img_path_1, length_1, width_1, height_1);
 	uchar *h_in_2 = read_uchar_array(img_path_2, length_2, width_2, height_2);
+	int W = width_1;
+	int H = height_1;
+
+	int pix_channels = W * H * 3;
+	uchar4 *h_in_1_u4 = new uchar4[W * H];
+	uchar4 *h_in_2_u4 = new uchar4[W * H];
+	memcpy(h_in_1_u4, h_in_1, pix_channels);
+	memcpy(h_in_2_u4, h_in_2, pix_channels);
+
+
 	
 	// RASTER READ
 	int num_pixels_1 = 0;
@@ -167,8 +199,7 @@ int main(int argc, char ** argv) {
 		exit(-1);
 	}
 
-	int W = width_1;
-	int H = height_1;
+
 	int mem_alloc = W * H * 3 * sizeof(uchar);
 
 	uchar *h_out_1;
