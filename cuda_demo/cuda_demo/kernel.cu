@@ -1,8 +1,36 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <string>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#ifdef _WIN32
+#  define WINDOWS_LEAN_AND_MEAN
+#  define NOMINMAX
+#  include <windows.h>
+#endif
+
+// OpenGL Graphics includes
+#include <helper_gl.h>
+#include <freeglut.h>
+
+// includes, cuda
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+
+// Utilities and timing functions
+#include <helper_functions.h>    // includes cuda.h and cuda_runtime_api.h
+#include <timer.h>               // timing functions
+
+// CUDA helper functions
+#include <helper_cuda.h>         // helper functions for CUDA error check
+#include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
+
+#include <vector_types.h>
+
+
 #include <iostream>
 #include <cuda.h>
 #include <conio.h>
@@ -250,6 +278,10 @@ int main(int argc, char ** argv) {
 	cudaFree(d_sum);
 
 
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "write short took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
 
 	//trial_binary_render(h_sum, W, H);
 	Mat img1_initial = trial_binary_render(h_in_1, W, H);
@@ -258,10 +290,6 @@ int main(int argc, char ** argv) {
 	Mat img2_final = trial_binary_render(h_out_2, W, H);
 	Mat img_final = trial_binary_render(h_sum, W, H);
 
-	auto t2 = std::chrono::high_resolution_clock::now();
-	std::cout << "write short took "
-		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-		<< " milliseconds\n";
 
 
 	return 0;
