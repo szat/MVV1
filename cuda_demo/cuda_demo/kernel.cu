@@ -42,19 +42,21 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = (row * w + col) * 3;
+	int raster_index = (row * w + col);
+	int color_index = raster_index * 3;
 
 	// should not need to do this check if everything is good, must be an extra pixel
-	if (i + 2 >= w * h * 3) return;
+	if (color_index + 2 >= w * h * 3) return;
+	if ((row >= h) || (col >= w)) return;
 
-	d_output[i] = 0;
-	d_output[i + 1] = 0;
-	d_output[i+2] = d_input[i+2];
+	//d_output[i] = 0;
+	//d_output[i + 1] = 0;
+	//d_output[color_index+2] = d_input[color_index+2];
 
-	//if ((r >= h) || (c >= w)) return;
+	
 
-	/*
-	short affine_index = d_raster1[i];
+	
+	short affine_index = d_raster1[raster_index];
 	short offset = affine_index * 12;
 	if (reverse) {
 		offset += 6;
@@ -63,18 +65,19 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 		float diff = 1 / (float)subDiv;
 		for (int i = 0; i < subDiv; i++) {
 			for (int j = 0; j < subDiv; j++) {
-				int new_c = (int)(((1-tau) + tau*d_affineData[offset]) * (float)(c - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
-				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(c - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(r - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				int new_c = (int)(((1-tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 				int new_i = new_r * w + new_c;
 				int new_index = new_i * 3;
-				d_output[new_index] = channel_1;
-				d_output[new_index + 1] = channel_2;
-				d_output[new_index + 2] = channel_3;
+				d_output[new_index] = d_input[color_index];
+				d_output[new_index + 1] = d_input[color_index+1];
+				d_output[new_index + 2] = d_input[color_index+2];
 			}
 		}
 	}
-	*/
+	
+	
 }
 
 __global__
