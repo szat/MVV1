@@ -131,7 +131,7 @@ void save_img(string tar_path, Mat &img) {
 	Size size = img.size();
 	int height = size.height;
 	int width = size.width;
-	int len = height * width * 3;
+	int len = height * width * 4;
 
 	uchar *pixels = new uchar[len];
 
@@ -142,6 +142,7 @@ void save_img(string tar_path, Mat &img) {
 			pixels[index] = data[0];
 			pixels[index + 1] = data[1];
 			pixels[index + 2] = data[2];
+			pixels[index + 3] = (uchar)0;
 		}
 	}
 

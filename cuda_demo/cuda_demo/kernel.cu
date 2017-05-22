@@ -36,17 +36,17 @@ void kernel2D(uchar* d_output, uchar* d_input, int w, int h, float * d_affineDat
 }
 
 __global__
-void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
 	if (tau > 1 || tau < 0) return;
 
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
 	int raster_index = (row * w + col);
-	int color_index = raster_index * 3;
+	//int color_index = raster_index * 3;
 
 	// should not need to do this check if everything is good, must be an extra pixel
-	if (color_index + 2 >= w * h * 3) return;
+	if (raster_index >= w * h) return;
 	if ((row >= h) || (col >= w)) return;
 	
 	short affine_index = d_raster1[raster_index];
@@ -62,10 +62,7 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 				int new_i = new_r * w + new_c;
-				int new_index = new_i * 3;
-				d_output[new_index] = d_input[color_index];
-				d_output[new_index + 1] = d_input[color_index+1];
-				d_output[new_index + 2] = d_input[color_index+2];
+				d_output[new_i] = d_input[raster_index];
 			}
 		}
 	}
@@ -74,43 +71,40 @@ void kernel2D_subpix(uchar* d_output, uchar* d_input, short* d_raster1, int w, i
 }
 
 __global__
-void kernel2D_add(uchar* d_output, uchar* d_input_1, uchar* d_input_2, int w, int h, float tau) {
+void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w, int h, float tau) {
 	//tau is from a to b
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
 	int raster_index = (row * w + col);
-	int color_index = raster_index * 3;
 
 	// should not need to do this check if everything is good, must be an extra pixel
-	if (color_index + 2 >= w * h * 3) return;
+	if (raster_index >= w * h) return;
 	if ((row >= h) || (col >= w)) return;
 
 	
-	for (int i = 0; i < 3; i++) {
-		if (d_input_1[color_index + i] == 0) {
-			d_output[color_index + i] = d_input_2[color_index + i];
-		}
-		else if (d_input_2[color_index + i] == 0) {
-			d_output[color_index + i] = d_input_1[color_index + i];
-		}
-		else {
-			d_output[color_index + i] = tau*d_input_1[color_index + i] + (1 - tau)*d_input_2[color_index + i];
-		}
+	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
+		d_output[raster_index] = d_input_2[raster_index];
 	}
-	
-
+	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
+		d_output[raster_index] = d_input_1[raster_index];
+	}
+	else {
+		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
+		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
+		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
+	}
 }
 
-Mat trial_binary_render(uchar *image, int width, int height) {
+Mat trial_binary_render(uchar4 *image, int width, int height) {
 	Mat img(height, width, CV_8UC3, Scalar(0, 0, 0));
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 
-			int index = (i * width + j) * 3;
+			int index = i * width + j;
 
-			uchar r = image[index];
-			uchar g = image[index + 1];
-			uchar b = image[index + 2];
+			uchar r = image[index].x;
+			uchar g = image[index].y;
+			uchar b = image[index].z;
 
 			Vec3b color = Vec3b(r, g, b);
 
@@ -137,6 +131,9 @@ void uchar4_test() {
 
 	uchar4 test1 = test_uchar4[0];
 	uchar4 test2 = test_uchar4[1];
+
+	int size = sizeof(uchar4);
+
 
 	cout << "test";
 }
@@ -170,17 +167,8 @@ int main(int argc, char ** argv) {
 	int width_2 = 0;
 	int height_1 = 0;
 	int height_2 = 0;
-	uchar *h_in_1 = read_uchar_array(img_path_1, length_1, width_1, height_1);
-	uchar *h_in_2 = read_uchar_array(img_path_2, length_2, width_2, height_2);
-	int W = width_1;
-	int H = height_1;
-
-	int pix_channels = W * H * 3;
-	uchar4 *h_in_1_u4 = new uchar4[W * H];
-	uchar4 *h_in_2_u4 = new uchar4[W * H];
-	memcpy(h_in_1_u4, h_in_1, pix_channels);
-	memcpy(h_in_2_u4, h_in_2, pix_channels);
-
+	uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+	uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 
 	
 	// RASTER READ
@@ -199,24 +187,24 @@ int main(int argc, char ** argv) {
 		exit(-1);
 	}
 
+	int W = width_1;
+	int H = height_1;
+	int mem_alloc = W * H * 4 * sizeof(uchar);
 
-	int mem_alloc = W * H * 3 * sizeof(uchar);
-
-	uchar *h_out_1;
-	uchar *h_out_2;
-	uchar *h_sum;
+	uchar4 *h_out_1;
+	uchar4 *h_out_2;
+	uchar4 *h_sum;
 	
 	// there must be a faster way to initialize these arrays to all zeros
-	
-	h_out_1 = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H*3; j++) h_out_1[j] = 0;
+	uchar *zeros = new uchar[mem_alloc];
+	for (int j = 0; j < mem_alloc; j++) zeros[j] = 0;
+	h_out_1 = (uchar4*)malloc(mem_alloc);
+	h_out_2 = (uchar4*)malloc(mem_alloc);
+	h_sum = (uchar4*)malloc(mem_alloc);
+	memcpy(h_out_1, zeros, mem_alloc);
+	memcpy(h_out_2, zeros, mem_alloc);
+	memcpy(h_sum, zeros, mem_alloc);
 
-	h_out_2 = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H*3; j++) h_out_2[j] = 0;
-
-	h_sum = (uchar*)malloc(mem_alloc);
-	for (int j = 0; j < W*H*3; j++) h_sum[j] = 0;
-	
 	//--Sending the data to the GPU memory
 	cout << "declaring device data-structures..." << endl;
 
@@ -232,23 +220,23 @@ int main(int argc, char ** argv) {
 	cudaMalloc((void**)&d_raster2, W * H * sizeof(short));
 	cudaMemcpy(d_raster2, h_raster2, W * H * sizeof(short), cudaMemcpyHostToDevice);
 
-	uchar * d_in_1;
+	uchar4 * d_in_1;
 	cudaMalloc((void**)&d_in_1, mem_alloc);
 	cudaMemcpy(d_in_1, h_in_1, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_out_1;
+	uchar4 * d_out_1;
 	cudaMalloc((void**)&d_out_1, mem_alloc);
 	cudaMemcpy(d_out_1, h_out_1, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_in_2;
+	uchar4 * d_in_2;
 	cudaMalloc((void**)&d_in_2, mem_alloc);
 	cudaMemcpy(d_in_2, h_in_2, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_out_2;
+	uchar4 * d_out_2;
 	cudaMalloc((void**)&d_out_2, mem_alloc);
 	cudaMemcpy(d_out_2, h_out_2, mem_alloc, cudaMemcpyHostToDevice);
 
-	uchar * d_sum;
+	uchar4 * d_sum;
 	cudaMalloc((void**)&d_sum, mem_alloc);
 	cudaMemcpy(d_sum, h_sum, mem_alloc, cudaMemcpyHostToDevice);
 
@@ -280,19 +268,19 @@ int main(int argc, char ** argv) {
 	cudaFree(d_affine_data);
 	cudaFree(d_sum);
 
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "write short took "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds\n";
 
-
+	
 	//trial_binary_render(h_sum, W, H);
 	Mat img1_initial = trial_binary_render(h_in_1, W, H);
 	Mat img2_initial = trial_binary_render(h_in_2, W, H);
 	Mat img1_final = trial_binary_render(h_out_1, W, H);
 	Mat img2_final = trial_binary_render(h_out_2, W, H);
 	Mat img_final = trial_binary_render(h_sum, W, H);
-
-	auto t2 = std::chrono::high_resolution_clock::now();
-	std::cout << "write short took "
-		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-		<< " milliseconds\n";
+	
 
 
 	return 0;
