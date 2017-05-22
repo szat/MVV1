@@ -138,7 +138,7 @@ void save_img(string tar_path, Mat &img) {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			Vec3b data = img.at<Vec3b>(i, j);
-			int index = (i * width + j) * 3;
+			int index = (i * width + j) * 4;
 			pixels[index] = data[0];
 			pixels[index + 1] = data[1];
 			pixels[index + 2] = data[2];
