@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuda_demo", "cuda_demo\cuda_demo.vcxproj", "{CE681333-30C2-4E8A-A1F2-F54F450175DB}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openGL_demo", "openGL_demo\openGL_demo.vcxproj", "{A6C77529-1652-491B-A5FB-BC2FD39AC998}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "io_demo", "io_demo\io_demo.vcxproj", "{53B755E0-F2A5-4962-A94A-C030D7477FBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,22 +21,6 @@ Global
 		{CE681333-30C2-4E8A-A1F2-F54F450175DB}.Release|x64.Build.0 = Release|x64
 		{CE681333-30C2-4E8A-A1F2-F54F450175DB}.Release|x86.ActiveCfg = Release|Win32
 		{CE681333-30C2-4E8A-A1F2-F54F450175DB}.Release|x86.Build.0 = Release|Win32
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Debug|x64.ActiveCfg = Debug|x64
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Debug|x64.Build.0 = Debug|x64
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Debug|x86.ActiveCfg = Debug|Win32
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Debug|x86.Build.0 = Debug|Win32
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Release|x64.ActiveCfg = Release|x64
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Release|x64.Build.0 = Release|x64
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Release|x86.ActiveCfg = Release|Win32
-		{A6C77529-1652-491B-A5FB-BC2FD39AC998}.Release|x86.Build.0 = Release|Win32
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Debug|x64.ActiveCfg = Debug|x64
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Debug|x64.Build.0 = Debug|x64
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Debug|x86.ActiveCfg = Debug|Win32
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Debug|x86.Build.0 = Debug|Win32
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Release|x64.ActiveCfg = Release|x64
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Release|x64.Build.0 = Release|x64
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Release|x86.ActiveCfg = Release|Win32
-		{53B755E0-F2A5-4962-A94A-C030D7477FBD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
