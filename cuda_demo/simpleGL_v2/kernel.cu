@@ -98,7 +98,6 @@ char **pArgv = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // declaration, forward
-bool runTest(int argc, char **argv, char *ref_file);
 void cleanup();
 
 // GL functionality
@@ -110,14 +109,10 @@ void deleteVBO(GLuint *vbo, struct cudaGraphicsResource *vbo_res);
 // rendering callbacks
 void display();
 void keyboard(unsigned char key, int x, int y);
-void mouse(int button, int state, int x, int y);
-void motion(int x, int y);
 void timerEvent(int value);
 
 // Cuda functionality
 void runCuda(struct cudaGraphicsResource **vbo_resource);
-//void runAutoTest(int devID, char **argv, char *ref_file);
-//void checkResultCuda(int argc, char **argv, const GLuint &vbo);, deleted, seems to work without
 
 const char *sSDKsample = "simpleGL (VBO)";
 
@@ -184,12 +179,10 @@ int main(int argc, char **argv)
 	// register callbacks
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
-	glutMouseFunc(mouse);
-	glutMotionFunc(motion);
 	glutCloseFunc(cleanup);
 	// create VBO
 	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard); //<== THIS IS IMPORTANT
-																		   // run the cuda part
+																	// run the cuda part
 	runCuda(&cuda_vbo_resource);
 	
 	// start rendering mainloop
@@ -210,7 +203,6 @@ bool initGL(int *argc, char **argv)
 	glutCreateWindow("Cuda GL Interop (VBO)");
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
-	glutMotionFunc(motion);
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	// initialize necessary OpenGL extensions	
@@ -220,7 +212,7 @@ bool initGL(int *argc, char **argv)
 		fflush(stderr);
 		return false;
 	}
-	
+
 	// default initialization
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glDisable(GL_DEPTH_TEST);
@@ -229,33 +221,13 @@ bool initGL(int *argc, char **argv)
 	glViewport(0, 0, window_width, window_height);
 
 	// projection
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_PROJECTION); //of GL_MODELVIEW, for us no diff
 	glLoadIdentity();
 	gluPerspective(60.0, (GLfloat)window_width / (GLfloat)window_height, 0.1, 10.0);
 
 	SDK_CHECK_ERROR_GL();
 
 	return true;
-}
-
-#ifdef _WIN32
-#ifndef FOPEN
-#define FOPEN(fHandle,filename,mode) fopen_s(&fHandle, filename, mode)
-#endif
-#else
-#ifndef FOPEN
-#define FOPEN(fHandle,filename,mode) (fHandle = fopen(filename, mode))
-#endif
-#endif
-
-void sdkDumpBin2(void *data, unsigned int bytes, const char *filename)
-{
-	printf("sdkDumpBin: <%s>\n", filename);
-	FILE *fp;
-	FOPEN(fp, filename, "wb");
-	fwrite(data, bytes, 1, fp);
-	fflush(fp);
-	fclose(fp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,8 +281,6 @@ void display()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0, 0.0, translate_z);
-	glRotatef(rotate_x, 1.0, 0.0, 0.0);
-	glRotatef(rotate_y, 0.0, 1.0, 0.0);
 
 	// render from the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -355,42 +325,4 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		glutDestroyWindow(glutGetWindow());
 		return;
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Mouse event handlers
-////////////////////////////////////////////////////////////////////////////////
-void mouse(int button, int state, int x, int y)
-{
-	if (state == GLUT_DOWN)
-	{
-		mouse_buttons |= 1 << button;
-	}
-	else if (state == GLUT_UP)
-	{
-		mouse_buttons = 0;
-	}
-
-	mouse_old_x = x;
-	mouse_old_y = y;
-}
-
-void motion(int x, int y)
-{
-	float dx, dy;
-	dx = (float)(x - mouse_old_x);
-	dy = (float)(y - mouse_old_y);
-
-	if (mouse_buttons & 1)
-	{
-		rotate_x += dy * 0.2f;
-		rotate_y += dx * 0.2f;
-	}
-	else if (mouse_buttons & 4)
-	{
-		translate_z += dy * 0.01f;
-	}
-
-	mouse_old_x = x;
-	mouse_old_y = y;
 }
