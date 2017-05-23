@@ -50,11 +50,12 @@ void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w,
 	if ((row >= h) || (col >= w)) return;
 	
 	short affine_index = d_raster1[raster_index];
-	short offset = affine_index * 12;
+	short offset = (affine_index - 1) * 12;
 	if (reverse) {
 		offset += 6;
 	}
 	if (affine_index != 0) {
+		// triangle indexes start at 1
 		float diff = 1 / (float)subDiv;
 		for (int i = 0; i < subDiv; i++) {
 			for (int j = 0; j < subDiv; j++) {
