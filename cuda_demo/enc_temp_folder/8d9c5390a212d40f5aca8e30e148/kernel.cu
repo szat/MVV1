@@ -68,7 +68,7 @@ using namespace std;
 //PFNGLGENBUFFERSARBPROC    glGenBuffers = NULL;
 //PFNGLBUFFERDATAARBPROC    glBufferData = NULL;
 
-#define WIDTH 667 //size of david_1.jpg
+#define WIDTH 667
 #define HEIGHT 1000
 
 GLuint  bufferObj;
