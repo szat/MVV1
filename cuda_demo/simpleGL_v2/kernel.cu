@@ -55,6 +55,13 @@ Host code
 
 #include <vector_types.h>
 
+#include <opencv2\imgproc.hpp>
+#include <opencv2\highgui.hpp>
+#include <string>
+
+using namespace cv;
+using namespace std;
+
 #define MAX_EPSILON_ERROR 10.0f
 #define THRESHOLD          0.30f
 #define REFRESH_DELAY     10 //ms
@@ -165,6 +172,11 @@ void runCuda(struct cudaGraphicsResource **vbo_resource)
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+
+	string img1_path = "../../data_store/images/david_1.jpg";
+	Mat img1 = imread(img1_path, IMREAD_COLOR);
+
+
 	char *ref_file = NULL;
 
 	pArgc = &argc;
