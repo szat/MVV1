@@ -42,6 +42,7 @@ Host code
 #include <GL/freeglut.h>
 
 // includes, cuda
+#include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
@@ -62,279 +63,108 @@ Host code
 using namespace cv;
 using namespace std;
 
-#define MAX_EPSILON_ERROR 10.0f
-#define THRESHOLD          0.30f
-#define REFRESH_DELAY     10 //ms
+//PFNGLBINDBUFFERARBPROC    glBindBuffer = NULL;
+//PFNGLDELETEBUFFERSARBPROC glDeleteBuffers = NULL;
+//PFNGLGENBUFFERSARBPROC    glGenBuffers = NULL;
+//PFNGLBUFFERDATAARBPROC    glBufferData = NULL;
 
-////////////////////////////////////////////////////////////////////////////////
-// constants
-const unsigned int window_width = 512;
-const unsigned int window_height = 512;
+#define WIDTH 523
+#define HEIGHT 1000
 
-const unsigned int mesh_width = 256;
-const unsigned int mesh_height = 256;
+GLuint  bufferObj;
+cudaGraphicsResource *resource;
 
-// vbo variables
-GLuint vbo;
-struct cudaGraphicsResource *cuda_vbo_resource;
-void *d_vbo_buffer = NULL;
+__global__ void kernel(uchar4 *ptr) {
+	// map from threadIdx/BlockIdx to pixel position
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
+	int offset = x + y * blockDim.x * gridDim.x;
 
-float g_fAnim = 0.0;
-
-// mouse controls
-int mouse_old_x, mouse_old_y;
-int mouse_buttons = 0;
-float rotate_x = 0.0, rotate_y = 0.0;
-float translate_z = -3.0;
-
-StopWatchInterface *timer = NULL;
-
-// Auto-Verification Code
-int fpsCount = 0;        // FPS count for averaging
-int fpsLimit = 1;        // FPS limit for sampling
-int g_Index = 0;
-float avgFPS = 0.0f;
-unsigned int frameCount = 0;
-unsigned int g_TotalErrors = 0;
-bool g_bQAReadback = false;
-
-int *pArgc = NULL;
-char **pArgv = NULL;
-
-#define MAX(a,b) ((a > b) ? a : b)
-
-////////////////////////////////////////////////////////////////////////////////
-// declaration, forward
-void cleanup();
-
-// GL functionality
-bool initGL(int *argc, char **argv);
-void createVBO(GLuint *vbo, struct cudaGraphicsResource **vbo_res,
-	unsigned int vbo_res_flags);
-void deleteVBO(GLuint *vbo, struct cudaGraphicsResource *vbo_res);
-
-// rendering callbacks
-void display();
-void keyboard(unsigned char key, int x, int y);
-void timerEvent(int value);
-
-// Cuda functionality
-void runCuda(struct cudaGraphicsResource **vbo_resource);
-
-const char *sSDKsample = "simpleGL (VBO)";
-
-///////////////////////////////////////////////////////////////////////////////
-//! Simple kernel to modify vertex positions in sine wave pattern
-//! @param data  data in global memory
-///////////////////////////////////////////////////////////////////////////////
-__global__ void simple_vbo_kernel(float4 *pos, unsigned int width, unsigned int height, float time)
-{
-	unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
-
-	// calculate uv coordinates
-	float u = x / (float)width;
-	float v = y / (float)height;
-	u = u*2.0f - 1.0f;
-	v = v*2.0f - 1.0f;
-
-	// calculate simple sine wave pattern
-	float freq = 4.0f;
-	float w = sinf(u*freq + time) * cosf(v*freq + time) * 0.5f;
-
-	// write output vertex
-	pos[y*width + x] = make_float4(u, w, v, 1.0f);
+	// accessing uchar4 vs unsigned char*
+	ptr[offset].x = 0;
+	ptr[offset].y = 12;
+	ptr[offset].z = 200;
+	ptr[offset].w = 255;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//! Run the Cuda part of the computation
-////////////////////////////////////////////////////////////////////////////////
-void runCuda(struct cudaGraphicsResource **vbo_resource)
-{
-	// map OpenGL buffer object for writing from CUDA
-	float4 *dptr;
-	checkCudaErrors(cudaGraphicsMapResources(1, vbo_resource, 0));
-	size_t num_bytes;
-	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes,
-		*vbo_resource));
-	//printf("CUDA mapped VBO: May access %ld bytes\n", num_bytes);
-
-	dim3 block(8, 8, 1);
-	dim3 grid(mesh_width / block.x, mesh_height / block.y, 1);
-	simple_vbo_kernel << <grid, block >> > (dptr, mesh_width, mesh_height, g_fAnim);
-
-	// unmap buffer object
-	checkCudaErrors(cudaGraphicsUnmapResources(1, vbo_resource, 0));
+static void key_func(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27:
+		// clean up OpenGL and CUDA
+		cudaGraphicsUnregisterResource(resource);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+		glDeleteBuffers(1, &bufferObj);
+		exit(0);
+	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Program main
-////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
+static void draw_func(void) {
+	// we pass zero as the last parameter, because out bufferObj is now
+	// the source, and the field switches from being a pointer to a
+	// bitmap to now mean an offset into a bitmap object
+	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glutSwapBuffers();
+}
 
+int main(int argc, char **argv) {
 	string img1_path = "../../data_store/images/david_1.jpg";
 	Mat img1 = imread(img1_path, IMREAD_COLOR);
+	uchar4* img1_ptr = (uchar4*)img1.data;
 
+	cudaDeviceProp  prop;
+	int dev;
 
-	char *ref_file = NULL;
+	memset(&prop, 0, sizeof(cudaDeviceProp));
+	prop.major = 1;
+	prop.minor = 0;
+	cudaChooseDevice(&dev, &prop);
 
-	pArgc = &argc;
-	pArgv = argv;
+	// tell CUDA which dev we will be using for graphic interop
+	// from the programming guide:  Interoperability with OpenGL
+	//     requires that the CUDA device be specified by
+	//     cudaGLSetGLDevice() before any other runtime calls.
 
-	printf("%s starting...\n", sSDKsample);
+	cudaGLSetGLDevice(dev);
 
-	printf("\n");
+	// these GLUT calls need to be made before the other OpenGL
+	// calls, else we get a seg fault
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowSize(WIDTH, HEIGHT);
+	glutCreateWindow("bitmap");
 
-	initGL(&argc, argv);
-	cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
-	// register callbacks
-	glutDisplayFunc(display);
-	glutKeyboardFunc(keyboard);
-	glutCloseFunc(cleanup);
-	// create VBO
-	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard); //<== THIS IS IMPORTANT
-																	// run the cuda part
-	runCuda(&cuda_vbo_resource);
+	//not in tutorial, otherwise crashes
+	if (GLEW_OK != glewInit()) { return 1; }
+	while (GL_NO_ERROR != glGetError());
+
+	// the first three are standard OpenGL, the 4th is the CUDA reg 
+	// of the bitmap these calls exist starting in OpenGL 1.5
+	glGenBuffers(1, &bufferObj);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * 4, NULL, GL_DYNAMIC_DRAW_ARB);
+	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+
+	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
+
+	// do work with the memory dst being on the GPU, gotten via mapping
+	cudaGraphicsMapResources(1, &resource, NULL);
+	uchar4* devPtr;
+	size_t  size;
 	
-	// start rendering mainloop
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
+
+	dim3 blockSize(32, 32);
+	int bx = (WIDTH + 32 - 1) / 32;
+	int by = (HEIGHT + 32 - 1) / 32;
+	dim3 gridSize = dim3(bx, by);
+
+	dim3    grids(WIDTH / 16, HEIGHT / 16);
+	dim3    threads(16, 16);
+	kernel << <gridSize, blockSize>> >(devPtr);
+	cudaGraphicsUnmapResources(1, &resource, NULL);
+
+	// set up GLUT and kick off main loop
+	glutKeyboardFunc(key_func);
+	glutDisplayFunc(draw_func);
 	glutMainLoop();
-
-	printf("%s completed, returned %s\n", sSDKsample, (g_TotalErrors == 0) ? "OK" : "ERROR!");
-	exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Initialize GL
-////////////////////////////////////////////////////////////////////////////////
-bool initGL(int *argc, char **argv)
-{
-	glutInit(argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(window_width, window_height);
-	glutCreateWindow("Cuda GL Interop (VBO)");
-	glutDisplayFunc(display);
-	glutKeyboardFunc(keyboard);
-	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
-
-	// initialize necessary OpenGL extensions	
-	if (!isGLVersionSupported(2, 0))
-	{
-		fprintf(stderr, "ERROR: Support for necessary OpenGL extensions missing.");
-		fflush(stderr);
-		return false;
-	}
-
-	// default initialization
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glDisable(GL_DEPTH_TEST);
-
-	// viewport
-	glViewport(0, 0, window_width, window_height);
-
-	// projection
-	glMatrixMode(GL_PROJECTION); //of GL_MODELVIEW, for us no diff
-	glLoadIdentity();
-	gluPerspective(60.0, (GLfloat)window_width / (GLfloat)window_height, 0.1, 10.0);
-
-	SDK_CHECK_ERROR_GL();
-
-	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Create VBO
-////////////////////////////////////////////////////////////////////////////////
-void createVBO(GLuint *vbo, struct cudaGraphicsResource **vbo_res, unsigned int vbo_res_flags)
-{
-	assert(vbo);
-
-	// create buffer object
-	glGenBuffers(1, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-
-	// initialize buffer object
-	unsigned int size = mesh_width * mesh_height * 4 * sizeof(float);
-	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// register this buffer object with CUDA
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(vbo_res, *vbo, vbo_res_flags));
-
-	SDK_CHECK_ERROR_GL();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Delete VBO
-////////////////////////////////////////////////////////////////////////////////
-void deleteVBO(GLuint *vbo, struct cudaGraphicsResource *vbo_res)
-{
-	// unregister this buffer object with CUDA
-	checkCudaErrors(cudaGraphicsUnregisterResource(vbo_res));
-
-	glBindBuffer(1, *vbo);
-	glDeleteBuffers(1, vbo);
-
-	*vbo = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Display callback
-////////////////////////////////////////////////////////////////////////////////
-void display()
-{
-	// run CUDA kernel to generate vertex positions
-	runCuda(&cuda_vbo_resource);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// set view matrix
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0, 0.0, translate_z);
-
-	// render from the vbo
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexPointer(4, GL_FLOAT, 0, 0);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glColor3f(1.0, 0.0, 0.0);
-	glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	glutSwapBuffers();
-
-	g_fAnim += 0.01f;
-}
-
-void timerEvent(int value)
-{
-	if (glutGetWindow())
-	{
-		glutPostRedisplay();
-		glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
-	}
-}
-
-void cleanup()
-{
-	if (vbo)
-	{
-		deleteVBO(&vbo, cuda_vbo_resource);
-	}
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-//! Keyboard events handler
-////////////////////////////////////////////////////////////////////////////////
-void keyboard(unsigned char key, int /*x*/, int /*y*/)
-{
-	switch (key)
-	{
-	case (27):
-		glutDestroyWindow(glutGetWindow());
-		return;
-	}
 }
