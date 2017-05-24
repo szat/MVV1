@@ -66,7 +66,7 @@ using namespace std;
 
 #define WIDTH 667 //size of david_1.jpg
 #define HEIGHT 1000
-#define REFRESH_DELAY     10 //ms
+#define REFRESH_DELAY     60 //ms
 
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
@@ -216,6 +216,7 @@ int main(int argc, char **argv)
 	int by = (HEIGHT + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
+	//cudaGraphicsResourceSetMapFlags(resource, cudaGraphicsMapFlagsWriteDiscard);
 	cudaGraphicsMapResources(1, &resource, NULL);
 	//cudaGraphicsMapResources(1, &cuda_texture);
 
@@ -235,7 +236,5 @@ int main(int argc, char **argv)
 	//cudaGraphicsUnmapResources(1, &cuda_texture);
 
 	// set up GLUT and kick off main loop
-	
-
 	glutMainLoop();
 }
