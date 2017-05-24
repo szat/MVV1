@@ -151,6 +151,7 @@ void save_img(string tar_path, Mat &img) {
 	write_uchar_array(tar_path, char_result, len, width, height);
 }
 
+
 // this next function will be to encode the images in a binary format
 // this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
 void save_img_binary(string src_path_1, string tar_path_1, string src_path_2, string tar_path_2) {

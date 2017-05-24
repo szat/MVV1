@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include "binary_io.h"
+#include "merge_background.h"
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -237,9 +238,41 @@ void trial_binary_render(uchar *image, int length, int width, int height) {
 	cout << "test";
 }
 
+void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
+	Mat img_1 = imread(src_path_1, IMREAD_COLOR);
+	Mat img_2 = imread(src_path_2, IMREAD_COLOR);
+
+	// Assumptions: img_1 and img_2 are of the same size
+	// The images for the video capture are the same size as img_1 and img_2
+	Mat merge = merge_images(img_1, img_2);
+
+	// checking assumptions
+	Size img_size_1 = img_1.size();
+	Size img_size_2 = img_2.size();
+	
+	if (img_size_1.width != img_size_2.width || img_size_1.height != img_size_2.height) {
+		throw "Irreconcilable sizes";
+	}
+	Size merge_size = merge.size();
+	
+	Mat new_img(img_size_1.height, merge_size.width, CV_8UC3);
+
+
+	// Create new image that is (merge.width x img_size_1.height)
+	// fill in middle with merge (black on top and bottom)
+	// extrapolate top and bottom
+
+	// 
+
+
+	save_img(dst_path, merge);
+
+	cout << "done";
+}
+
 int danny_test() {
 	// master function for constructing and saving a frame
-
+	/*
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -250,6 +283,12 @@ int danny_test() {
 	string img1_path = "david_1.jpg";
 	string img2_path = "david_2.jpg";
 	save_frame_master(img1_path, img2_path);
+	*/
+
+	string src_path_1 = "../../data_store/images/img_background_1.jpg";
+	string src_path_2 = "../../data_store/images/img_background_2.jpg";
+	string dst_path = "../../data_store/binary/background.bin";
+	merge_and_save(src_path_1, src_path_2, dst_path);
 
 	return 0;
 }
