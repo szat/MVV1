@@ -367,6 +367,7 @@ int adrian_test() {
 	//test_akaze_harris_global_harris_local("david_1.jpg", "david_2.jpg");
 
 	//loading an david seems to take approx 50ms, so two davids 100ms
+	/*
 	string address1 = "..\\data_store\\david_1.jpg";
 	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
 	string address2 = "..\\data_store\\david_2_resize_no_background.jpg";
@@ -377,6 +378,18 @@ int adrian_test() {
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 	chrono::duration<double, std::milli> time_span = t2 - t1;
 	std::cout << "It took me " << time_span.count() / 10 << " milliseconds." << endl;
+	return 0;
+	*/
+	string src_path_1 = "../../data_store/images/david_1.jpg";
+	string tar_path_1 = "../../data_store/binary/david_1.bin";
+	string src_path_2 = "../../data_store/images/david_2.jpg";
+	string tar_path_2 = "../../data_store/binary/david_2.bin";
+
+	save_img_binary(src_path_1, tar_path_1, src_path_2, tar_path_2);
+
+	string img1_path = "david_1.jpg";
+	string img2_path = "david_2.jpg";
+	save_frame_master(img1_path, img2_path);
 	return 0;
 }
 
