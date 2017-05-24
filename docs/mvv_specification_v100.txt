@@ -53,7 +53,7 @@ short[][] (2 bytes)
 
 How much data is in one frame? We've got say 300 triangles, that's 12 float * 300 * 4 bytes = 48 * 300 bytes = 12 kb
 
-We've got 5 bytes for all 4 channels (single pixel), and we've got 600 * 1000 pixels, so 600,000 * 5 = 3,000,000 => 3 MB
+We've got 5 bytes for all 4 channels (single pixel), and we've got 600 * 1000 pixels, so 600,000 * 5 = 3,000,000 => 
 
 
 

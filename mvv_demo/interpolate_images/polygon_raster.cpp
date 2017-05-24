@@ -162,7 +162,8 @@ short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 			short y = (short)raster[i][j].y;
 			// weird index swapping
 			// triangle index for the affine transforms
-			grid[y][x] = i;
+			// triangle index start at 1
+			grid[y][x] = i + 1;
 		}
 	}
 	// possible memory leak if this gets called a bunch and the arrays are never deleted
