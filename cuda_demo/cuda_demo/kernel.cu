@@ -48,7 +48,7 @@ void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w,
 	// should not need to do this check if everything is good, must be an extra pixel
 	if (raster_index >= w * h) return;
 	if ((row >= h) || (col >= w)) return;
-	
+
 	short affine_index = d_raster1[raster_index];
 	short offset = (affine_index - 1) * 12;
 	if (reverse) {
@@ -59,16 +59,16 @@ void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w,
 		float diff = 1 / (float)subDiv;
 		for (int i = 0; i < subDiv; i++) {
 			for (int j = 0; j < subDiv; j++) {
-				int new_c = (int)(((1-tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
-				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1-tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
 				int new_i = new_r * w + new_c;
 				d_output[new_i] = d_input[raster_index];
 			}
 		}
 	}
-	
-	
+
+
 }
 
 __global__
@@ -82,7 +82,7 @@ void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w,
 	if (raster_index >= w * h) return;
 	if ((row >= h) || (col >= w)) return;
 
-	
+
 	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
 		d_output[raster_index] = d_input_2[raster_index];
 	}
@@ -171,7 +171,7 @@ int main(int argc, char ** argv) {
 	uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 	uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 
-	
+
 	// RASTER READ
 	int num_pixels_1 = 0;
 	int num_pixels_2 = 0;
@@ -195,7 +195,7 @@ int main(int argc, char ** argv) {
 	uchar4 *h_out_1;
 	uchar4 *h_out_2;
 	uchar4 *h_sum;
-	
+
 	// there must be a faster way to initialize these arrays to all zeros
 	uchar *zeros = new uchar[mem_alloc];
 	for (int j = 0; j < mem_alloc; j++) zeros[j] = 0;
@@ -274,14 +274,14 @@ int main(int argc, char ** argv) {
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds\n";
 
-	
+
 	//trial_binary_render(h_sum, W, H);
 	Mat img1_initial = trial_binary_render(h_in_1, W, H);
 	Mat img2_initial = trial_binary_render(h_in_2, W, H);
 	Mat img1_final = trial_binary_render(h_out_1, W, H);
 	Mat img2_final = trial_binary_render(h_out_2, W, H);
 	Mat img_final = trial_binary_render(h_sum, W, H);
-	
+
 
 
 	return 0;
