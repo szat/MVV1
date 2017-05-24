@@ -323,7 +323,7 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 
 int danny_test() {
 	// master function for constructing and saving a frame
-	/*
+	
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -334,13 +334,13 @@ int danny_test() {
 	string img1_path = "david_1.jpg";
 	string img2_path = "david_2.jpg";
 	save_frame_master(img1_path, img2_path);
-	*/
-
+	
+	/*
 	string src_path_1 = "../../data_store/images/img_background_1.jpg";
 	string src_path_2 = "../../data_store/images/img_background_2.jpg";
 	string dst_path = "../../data_store/binary/background.bin";
 	merge_and_save(src_path_1, src_path_2, dst_path);
-
+	*/
 	return 0;
 }
 
