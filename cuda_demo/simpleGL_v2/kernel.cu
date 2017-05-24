@@ -30,6 +30,7 @@ Host code
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctime>
 
 #ifdef _WIN32
 #  define WINDOWS_LEAN_AND_MEAN
@@ -73,8 +74,9 @@ using namespace std;
 
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
+__device__ volatile int param = 50;
 
-__global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h) {
+__global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -84,10 +86,26 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h) {
 
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x =d_img_ptr[i].x;
+	ptr[i].x =(d_img_ptr[i].x + param)%255;
 	ptr[i].y =d_img_ptr[i].y;
-	ptr[i].z =d_img_ptr[i].z;
+	ptr[i].z = (d_img_ptr[i].z + param)%200;
 	ptr[i].w =d_img_ptr[i].w;
+}
+
+__global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	
+	if ((r >= h) || (c >= w)) return;
+
+
+	// accessing uchar4 vs unsigned char*
+	ptr[i].x = ptr[i].x + 10; 
+	ptr[i].y = ptr[i].y;
+	ptr[i].z = ptr[i].z + 10;
+	ptr[i].w = ptr[i].w;
 }
 
 static void key_func(unsigned char key, int x, int y) {
@@ -105,11 +123,34 @@ static void draw_func(void) {
 	// we pass zero as the last parameter, because out bufferObj is now
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
+
+	dim3 blockSize(32, 32);
+	int bx = (WIDTH + 32 - 1) / 32;
+	int by = (HEIGHT + 32 - 1) / 32;
+	dim3 gridSize = dim3(bx, by);
+
+	cudaGraphicsMapResources(1, &resource, NULL);
+	//cudaGraphicsMapResources(1, &cuda_texture);
+
+	uchar4* devPtr;
+	//cudaArray* memDevice;
+	size_t  size;
+
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
+
+
+	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
+
+	kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, param);
+	param++;
+	cudaGraphicsUnmapResources(1, &resource, NULL);
+
 	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
 	string img_path = "../../data_store/images/david_1.jpg";
 	Mat img = imread(img_path, IMREAD_COLOR);
@@ -157,25 +198,38 @@ int main(int argc, char **argv)
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
 	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0); <== makes the code crash
 
+	glutKeyboardFunc(key_func);
+	glutDisplayFunc(draw_func);
+
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 
 	// do work with the memory dst being on the GPU, gotten via mapping
-	cudaGraphicsMapResources(1, &resource, NULL);
-	uchar4* devPtr;
-	size_t  size;
-	
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
 
 	dim3 blockSize(32, 32);
 	int bx = (WIDTH + 32 - 1) / 32;
 	int by = (HEIGHT + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
-	kernel << <gridSize, blockSize>> >(devPtr, d_img_ptr, WIDTH, HEIGHT);
+	cudaGraphicsMapResources(1, &resource, NULL);
+	//cudaGraphicsMapResources(1, &cuda_texture);
+
+	uchar4* devPtr;
+	//cudaArray* memDevice;
+	size_t  size;
+
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
+	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
+
+
+	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
+	
+	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
+
 	cudaGraphicsUnmapResources(1, &resource, NULL);
+	//cudaGraphicsUnmapResources(1, &cuda_texture);
 
 	// set up GLUT and kick off main loop
-	glutKeyboardFunc(key_func);
-	glutDisplayFunc(draw_func);
+	
+
 	glutMainLoop();
 }
