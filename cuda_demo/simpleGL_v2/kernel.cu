@@ -64,13 +64,9 @@ Host code
 using namespace cv;
 using namespace std;
 
-//PFNGLBINDBUFFERARBPROC    glBindBuffer = NULL;
-//PFNGLDELETEBUFFERSARBPROC glDeleteBuffers = NULL;
-//PFNGLGENBUFFERSARBPROC    glGenBuffers = NULL;
-//PFNGLBUFFERDATAARBPROC    glBufferData = NULL;
-
 #define WIDTH 667 //size of david_1.jpg
 #define HEIGHT 1000
+#define REFRESH_DELAY     10 //ms
 
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
@@ -87,7 +83,7 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) 
 
 	// accessing uchar4 vs unsigned char*
 	ptr[i].x =(d_img_ptr[i].x + param)%255;
-	ptr[i].y =d_img_ptr[i].y;
+	ptr[i].y = d_img_ptr[i].y;
 	ptr[i].z = (d_img_ptr[i].z + param)%200;
 	ptr[i].w =d_img_ptr[i].w;
 }
@@ -150,6 +146,15 @@ static void draw_func(void) {
 	glutSwapBuffers();
 }
 
+void timerEvent(int value)
+{
+	if (glutGetWindow())
+	{
+		glutPostRedisplay();
+		glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	string img_path = "../../data_store/images/david_1.jpg";
@@ -186,6 +191,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(WIDTH, HEIGHT);
 	glutCreateWindow("bitmap");
+	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
 	if (GLEW_OK != glewInit()) { return 1; }
