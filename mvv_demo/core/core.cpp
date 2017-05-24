@@ -238,6 +238,38 @@ void trial_binary_render(uchar *image, int length, int width, int height) {
 	cout << "test";
 }
 
+void fill_top_and_bottom(Mat &img) {
+	Size img_size = img.size();
+	int img_width = img_size.width;
+	int img_height = img_size.height;
+
+	int midpoint = img_height / 2;
+
+	for (int j = 0; j < img_width; j++) {
+		for (int i_top = midpoint; i_top > 0; i_top--) {
+			Vec3b latest = img.at<Vec3b>(i_top + 1, j);
+			Vec3b current = img.at<Vec3b>(i_top, j);
+			int r = current[0];
+			int g = current[1];
+			int b = current[2];
+			if (r == 0 && g == 0 && b == 0) {
+				img.at<Vec3b>(i_top, j) = latest;
+			}
+		}
+
+		for (int i_bottom = midpoint; i_bottom < img_height; i_bottom++) {
+			Vec3b latest = img.at<Vec3b>(i_bottom - 1, j);
+			Vec3b current = img.at<Vec3b>(i_bottom, j);
+			int r = current[0];
+			int g = current[1];
+			int b = current[2];
+			if (r == 0 && g == 0 && b == 0) {
+				img.at<Vec3b>(i_bottom, j) = latest;
+			}
+		}
+	}
+}
+
 void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 	Mat img_1 = imread(src_path_1, IMREAD_COLOR);
 	Mat img_2 = imread(src_path_2, IMREAD_COLOR);
@@ -257,15 +289,34 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 	
 	Mat new_img(img_size_1.height, merge_size.width, CV_8UC3);
 
+	int height_diff = img_size_1.height - merge_size.height;
+	if (height_diff < 0) {
+		throw "Not implemented";
+	}
 
-	// Create new image that is (merge.width x img_size_1.height)
+	int top_diff = 0;
+	int bottom_diff = 0;
+	if (height_diff % 2 != 0) {
+		top_diff = height_diff / 2 + 1;
+		bottom_diff = height_diff / 2;
+	}
+	else {
+		top_diff = height_diff / 2;
+		bottom_diff = height_diff / 2;
+	}
+
+	// not sure if this is working quite as I intended it
+	int original_i = 0;
+	for (int i = top_diff; i < merge_size.height; i++) {
+		for (int j = 0; j < merge_size.width; j++) {
+			new_img.at<Vec3b>(i, j) = merge.at<Vec3b>(original_i, j);
+		}
+		original_i++;
+	}
+
 	// fill in middle with merge (black on top and bottom)
-	// extrapolate top and bottom
-
-	// 
-
-
-	save_img(dst_path, merge);
+	fill_top_and_bottom(new_img);
+	save_img(dst_path, new_img);
 
 	cout << "done";
 }
