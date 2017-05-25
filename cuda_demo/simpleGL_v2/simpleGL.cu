@@ -61,17 +61,20 @@ Host code
 #include <opencv2\highgui.hpp>
 #include <string>
 
+#include <binary_io.h>
+
 using namespace cv;
 using namespace std;
 
 #define WIDTH 667 //size of david_1.jpg
 #define HEIGHT 1000
-#define REFRESH_DELAY     60 //ms
+#define REFRESH_DELAY     2 //ms
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
+__device__ int counter;
 __device__ volatile int param = 50;
 
 __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
@@ -79,9 +82,7 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) 
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
-
 	if ((r >= h) || (c >= w)) return;
-
 
 	// accessing uchar4 vs unsigned char*
 	ptr[i].x =(d_img_ptr[i].x + param)%255;
@@ -95,10 +96,10 @@ __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
 	int i = r * w + c;
-	
 	if ((r >= h) || (c >= w)) return;
 
-
+	//atomicAdd(&counter, 1);
+	
 	// accessing uchar4 vs unsigned char*
 	ptr[i].x = ptr[i].x + 10; 
 	ptr[i].y = ptr[i].y;
@@ -122,22 +123,6 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	dim3 blockSize(32, 32);
-	int bx = (WIDTH + 32 - 1) / 32;
-	int by = (HEIGHT + 32 - 1) / 32;
-	dim3 gridSize = dim3(bx, by);
-
-	cudaGraphicsMapResources(1, &resource, NULL);
-
-	uchar4* devPtr;
-	size_t  size;
-
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
-
-	kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, param);
-	param++;
-	cudaGraphicsUnmapResources(1, &resource, NULL);
-
 	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
 }
@@ -153,6 +138,18 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
+	for (int i = 0; i < 1000; i++) {
+		string img_path_1 = "../../data_store/binary/david_1.bin";
+
+		// BINARY IMAGE READ
+		int length_1 = 0;
+		int width_1 = 0;
+		int height_1 = 0;
+		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		
+		free(h_in_1);
+	}
+
 	string img_path = "../../data_store/images/david_1.jpg";
 	Mat img = imread(img_path, IMREAD_COLOR);
 	int H = img.size().height;
@@ -200,6 +197,8 @@ int main(int argc, char **argv)
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
+	//which one to pick? goes along with postrediplay
+	//glutIdleFunc(draw_func);
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
@@ -218,6 +217,48 @@ int main(int argc, char **argv)
 	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
+
+	/*
+	int addXdir = 1;
+	int * devAddXdir;
+	cudaMalloc((void**)&devAddXdir, sizeof(int));
+	cudaMemcpy(devAddXdir, &addXdir, sizeof(int), cudaMemcpyHostToDevice);
+	*/
+
+	for (;;) {
+		string img_path = "../../data_store/images/david_1.jpg";
+		Mat img = imread(img_path, IMREAD_COLOR);
+		int H = img.size().height;
+		int W = img.size().width;
+		Mat bgra;
+		cvtColor(img, bgra, CV_BGR2BGRA);
+		uchar4* h_img_ptr;
+		h_img_ptr = (uchar4*)(bgra.data);
+
+		dim3 blockSize(32, 32);
+		int bx = (WIDTH + 32 - 1) / 32;
+		int by = (HEIGHT + 32 - 1) / 32;
+		dim3 gridSize = dim3(bx, by);
+
+		cudaGraphicsMapResources(1, &resource, NULL);
+
+		uchar4* devPtr;
+		size_t  size;
+
+		cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+
+		kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, 0);
+
+		cudaGraphicsUnmapResources(1, &resource, NULL);
+
+
+		//Does not seem "necessary"
+		cudaDeviceSynchronize();
+
+		//only gluMainLoopEvent() seems necessary
+		glutPostRedisplay();
+		glutMainLoopEvent();
+	}
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
