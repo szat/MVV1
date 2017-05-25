@@ -68,6 +68,8 @@ using namespace std;
 #define HEIGHT 1000
 #define REFRESH_DELAY     60 //ms
 
+//TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
+
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
 __device__ volatile int param = 50;
@@ -157,32 +159,44 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
+	
 	string img_path = "../../data_store/images/david_1.jpg";
 	Mat img = imread(img_path, IMREAD_COLOR);
 	int H = img.size().height;
 	int W = img.size().width;
+	
 	Mat bgra;
 	cvtColor(img, bgra, CV_BGR2BGRA);
-	uchar4* h_img_ptr;
-	h_img_ptr = (uchar4*)(bgra.data);
+	uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT * sizeof(uchar4)];
+	for (int i = 0; i < WIDTH * HEIGHT * sizeof(uchar4); i++) {
+		uchar4 tester;
+		tester.x = 255;
+		tester.y = 0;
+		tester.z = 0;
+		tester.w = 0;
+		h_img_ptr[i] = tester;
+	}
 
+	//h_img_ptr = (uchar4*)(bgra.data);
 	uchar4* d_img_ptr;
 	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
 	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
-
+	
+	
 	cudaDeviceProp  prop;
 	int dev;
-
+	
 	memset(&prop, 0, sizeof(cudaDeviceProp));
 	prop.major = 1;
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
-
+	
 	// tell CUDA which dev we will be using for graphic interop
 	// from the programming guide:  Interoperability with OpenGL
 	//     requires that the CUDA device be specified by
 	//     cudaGLSetGLDevice() before any other runtime calls.
 
+	
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
@@ -237,4 +251,5 @@ int main(int argc, char **argv)
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
+	
 }
