@@ -128,17 +128,11 @@ static void draw_func(void) {
 	dim3 gridSize = dim3(bx, by);
 
 	cudaGraphicsMapResources(1, &resource, NULL);
-	//cudaGraphicsMapResources(1, &cuda_texture);
 
 	uchar4* devPtr;
-	//cudaArray* memDevice;
 	size_t  size;
 
 	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
-	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
-
-
-	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
 
 	kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, param);
 	param++;
@@ -216,38 +210,26 @@ int main(int argc, char **argv)
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
-	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0); <== makes the code crash
 
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 
-	// do work with the memory dst being on the GPU, gotten via mapping
+	cudaGraphicsMapResources(1, &resource, NULL);
 
+	uchar4* devPtr;
+	size_t  size;
+
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
+	
 	dim3 blockSize(32, 32);
 	int bx = (WIDTH + 32 - 1) / 32;
 	int by = (HEIGHT + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-
-	//cudaGraphicsResourceSetMapFlags(resource, cudaGraphicsMapFlagsWriteDiscard);
-	cudaGraphicsMapResources(1, &resource, NULL);
-	//cudaGraphicsMapResources(1, &cuda_texture);
-
-	uchar4* devPtr;
-	//cudaArray* memDevice;
-	size_t  size;
-
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
-	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
-
-
-	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
-	
 	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
-	//cudaGraphicsUnmapResources(1, &cuda_texture);
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
