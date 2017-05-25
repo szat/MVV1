@@ -627,6 +627,49 @@ C:/ProgramData/NVIDIA Corporation/CUDA Samples/v8.0/common/inc\helper_cuda.h
 C:/ProgramData/NVIDIA Corporation/CUDA Samples/v8.0/common/inc\helper_cuda_gl.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\GL/gl.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\vector_types.h
+C:\opencv\build\include\opencv2\imgproc.hpp
+C:\opencv\build\include\opencv2/core.hpp
+C:\opencv\build\include\opencv2/core/cvdef.h
+C:\opencv\build\include\opencv2/core/hal/interface.h
+C:\opencv\build\include\opencv2/core/version.hpp
+C:\opencv\build\include\opencv2/core/base.hpp
+C:\opencv\build\include\opencv2/opencv_modules.hpp
+C:\opencv\build\include\opencv2/core/cvstd.hpp
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\cctype
+C:\opencv\build\include\opencv2/core/ptr.inl.hpp
+C:\opencv\build\include\opencv2/core/neon_utils.hpp
+C:\opencv\build\include\opencv2/core/traits.hpp
+C:\opencv\build\include\opencv2/core/matx.hpp
+C:\opencv\build\include\opencv2/core/saturate.hpp
+C:\opencv\build\include\opencv2/core/fast_math.hpp
+C:\opencv\build\include\opencv2/core/types.hpp
+C:\opencv\build\include\opencv2/core/mat.hpp
+C:\opencv\build\include\opencv2/core/bufferpool.hpp
+C:\opencv\build\include\opencv2/core/mat.inl.hpp
+C:\opencv\build\include\opencv2/core/persistence.hpp
+C:\opencv\build\include\opencv2/core/operations.hpp
+C:\opencv\build\include\opencv2/core/cvstd.inl.hpp
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\complex
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ccomplex
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xcomplex
+C:\opencv\build\include\opencv2/core/utility.hpp
+C:\opencv\build\include\opencv2/core.hpp
+C:\opencv\build\include\opencv2/core/core_c.h
+C:\opencv\build\include\opencv2/core/types_c.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\assert.h
+C:\opencv\build\include\opencv2/core.hpp
+C:\opencv\build\include\opencv2/core/utility.hpp
+C:\opencv\build\include\opencv2/core/optim.hpp
+C:\opencv\build\include\opencv2/core.hpp
+C:\opencv\build\include\opencv2/core/ovx.hpp
+C:\opencv\build\include\opencv2/imgproc/imgproc_c.h
+C:\opencv\build\include\opencv2/imgproc/types_c.h
+C:\opencv\build\include\opencv2\highgui.hpp
+C:\opencv\build\include\opencv2/imgcodecs.hpp
+C:\opencv\build\include\opencv2/videoio.hpp
+C:\opencv\build\include\opencv2/highgui/highgui_c.h
+C:\opencv\build\include\opencv2/imgcodecs/imgcodecs_c.h
+C:\opencv\build\include\opencv2/videoio/videoio_c.h
 c:\users\danny\documents\github\mvv\cuda_demo\simplegl_v2\binary_io.h
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\chrono
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\ratio
