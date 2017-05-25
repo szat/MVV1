@@ -3,7 +3,23 @@
 #include <fstream>
 #include <chrono>
 #include <string>
-#include <vector_types.h>
+
+uchar * read_uchar_array(std::string full_path, int &length, int &width, int &height) {
+	// modifies length, returns char array
+	std::ifstream ifile(full_path, std::ios::binary);
+	char * length_array = new char[12];
+	int * int_array = new int[3];
+	ifile.read(length_array, 12);
+	memcpy(int_array, length_array, 12);
+	length = int_array[0];
+	width = int_array[1];
+	height = int_array[2];
+	char * result = new char[length];
+	ifile.read(result, length);
+	uchar * result_uchar = new uchar[length];
+	memcpy(result_uchar, result, length);
+	return result_uchar;
+}
 
 uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array

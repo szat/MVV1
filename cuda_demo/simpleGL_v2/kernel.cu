@@ -56,12 +56,10 @@ Host code
 #include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
 
 #include <vector_types.h>
-
-#include <opencv2\imgproc.hpp>
-#include <opencv2\highgui.hpp>
 #include <string>
 
-using namespace cv;
+#include "binary_io.h"
+
 using namespace std;
 
 #define WIDTH 667 //size of david_1.jpg
@@ -128,11 +126,17 @@ static void draw_func(void) {
 	dim3 gridSize = dim3(bx, by);
 
 	cudaGraphicsMapResources(1, &resource, NULL);
+	//cudaGraphicsMapResources(1, &cuda_texture);
 
 	uchar4* devPtr;
+	//cudaArray* memDevice;
 	size_t  size;
 
 	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
+
+
+	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
 
 	kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, param);
 	param++;
@@ -153,28 +157,23 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	
-	string img_path = "../../data_store/images/david_1.jpg";
-	Mat img = imread(img_path, IMREAD_COLOR);
-	int H = img.size().height;
-	int W = img.size().width;
-	
-	Mat bgra;
-	cvtColor(img, bgra, CV_BGR2BGRA);
-	uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT * sizeof(uchar4)];
-	for (int i = 0; i < WIDTH * HEIGHT * sizeof(uchar4); i++) {
-		uchar4 tester;
-		tester.x = 255;
-		tester.y = 0;
-		tester.z = 0;
-		tester.w = 0;
-		h_img_ptr[i] = tester;
-	}
+	string img_path_1 = "../../data_store/binary/david_1.bin";
+	string img_path_2 = "../../data_store/binary/david_2.bin";
+	int length_1 = 0;
+	int width_1 = 0;
+	int height_1 = 0;
+	int length_2 = 0;
+	int width_2 = 0;
+	int height_2 = 0;
+	uchar4 *h_img_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+	uchar4 *h_img_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
+
+	int length = WIDTH * HEIGHT * sizeof(uchar4);
 
 	//h_img_ptr = (uchar4*)(bgra.data);
 	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
-	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_img_ptr, length);
+	cudaMemcpy(d_img_ptr, h_img_1, length, cudaMemcpyHostToDevice);
 	
 	
 	cudaDeviceProp  prop;
@@ -210,26 +209,38 @@ int main(int argc, char **argv)
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
+	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0); <== makes the code crash
 
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 
-	cudaGraphicsMapResources(1, &resource, NULL);
+	// do work with the memory dst being on the GPU, gotten via mapping
 
-	uchar4* devPtr;
-	size_t  size;
-
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
-	
 	dim3 blockSize(32, 32);
 	int bx = (WIDTH + 32 - 1) / 32;
 	int by = (HEIGHT + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
+
+	//cudaGraphicsResourceSetMapFlags(resource, cudaGraphicsMapFlagsWriteDiscard);
+	cudaGraphicsMapResources(1, &resource, NULL);
+	//cudaGraphicsMapResources(1, &cuda_texture);
+
+	uchar4* devPtr;
+	//cudaArray* memDevice;
+	size_t  size;
+
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
+	//cudaGraphicsSubResourceGetMappedArray(&memDevice, cuda_texture, 0, 0);
+
+
+	//cudaMemcpyToArray(memDevice, 0, 0, d_in, w*h * sizeof(uchar4), cudaMemcpyDeviceToDevice);
+	
 	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
+	//cudaGraphicsUnmapResources(1, &cuda_texture);
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
