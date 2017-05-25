@@ -125,23 +125,7 @@ static void draw_func(void) {
 	// bitmap to now mean an offset into a bitmap object
 
 	/*
-	string img_path_1 = "../../data_store/binary/david_1.bin";
-	string img_path_2 = "../../data_store/binary/david_2.bin";
-	int length_1 = 0;
-	int width_1 = 0;
-	int height_1 = 0;
-	int length_2 = 0;
-	int width_2 = 0;
-	int height_2 = 0;
-	uchar4 *h_img_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-	uchar4 *h_img_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 
-	int length = WIDTH * HEIGHT * sizeof(uchar4);
-
-	//h_img_ptr = (uchar4*)(bgra.data);
-	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, length);
-	cudaMemcpy(d_img_ptr, h_img_1, length, cudaMemcpyHostToDevice);
 	
 	*/
 
@@ -182,6 +166,24 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
+	string img_path_1 = "../../data_store/binary/david_1.bin";
+	string img_path_2 = "../../data_store/binary/david_2.bin";
+	int length_1 = 0;
+	int width_1 = 0;
+	int height_1 = 0;
+	int length_2 = 0;
+	int width_2 = 0;
+	int height_2 = 0;
+	uchar4 *h_img_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+	uchar4 *h_img_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
+
+	int length = WIDTH * HEIGHT * sizeof(uchar4);
+
+	//h_img_ptr = (uchar4*)(bgra.data);
+	uchar4* d_img_ptr;
+	cudaMalloc((void**)&d_img_ptr, length);
+	cudaMemcpy(d_img_ptr, h_img_1, length, cudaMemcpyHostToDevice);
+
 	cudaDeviceProp  prop;
 	int dev;
 	
@@ -221,7 +223,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
-	/*
+	
 	// do work with the memory dst being on the GPU, gotten via mapping
 
 	dim3 blockSize(32, 32);
@@ -249,7 +251,7 @@ int main(int argc, char **argv)
 	//cudaGraphicsUnmapResources(1, &cuda_texture);
 
 	// set up GLUT and kick off main loop
-	*/
+	
 	glutMainLoop();
 	
 }
