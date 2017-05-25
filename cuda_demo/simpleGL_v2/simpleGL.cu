@@ -138,44 +138,43 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	for (int i = 0; i < 1000; i++) {
-		string img_path_1 = "../../data_store/binary/david_1.bin";
-
-		// BINARY IMAGE READ
-		int length_1 = 0;
-		int width_1 = 0;
-		int height_1 = 0;
-		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-		
-		free(h_in_1);
-	}
-
 	string img_path = "../../data_store/images/david_1.jpg";
 	Mat img = imread(img_path, IMREAD_COLOR);
 	int H = img.size().height;
 	int W = img.size().width;
+	
 	Mat bgra;
 	cvtColor(img, bgra, CV_BGR2BGRA);
-	uchar4* h_img_ptr;
-	h_img_ptr = (uchar4*)(bgra.data);
+	uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT * sizeof(uchar4)];
+	for (int i = 0; i < WIDTH * HEIGHT * sizeof(uchar4); i++) {
+		uchar4 tester;
+		tester.x = 255;
+		tester.y = 0;
+		tester.z = 0;
+		tester.w = 0;
+		h_img_ptr[i] = tester;
+	}
 
+	//h_img_ptr = (uchar4*)(bgra.data);
 	uchar4* d_img_ptr;
 	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
 	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
-
+	
+	
 	cudaDeviceProp  prop;
 	int dev;
-
+	
 	memset(&prop, 0, sizeof(cudaDeviceProp));
 	prop.major = 1;
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
-
+	
 	// tell CUDA which dev we will be using for graphic interop
 	// from the programming guide:  Interoperability with OpenGL
 	//     requires that the CUDA device be specified by
 	//     cudaGLSetGLDevice() before any other runtime calls.
 
+	
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
@@ -262,4 +261,5 @@ int main(int argc, char **argv)
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
+	
 }
