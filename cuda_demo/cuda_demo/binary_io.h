@@ -18,6 +18,9 @@ uchar * read_uchar_array(std::string full_path, int &length, int &width, int &he
 	ifile.read(result, length);
 	uchar * result_uchar = new uchar[length];
 	memcpy(result_uchar, result, length);
+	free(length_array);
+	free(int_array);
+	free(result);
 	return result_uchar;
 }
 
@@ -35,6 +38,9 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	ifile.read(result, length);
 	uchar4 * result_uchar = new uchar4[width*height];
 	memcpy(result_uchar, result, length);
+	free(length_array);
+	free(int_array);
+	free(result);
 	return result_uchar;
 }
 
@@ -49,6 +55,9 @@ short * read_short_array(std::string full_path, int &length) {
 	ifile.read(result, length * 2);
 	short * short_result = new short[length];
 	memcpy(short_result, result, length * 2);
+	free(length_array);
+	free(int_array);
+	free(result);
 	return short_result;
 }
 
@@ -63,5 +72,8 @@ float * read_float_array(std::string full_path, int &length) {
 	char * char_result = new char[length * 4];
 	ifile.read(char_result, length * 4);
 	memcpy(result, char_result, length * 4);
+	free(length_array);
+	free(int_array);
+	free(result);
 	return result;
 }
