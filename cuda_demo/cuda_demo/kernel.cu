@@ -250,11 +250,9 @@ int main(int argc, char ** argv) {
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 
-
 	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
 	kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
 	kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_2, W, H, tau);
-
 
 	cudaMemcpy(h_out_1, d_out_1, mem_alloc, cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_out_2, d_out_2, mem_alloc, cudaMemcpyDeviceToHost);
@@ -274,15 +272,12 @@ int main(int argc, char ** argv) {
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds\n";
 
-
 	//trial_binary_render(h_sum, W, H);
 	Mat img1_initial = trial_binary_render(h_in_1, W, H);
 	Mat img2_initial = trial_binary_render(h_in_2, W, H);
 	Mat img1_final = trial_binary_render(h_out_1, W, H);
 	Mat img2_final = trial_binary_render(h_out_2, W, H);
 	Mat img_final = trial_binary_render(h_sum, W, H);
-
-
 
 	return 0;
 }

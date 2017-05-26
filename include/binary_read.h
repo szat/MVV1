@@ -39,6 +39,7 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	result = nullptr;
 	free(length_array);
 	free(int_array);
+	ifile.close();
 	return result_uchar4;
 }
 
@@ -55,6 +56,7 @@ short * read_short_array(std::string full_path, int &length) {
 	result = nullptr;
 	free(length_array);
 	free(int_array);
+	ifile.close();
 	return short_result;
 }
 
@@ -71,5 +73,6 @@ float * read_float_array(std::string full_path, int &length) {
 	char_result = nullptr;
 	free(length_array);
 	free(int_array);
+	ifile.close();
 	return float_result;
 }
