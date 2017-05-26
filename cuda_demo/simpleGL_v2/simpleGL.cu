@@ -39,7 +39,7 @@ Host code
 #endif
 
 // OpenGL Graphics includes
-#include <helper_gl.h>
+//#include <helper_gl.h>
 #include <GL/freeglut.h>
 
 // includes, cuda
@@ -48,12 +48,12 @@ Host code
 #include <cuda_gl_interop.h>
 
 // Utilities and timing functions
-#include <helper_functions.h>    // includes cuda.h and cuda_runtime_api.h
-#include <timer.h>               // timing functions
+//#include <helper_functions.h>    // includes cuda.h and cuda_runtime_api.h
+//#include <timer.h>               // timing functions
 
 // CUDA helper functions
-#include <helper_cuda.h>         // helper functions for CUDA error check
-#include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
+//#include <helper_cuda.h>         // helper functions for CUDA error check
+//#include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
 
 #include <vector_types.h>
 
