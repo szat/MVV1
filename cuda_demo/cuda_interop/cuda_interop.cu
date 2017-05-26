@@ -130,6 +130,7 @@ int main(int argc, char **argv)
 	int width_1 = 0;
 	int height_1 = 0;
 	uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+
 		
 	//h_img_ptr = (uchar4*)(bgra.data);
 	uchar4* d_img_ptr;
@@ -227,7 +228,7 @@ int main(int argc, char **argv)
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		//free(h_img_ptr);
+		free(h_img_ptr);
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
