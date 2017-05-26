@@ -274,15 +274,12 @@ int main(int argc, char ** argv) {
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds\n";
 
-
 	//trial_binary_render(h_sum, W, H);
 	Mat img1_initial = trial_binary_render(h_in_1, W, H);
 	Mat img2_initial = trial_binary_render(h_in_2, W, H);
 	Mat img1_final = trial_binary_render(h_out_1, W, H);
 	Mat img2_final = trial_binary_render(h_out_2, W, H);
 	Mat img_final = trial_binary_render(h_sum, W, H);
-
-
 
 	return 0;
 }
