@@ -74,7 +74,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\opencv\build\include;$(SolutionDir)..\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\opencv\build\include;C:\Users\Adrian\Documents\GitHub\mvv\cuda_demo\cuda_demo;$(IncludePath)</IncludePath>
     <LibraryPath>C:\opencv\build\x64\vc14\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
