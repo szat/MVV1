@@ -56,9 +56,6 @@ Host code
 #include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
 
 #include <vector_types.h>
-
-#include <opencv2\imgproc.hpp>
-#include <opencv2\highgui.hpp>
 #include <string>
 
 using namespace cv;
@@ -83,10 +80,10 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) 
 	if ((r >= h) || (c >= w)) return;
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x =(d_img_ptr[i].x + param)%255;
+	ptr[i].x = (d_img_ptr[i].x + param) % 255;
 	ptr[i].y = d_img_ptr[i].y;
-	ptr[i].z = (d_img_ptr[i].z + param)%200;
-	ptr[i].w =d_img_ptr[i].w;
+	ptr[i].z = (d_img_ptr[i].z + param) % 200;
+	ptr[i].w = d_img_ptr[i].w;
 }
 
 __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
@@ -97,9 +94,9 @@ __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
 	if ((r >= h) || (c >= w)) return;
 
 	//atomicAdd(&counter, 1);
-	
+
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x = ptr[i].x + 10; 
+	ptr[i].x = ptr[i].x + 10;
 	ptr[i].y = ptr[i].y;
 	ptr[i].z = ptr[i].z + 10;
 	ptr[i].w = ptr[i].w;
@@ -140,7 +137,7 @@ int main(int argc, char **argv)
 	Mat img = imread(img_path, IMREAD_COLOR);
 	int H = img.size().height;
 	int W = img.size().width;
-	
+
 	Mat bgra;
 	cvtColor(img, bgra, CV_BGR2BGRA);
 	uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT * sizeof(uchar4)];
@@ -157,22 +154,22 @@ int main(int argc, char **argv)
 	uchar4* d_img_ptr;
 	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
 	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
-	
-	
+
+
 	cudaDeviceProp  prop;
 	int dev;
-	
+
 	memset(&prop, 0, sizeof(cudaDeviceProp));
 	prop.major = 1;
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
-	
+
 	// tell CUDA which dev we will be using for graphic interop
 	// from the programming guide:  Interoperability with OpenGL
 	//     requires that the CUDA device be specified by
 	//     cudaGLSetGLDevice() before any other runtime calls.
 
-	
+
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
@@ -205,8 +202,8 @@ int main(int argc, char **argv)
 	uchar4* devPtr;
 	size_t  size;
 
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr,&size,resource);
-	
+	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+
 	dim3 blockSize(32, 32);
 	int bx = (WIDTH + 32 - 1) / 32;
 	int by = (HEIGHT + 32 - 1) / 32;
@@ -223,13 +220,22 @@ int main(int argc, char **argv)
 	*/
 
 	for (;;) {
+		/*
 		string img_path = "../../data_store/images/david_1.jpg";
 		Mat img = imread(img_path, IMREAD_COLOR);
 		int H = img.size().height;
 		int W = img.size().width;
 		Mat bgra;
 		cvtColor(img, bgra, CV_BGR2BGRA);
-		uchar4* h_img_ptr;
+		*/
+		
+		uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT];
+		for (int i = 0; i < WIDTH * HEIGHT; i++) {
+			h_img_ptr[i].x = 255;
+			h_img_ptr[i].y = 0;
+			h_img_ptr[i].z = 0;
+		}
+
 		h_img_ptr = (uchar4*)(bgra.data);
 
 		dim3 blockSize(32, 32);
@@ -259,5 +265,5 @@ int main(int argc, char **argv)
 
 	// set up GLUT and kick off main loop
 	glutMainLoop();
-	
+
 }
