@@ -201,6 +201,7 @@ int main(int argc, char **argv)
 	*/
 
 	for (;;) {
+		
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
 
@@ -208,6 +209,7 @@ int main(int argc, char **argv)
 		int width_1 = 0;
 		int height_1 = 0;
 		uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		
 
 		dim3 blockSize(32, 32);
 		int bx = (WIDTH + 32 - 1) / 32;
@@ -225,7 +227,7 @@ int main(int argc, char **argv)
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		free(h_img_ptr);
+		//free(h_img_ptr);
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
