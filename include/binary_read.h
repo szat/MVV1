@@ -4,6 +4,7 @@
 #include <chrono>
 #include <string>
 
+/*
 uchar * read_uchar_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
 	std::ifstream ifile(full_path, std::ios::binary);
@@ -20,6 +21,7 @@ uchar * read_uchar_array(std::string full_path, int &length, int &width, int &he
 	memcpy(result_uchar, result, length);
 	return result_uchar;
 }
+*/
 
 uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
@@ -33,9 +35,12 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	height = int_array[2];
 	char * result = new char[length];
 	ifile.read(result, length);
-	uchar4 * result_uchar = new uchar4[width*height];
-	memcpy(result_uchar, result, length);
-	return result_uchar;
+	uchar4 * result_uchar4 = new uchar4[width*height];
+	memcpy(result_uchar4, result, length);
+	free(result);
+	free(length_array);
+	free(int_array);
+	return result_uchar4;
 }
 
 short * read_short_array(std::string full_path, int &length) {
@@ -49,6 +54,9 @@ short * read_short_array(std::string full_path, int &length) {
 	ifile.read(result, length * 2);
 	short * short_result = new short[length];
 	memcpy(short_result, result, length * 2);
+	free(result);
+	free(length_array);
+	free(int_array);
 	return short_result;
 }
 
@@ -63,5 +71,8 @@ float * read_float_array(std::string full_path, int &length) {
 	char * char_result = new char[length * 4];
 	ifile.read(char_result, length * 4);
 	memcpy(result, char_result, length * 4);
+	free(result);
+	free(length_array);
+	free(int_array);
 	return result;
 }
