@@ -35,9 +35,6 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	ifile.read(result, length);
 	uchar4 * result_uchar = new uchar4[width*height];
 	memcpy(result_uchar, result, length);
-	free(result);
-	free(length_array);
-	free(int_array);
 	return result_uchar;
 }
 

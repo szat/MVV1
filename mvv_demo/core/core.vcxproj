@@ -101,7 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\interpolate_images;..\build_geometry;..\match_features;C:\opencv\build\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\interpolate_images;..\build_geometry;..\match_features;$(SolutionDir)..\include;C:\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,14 +148,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="binary_io.h" />
     <ClInclude Include="merge_background.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="binary_io.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="merge_background.cpp" />
     <ClCompile Include="stdafx.cpp" />

@@ -1,4 +1,4 @@
-#include "binary_io.h"
+#pragma once
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
@@ -6,14 +6,11 @@
 #include <chrono>
 #include <string>
 
-using namespace std;
-using namespace cv;
 // Note about all of this:
 // OS-dependent! This will not work on other architectures (for now).
 
-
-void write_uchar_array(string full_path, char * input, int length, int width, int height) {
-	ofstream ofile(full_path, ios::binary);
+void write_uchar_array(std::string full_path, char * input, int length, int width, int height) {
+	std::ofstream ofile(full_path, std::ios::binary);
 	char * length_array = new char[12];
 	int * int_array = new int[3];
 	int_array[0] = length;
@@ -25,26 +22,9 @@ void write_uchar_array(string full_path, char * input, int length, int width, in
 	ofile.close();
 }
 
-uchar * read_uchar_array(string full_path, int &length, int &width, int &height) {
-	// modifies length, returns char array
-	ifstream ifile(full_path, ios::binary);
-	char * length_array = new char[12];
-	int * int_array = new int[3];
-	ifile.read(length_array, 12);
-	memcpy(int_array, length_array, 12);
-	length = int_array[0];
-	width = int_array[1];
-	height = int_array[2];
-	char * result = new char[length];
-	ifile.read(result, length);
-	uchar * result_uchar = new uchar[length];
-	memcpy(result_uchar, result, length);
-	return result_uchar;
-}
-
-void write_short_array(string full_path, short * input, int length) {
+void write_short_array(std::string full_path, short * input, int length) {
 	char * char_input = new char[length * 2];
-	ofstream ofile(full_path, ios::binary);
+	std::ofstream ofile(full_path, std::ios::binary);
 	char * length_array = new char[4];
 	int * int_array = new int[1];
 	int_array[0] = length;
@@ -55,23 +35,9 @@ void write_short_array(string full_path, short * input, int length) {
 	ofile.write(char_input, length * 2);
 }
 
-short * read_short_array(string full_path, int &length) {
-	ifstream ifile(full_path, ios::binary);
-	char * length_array = new char[4];
-	int * int_array = new int[1];
-	ifile.read(length_array, 4);
-	memcpy(int_array, length_array, 4);
-	length = int_array[0];
-	char * result = new char[length * 2];
-	ifile.read(result, length * 2);
-	short * short_result = new short[length];
-	memcpy(short_result, result, length * 2);
-	return short_result;
-}
-
-void write_float_array(string full_path, float * input, int length) {
+void write_float_array(std::string full_path, float * input, int length) {
 	char * char_input = new char[length * 4];
-	ofstream ofile(full_path, ios::binary);
+	std::ofstream ofile(full_path, std::ios::binary);
 	char * length_array = new char[4];
 	int * int_array = new int[1];
 	int_array[0] = length;
@@ -81,21 +47,7 @@ void write_float_array(string full_path, float * input, int length) {
 	ofile.write(char_input, length * 4);
 }
 
-float * read_float_array(string full_path, int &length) {
-	ifstream ifile(full_path, ios::binary);
-	char * length_array = new char[4];
-	int * int_array = new int[1];
-	ifile.read(length_array, 4);
-	memcpy(int_array, length_array, 4);
-	length = int_array[0];
-	float * result = new float[length];
-	char * char_result = new char[length * 4];
-	ifile.read(char_result, length * 4);
-	memcpy(result, char_result, length * 4);
-	return result;
-}
-
-void save_raster(string full_path, short ** raster, int width, int height) {
+void save_raster(std::string full_path, short ** raster, int width, int height) {
 	int size = width * height;
 	short * raster_1D = new short[size];
 	for (int i = 0; i < height; i++) {
@@ -106,7 +58,7 @@ void save_raster(string full_path, short ** raster, int width, int height) {
 	write_short_array(full_path, raster_1D, size);
 }
 
-float* convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_params) {
+float* convert_vector_params(std::vector<cv::Mat> forward_params, std::vector<cv::Mat> reverse_params) {
 	int num_triangles = forward_params.size();
 	float* params = new float[num_triangles * 12];
 	for (int i = 0; i < num_triangles; i++) {
@@ -127,8 +79,8 @@ float* convert_vector_params(vector<Mat> forward_params, vector<Mat> reverse_par
 	return params;
 }
 
-void save_img(string tar_path, Mat &img) {
-	Size size = img.size();
+void save_img(std::string tar_path, cv::Mat &img) {
+	cv::Size size = img.size();
 	int height = size.height;
 	int width = size.width;
 	int len = height * width * 4;
@@ -137,7 +89,7 @@ void save_img(string tar_path, Mat &img) {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			Vec3b data = img.at<Vec3b>(i, j);
+			cv::Vec3b data = img.at<cv::Vec3b>(i, j);
 			int index = (i * width + j) * 4;
 			pixels[index] = data[0];
 			pixels[index + 1] = data[1];
@@ -154,11 +106,11 @@ void save_img(string tar_path, Mat &img) {
 
 // this next function will be to encode the images in a binary format
 // this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
-void save_img_binary(string src_path_1, string tar_path_1, string src_path_2, string tar_path_2) {
-	Mat img_1 = imread(src_path_1, IMREAD_COLOR);
-	Mat img_2 = imread(src_path_2, IMREAD_COLOR);
-	Size desiredSize = img_2.size();
-	resize(img_1, img_1, desiredSize);
+void save_img_binary(std::string src_path_1, std::string tar_path_1, std::string src_path_2, std::string tar_path_2) {
+	cv::Mat img_1 = imread(src_path_1, cv::ImreadModes::IMREAD_COLOR);
+	cv::Mat img_2 = imread(src_path_2, cv::ImreadModes::IMREAD_COLOR);
+	cv::Size desiredSize = img_2.size();
+	cv::resize(img_1, img_1, desiredSize);
 
 	save_img(tar_path_1, img_1);
 	save_img(tar_path_2, img_2);
