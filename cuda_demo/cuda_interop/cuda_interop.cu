@@ -131,8 +131,6 @@ int main(int argc, char **argv)
 	int height_1 = 0;
 	uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 		
-
-
 	//h_img_ptr = (uchar4*)(bgra.data);
 	uchar4* d_img_ptr;
 	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
@@ -203,23 +201,13 @@ int main(int argc, char **argv)
 	*/
 
 	for (;;) {
-		/*
-		string img_path = "../../data_store/images/david_1.jpg";
-		Mat img = imread(img_path, IMREAD_COLOR);
-		int H = img.size().height;
-		int W = img.size().width;
-		Mat bgra;
-		cvtColor(img, bgra, CV_BGR2BGRA);
-		*/
-		
+		string img_path_1 = "../../data_store/binary/david_1.bin";
+		string img_path_2 = "../../data_store/binary/david_2.bin";
 
-
-		uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT];
-		for (int i = 0; i < WIDTH * HEIGHT; i++) {
-			h_img_ptr[i].x = 255;
-			h_img_ptr[i].y = 0;
-			h_img_ptr[i].z = 0;
-		}
+		int length_1 = 0;
+		int width_1 = 0;
+		int height_1 = 0;
+		uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 
 		dim3 blockSize(32, 32);
 		int bx = (WIDTH + 32 - 1) / 32;
@@ -237,13 +225,14 @@ int main(int argc, char **argv)
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-
+		free(h_img_ptr);
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
 		//only gluMainLoopEvent() seems necessary
 		glutPostRedisplay();
 		glutMainLoopEvent();
+
 	}
 
 	// set up GLUT and kick off main loop
