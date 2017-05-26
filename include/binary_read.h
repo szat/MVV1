@@ -4,10 +4,6 @@
 #include <chrono>
 #include <string>
 
-int test_read(){
-    return -2;
-}
-
 uchar * read_uchar_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
 	std::ifstream ifile(full_path, std::ios::binary);

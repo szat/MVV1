@@ -12,7 +12,7 @@
 #include <chrono>
 #include <fstream>
 
-#include "binary_io.h"
+#include "binary_write.h"
 #include "merge_background.h"
 
 #include "build_geometry.h"
