@@ -39,7 +39,7 @@ Host code
 #endif
 
 // OpenGL Graphics includes
-//#include <helper_gl.h>
+#include <helper_gl.h>
 #include <GL/freeglut.h>
 
 // includes, cuda
@@ -55,7 +55,7 @@ Host code
 //#include <helper_cuda.h>         // helper functions for CUDA error check
 //#include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
 
-#include <vector_types.h>
+//#include <vector_types.h>
 
 #include <opencv2\imgproc.hpp>
 #include <opencv2\highgui.hpp>
