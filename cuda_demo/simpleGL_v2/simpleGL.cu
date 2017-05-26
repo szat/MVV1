@@ -160,7 +160,6 @@ int main(int argc, char **argv)
 	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
 	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
 	
-	
 	cudaDeviceProp  prop;
 	int dev;
 	
