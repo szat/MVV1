@@ -10,7 +10,7 @@
 #include <chrono>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "binary_io.h"
+#include "binary_read.h"
 
 using namespace std;
 using namespace cv;

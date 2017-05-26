@@ -71,7 +71,6 @@ float * read_float_array(std::string full_path, int &length) {
 	char * char_result = new char[length * 4];
 	ifile.read(char_result, length * 4);
 	memcpy(result, char_result, length * 4);
-	free(result);
 	free(length_array);
 	free(int_array);
 	return result;
