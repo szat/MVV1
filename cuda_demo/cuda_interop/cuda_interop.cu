@@ -46,19 +46,8 @@ Host code
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
-
-// Utilities and timing functions
-#include <helper_functions.h>    // includes cuda.h and cuda_runtime_api.h
-#include <timer.h>               // timing functions
-
-// CUDA helper functions
-#include <helper_cuda.h>         // helper functions for CUDA error check
-#include <helper_cuda_gl.h>      // helper functions for CUDA/GL interop
-
 #include <vector_types.h>
-#include <string>
 
-using namespace cv;
 using namespace std;
 
 #define WIDTH 667 //size of david_1.jpg
@@ -133,13 +122,6 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	string img_path = "../../data_store/images/david_1.jpg";
-	Mat img = imread(img_path, IMREAD_COLOR);
-	int H = img.size().height;
-	int W = img.size().width;
-
-	Mat bgra;
-	cvtColor(img, bgra, CV_BGR2BGRA);
 	uchar4* h_img_ptr = new uchar4[WIDTH * HEIGHT * sizeof(uchar4)];
 	for (int i = 0; i < WIDTH * HEIGHT * sizeof(uchar4); i++) {
 		uchar4 tester;
@@ -235,8 +217,6 @@ int main(int argc, char **argv)
 			h_img_ptr[i].y = 0;
 			h_img_ptr[i].z = 0;
 		}
-
-		h_img_ptr = (uchar4*)(bgra.data);
 
 		dim3 blockSize(32, 32);
 		int bx = (WIDTH + 32 - 1) / 32;
