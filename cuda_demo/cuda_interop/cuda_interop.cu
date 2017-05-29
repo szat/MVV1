@@ -51,8 +51,6 @@ Host code
 
 using namespace std;
 
-#define WIDTH 667 //size of david_1.jpg
-#define HEIGHT 1000
 #define REFRESH_DELAY     2 //ms
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
@@ -62,7 +60,8 @@ cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
 
-__global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
+
+__global__ void shift_image(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -76,7 +75,7 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) 
 	ptr[i].w = d_img_ptr[i].w;
 }
 
-__global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
+__global__ void morph_image(uchar4 *ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -86,9 +85,9 @@ __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
 	//atomicAdd(&counter, 1);
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x = ptr[i].x + 10;
+	ptr[i].x = (ptr[i].x + 10 * param) % 255;
 	ptr[i].y = ptr[i].y;
-	ptr[i].z = ptr[i].z + 10;
+	ptr[i].z = (ptr[i].z + 10 * param) % 255;
 	ptr[i].w = ptr[i].w;
 }
 
@@ -108,7 +107,10 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	int width = 667;
+	int height = 1000;
+
+	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
 }
 
@@ -123,19 +125,19 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	string img_path_1 = "../../data_store/binary/david_1.bin";
-	string img_path_2 = "../../data_store/binary/david_2.bin";
+	// should be preloaded from a video config file
+	int width = 667;
+	int height = 1000;
+	int memsize = width * height * sizeof(uchar4);
 
-	int length_1 = 0;
-	int width_1 = 0;
-	int height_1 = 0;
-	uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-
-		
-	//h_img_ptr = (uchar4*)(bgra.data);
+	// use calloc
+	//uchar4* h_img_ptr = (uchar4*)calloc(0, sizeof(uchar4));
+	
+	uchar4* h_img_ptr = new uchar4[width * height];
+	
 	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
-	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_img_ptr, memsize);
+	cudaMemcpy(d_img_ptr, h_img_ptr, memsize, cudaMemcpyHostToDevice);
 
 
 	cudaDeviceProp  prop;
@@ -158,7 +160,7 @@ int main(int argc, char **argv)
 	// calls, else we get a seg fault
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(WIDTH, HEIGHT);
+	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
@@ -170,7 +172,7 @@ int main(int argc, char **argv)
 	// of the bitmap these calls exist starting in OpenGL 1.5
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
 	//which one to pick? goes along with postrediplay
@@ -181,16 +183,16 @@ int main(int argc, char **argv)
 
 	cudaGraphicsMapResources(1, &resource, NULL);
 
-	uchar4* devPtr;
+	uchar4* d_img_display;
 	size_t  size;
 
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+	cudaGraphicsResourceGetMappedPointer((void**)&d_img_display, &size, resource);
 
 	dim3 blockSize(32, 32);
-	int bx = (WIDTH + 32 - 1) / 32;
-	int by = (HEIGHT + 32 - 1) / 32;
+	int bx = (width + 32 - 1) / 32;
+	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
+	shift_image << <gridSize, blockSize >> >(d_img_display, d_img_ptr, width, height, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
@@ -200,35 +202,38 @@ int main(int argc, char **argv)
 	cudaMalloc((void**)&devAddXdir, sizeof(int));
 	cudaMemcpy(devAddXdir, &addXdir, sizeof(int), cudaMemcpyHostToDevice);
 	*/
-
+	int morphing_param = 0;
 	for (;;) {
 		
+
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
 
 		int length_1 = 0;
 		int width_1 = 0;
 		int height_1 = 0;
-		uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-		
+		uchar4* h_onload_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		cudaMemcpy(d_img_display, h_onload_ptr, memsize, cudaMemcpyHostToDevice);
 
 		dim3 blockSize(32, 32);
-		int bx = (WIDTH + 32 - 1) / 32;
-		int by = (HEIGHT + 32 - 1) / 32;
+		int bx = (width + 32 - 1) / 32;
+		int by = (height + 32 - 1) / 32;
 		dim3 gridSize = dim3(bx, by);
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 
-		uchar4* devPtr;
+		uchar4* d_img_display;
 		size_t  size;
 
-		cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+		cudaGraphicsResourceGetMappedPointer((void**)&d_img_display, &size, resource);
 
-		kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, 0);
+
+		morph_image << <gridSize, blockSize >> >(d_img_display, width, height, morphing_param);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		free(h_img_ptr);
+		free(h_onload_ptr);
+		morphing_param++;
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
