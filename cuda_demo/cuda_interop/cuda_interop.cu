@@ -62,6 +62,33 @@ cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 100;
 
+
+__global__
+void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w, int h, float tau) {
+	//tau is from a to b
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int raster_index = (row * w + col);
+
+	// should not need to do this check if everything is good, must be an extra pixel
+	if (raster_index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+
+	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
+		d_output[raster_index] = d_input_2[raster_index];
+	}
+	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
+		d_output[raster_index] = d_input_1[raster_index];
+	}
+	else {
+		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
+		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
+		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
+	}
+}
+
+
 __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
@@ -165,6 +192,12 @@ int main(int argc, char **argv)
 	uchar4* d_img_ptr_1;
 	cudaMalloc((void**)&d_img_ptr_1, WIDTH*HEIGHT * sizeof(uchar4));
 
+	uchar4* d_img_ptr_2;
+	cudaMalloc((void**)&d_img_ptr_2, WIDTH*HEIGHT * sizeof(uchar4));
+
+	uchar4* d_render;
+	cudaMalloc((void**)&d_render, WIDTH*HEIGHT * sizeof(uchar4));
+
 	int counter = 0;
 
 	dim3 blockSize(32, 32);
@@ -179,23 +212,32 @@ int main(int argc, char **argv)
 		auto t1 = std::chrono::high_resolution_clock::now();
 
 		string img_path_1 = "../../data_store/binary/david_1.bin";
-		string img_path_2 = "../../data_store/binary/david_2.bin";
 		int length_1 = 0;
 		int width_1 = 0;
 		int height_1 = 0;
 		uchar4* h_img_ptr_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 		cudaMemcpy(d_img_ptr_1, h_img_ptr_1, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
-		
+
+		string img_path_2 = "../../data_store/binary/david_2.bin";
+		int length_2 = 0;
+		int width_2 = 0;
+		int height_2 = 0;
+		uchar4* h_img_ptr_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
+		cudaMemcpy(d_img_ptr_2, h_img_ptr_2, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
+
 		cudaGraphicsMapResources(1, &resource, NULL);
 		size_t  size;
-		cudaGraphicsResourceGetMappedPointer((void**)&d_img_ptr_1, &size, resource);
+		cudaGraphicsResourceGetMappedPointer((void**)&d_render, &size, resource);
 
 		kernel_2 << <gridSize, blockSize >> >(d_img_ptr_1, WIDTH, HEIGHT, counter);
+		kernel_2 << <gridSize, blockSize >> >(d_img_ptr_2, WIDTH, HEIGHT, counter);
+		kernel2D_add << <gridSize, blockSize >> > (d_render, d_img_ptr_1, d_img_ptr_2, WIDTH, HEIGHT, 0.5);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 		
 		free(h_img_ptr_1);
-		
+		free(h_img_ptr_2);
+
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
