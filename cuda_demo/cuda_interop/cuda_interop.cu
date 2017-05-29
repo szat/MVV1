@@ -198,6 +198,12 @@ int main(int argc, char **argv)
 	uchar4* d_render;
 	cudaMalloc((void**)&d_render, WIDTH*HEIGHT * sizeof(uchar4));
 
+	short *d_raster1;
+	cudaMalloc((void**)&d_raster1, WIDTH * HEIGHT * sizeof(short));
+
+	short *d_raster2;
+	cudaMalloc((void**)&d_raster2, WIDTH * HEIGHT * sizeof(short));
+
 	int counter = 0;
 
 	dim3 blockSize(32, 32);
@@ -211,6 +217,8 @@ int main(int argc, char **argv)
 
 		auto t1 = std::chrono::high_resolution_clock::now();
 
+
+		// IMAGE READ
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		int length_1 = 0;
 		int width_1 = 0;
@@ -225,6 +233,32 @@ int main(int argc, char **argv)
 		uchar4* h_img_ptr_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 		cudaMemcpy(d_img_ptr_2, h_img_ptr_2, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
 
+		
+		// RASTER READ
+		string raster1_path = "../../data_store/raster/rasterA.bin";
+		int num_pixels_1 = 0;
+		short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
+		cudaMemcpy(d_raster1, h_raster1, WIDTH * HEIGHT * sizeof(short), cudaMemcpyHostToDevice);
+
+		string raster2_path = "../../data_store/raster/rasterB.bin";
+		int num_pixels_2 = 0;
+		short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
+		cudaMemcpy(d_raster2, h_raster2, WIDTH * HEIGHT * sizeof(short), cudaMemcpyHostToDevice);
+		
+
+		/*
+		// AFFINE READ
+		string affine_path = "../../data_store/affine/affine_1.bin";
+		int num_floats = 0;
+		float *h_affine_data = read_float_array(affine_path, num_floats);
+		int num_triangles = num_floats / 12;
+		float * d_affine_data;
+		cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
+		cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
+		free(h_affine_data);
+		cudaFree(d_affine_data);
+		*/
+
 		cudaGraphicsMapResources(1, &resource, NULL);
 		size_t  size;
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render, &size, resource);
@@ -237,6 +271,7 @@ int main(int argc, char **argv)
 		
 		free(h_img_ptr_1);
 		free(h_img_ptr_2);
+		
 
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
