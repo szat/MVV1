@@ -51,8 +51,6 @@ Host code
 
 using namespace std;
 
-#define WIDTH 667 //size of david_1.jpg
-#define HEIGHT 1000
 #define REFRESH_DELAY     2 //ms
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
@@ -62,7 +60,68 @@ cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
 
-__global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
+__global__
+void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+{
+	if (tau > 1 || tau < 0) return;
+
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int raster_index = (row * w + col);
+	//int color_index = raster_index * 3;
+
+	// should not need to do this check if everything is good, must be an extra pixel
+	if (raster_index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+	short affine_index = d_raster1[raster_index];
+	short offset = (affine_index - 1) * 12;
+	if (reverse) {
+		offset += 6;
+	}
+	if (affine_index != 0) {
+		// triangle indexes start at 1
+		float diff = 1 / (float)subDiv;
+		for (int i = 0; i < subDiv; i++) {
+			for (int j = 0; j < subDiv; j++) {
+				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
+				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
+				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
+				int new_i = new_r * w + new_c;
+				d_output[new_i] = d_input[raster_index];
+			}
+		}
+	}
+
+
+}
+
+__global__
+void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w, int h, float tau) {
+	//tau is from a to b
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int raster_index = (row * w + col);
+
+	// should not need to do this check if everything is good, must be an extra pixel
+	if (raster_index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+
+	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
+		d_output[raster_index] = d_input_2[raster_index];
+	}
+	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
+		d_output[raster_index] = d_input_1[raster_index];
+	}
+	else {
+		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
+		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
+		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
+	}
+}
+
+__global__ void shift_image(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -76,7 +135,7 @@ __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) 
 	ptr[i].w = d_img_ptr[i].w;
 }
 
-__global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
+__global__ void morph_image(uchar4 *ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -86,10 +145,27 @@ __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
 	//atomicAdd(&counter, 1);
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x = ptr[i].x + 10;
+	ptr[i].x = (ptr[i].x + 1 * param) % 255;
 	ptr[i].y = ptr[i].y;
-	ptr[i].z = ptr[i].z + 10;
+	ptr[i].z = (ptr[i].z + 1 * param) % 255;
 	ptr[i].w = ptr[i].w;
+}
+
+__global__ void flip_y(uchar4 *ptr, int w, int h) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	if ((r >= h) || (c >= w)) return;
+
+	// only flip top
+	if (r < h / 2) {
+		int diff = h - r;
+		int i_flip = diff * w + c;
+		uchar4 temp = ptr[i_flip];
+		ptr[i_flip] = ptr[i];
+		ptr[i] = temp;
+	}
 }
 
 static void key_func(unsigned char key, int x, int y) {
@@ -108,7 +184,10 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	int width = 667;
+	int height = 1000;
+
+	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
 }
 
@@ -123,19 +202,19 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	string img_path_1 = "../../data_store/binary/david_1.bin";
-	string img_path_2 = "../../data_store/binary/david_2.bin";
+	// should be preloaded from a video config file
+	int width = 667;
+	int height = 1000;
+	int memsize = width * height * sizeof(uchar4);
 
-	int length_1 = 0;
-	int width_1 = 0;
-	int height_1 = 0;
-	uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-
-		
-	//h_img_ptr = (uchar4*)(bgra.data);
+	// use calloc
+	//uchar4* h_img_ptr = (uchar4*)calloc(0, sizeof(uchar4));
+	
+	uchar4* h_img_ptr = new uchar4[width * height];
+	
 	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
-	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_img_ptr, memsize);
+	cudaMemcpy(d_img_ptr, h_img_ptr, memsize, cudaMemcpyHostToDevice);
 
 
 	cudaDeviceProp  prop;
@@ -158,7 +237,7 @@ int main(int argc, char **argv)
 	// calls, else we get a seg fault
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(WIDTH, HEIGHT);
+	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
@@ -170,7 +249,7 @@ int main(int argc, char **argv)
 	// of the bitmap these calls exist starting in OpenGL 1.5
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
 	//which one to pick? goes along with postrediplay
@@ -181,16 +260,16 @@ int main(int argc, char **argv)
 
 	cudaGraphicsMapResources(1, &resource, NULL);
 
-	uchar4* devPtr;
+	uchar4* d_render_final;
 	size_t  size;
 
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
+	cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 
 	dim3 blockSize(32, 32);
-	int bx = (WIDTH + 32 - 1) / 32;
-	int by = (HEIGHT + 32 - 1) / 32;
+	int bx = (width + 32 - 1) / 32;
+	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
+	shift_image << <gridSize, blockSize >> >(d_render_final, d_img_ptr, width, height, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
@@ -200,35 +279,127 @@ int main(int argc, char **argv)
 	cudaMalloc((void**)&devAddXdir, sizeof(int));
 	cudaMemcpy(devAddXdir, &addXdir, sizeof(int), cudaMemcpyHostToDevice);
 	*/
-
+	int morphing_param = 0;
 	for (;;) {
-		
+		auto t1 = std::chrono::high_resolution_clock::now();
+
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
+		string raster1_path = "../../data_store/raster/rasterA.bin";
+		string raster2_path = "../../data_store/raster/rasterB.bin";
+		string affine_path = "../../data_store/affine/affine_1.bin";
 
+		// BINARY IMAGE READ
 		int length_1 = 0;
+		int length_2 = 0;
 		int width_1 = 0;
+		int width_2 = 0;
 		int height_1 = 0;
-		uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-		
+		int height_2 = 0;
+		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
+
+
+		// RASTER READ
+		int num_pixels_1 = 0;
+		int num_pixels_2 = 0;
+		short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
+		short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
+
+		// AFFINE READ
+		int num_floats = 0;
+		float *h_affine_data = read_float_array(affine_path, num_floats);
+		int num_triangles = num_floats / 12;
+
+		if (height_1 != height_2 || width_1 != width_2) {
+			cout << "Incompatible image sizes. Program will now crash.\n";
+			exit(-1);
+		}
+
+		uchar4 *h_out_1;
+		uchar4 *h_out_2;
+		uchar4 *h_sum;
+
+		// there must be a faster way to initialize these arrays to all zeros
+		h_out_1 = new uchar4[width * height];
+		h_out_2 = new uchar4[width * height];
+		h_sum = new uchar4[width * height];
+
+		//--Sending the data to the GPU memory
+		cout << "declaring device data-structures..." << endl;
+
+		float * d_affine_data;
+		cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
+		cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
+
+		short *d_raster1;
+		cudaMalloc((void**)&d_raster1, width * height * sizeof(short));
+		cudaMemcpy(d_raster1, h_raster1, width * height * sizeof(short), cudaMemcpyHostToDevice);
+
+		short *d_raster2;
+		cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
+		cudaMemcpy(d_raster2, h_raster2, width * height * sizeof(short), cudaMemcpyHostToDevice);
+
+		uchar4 * d_in_1;
+		cudaMalloc((void**)&d_in_1, memsize);
+		cudaMemcpy(d_in_1, h_in_1, memsize, cudaMemcpyHostToDevice);
+
+		uchar4 * d_out_1;
+		cudaMalloc((void**)&d_out_1, memsize);
+		cudaMemcpy(d_out_1, h_out_1, memsize, cudaMemcpyHostToDevice);
+
+		uchar4 * d_in_2;
+		cudaMalloc((void**)&d_in_2, memsize);
+		cudaMemcpy(d_in_2, h_in_2, memsize, cudaMemcpyHostToDevice);
+
+		uchar4 * d_out_2;
+		cudaMalloc((void**)&d_out_2, memsize);
+		cudaMemcpy(d_out_2, h_out_2, memsize, cudaMemcpyHostToDevice);
+
+		uchar4 * d_sum;
+		cudaMalloc((void**)&d_sum, memsize);
+		cudaMemcpy(d_sum, h_sum, memsize, cudaMemcpyHostToDevice);
+
+		float tau = (float)(morphing_param % 200) * 0.005f;
+
+		float reverse_tau = 1.0f - tau;
+		int reversal_offset = 0;
+
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
+		kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_2, width, height, tau);
+
+		cudaMemcpy(h_sum, d_sum, memsize, cudaMemcpyDeviceToHost);
+
+		cudaFree(d_in_1);
+		cudaFree(d_out_1);
+		cudaFree(d_raster1);
+		cudaFree(d_in_2);
+		cudaFree(d_out_2);
+		cudaFree(d_raster2);
+		cudaFree(d_affine_data);
 
 		dim3 blockSize(32, 32);
-		int bx = (WIDTH + 32 - 1) / 32;
-		int by = (HEIGHT + 32 - 1) / 32;
+		int bx = (width + 32 - 1) / 32;
+		int by = (height + 32 - 1) / 32;
 		dim3 gridSize = dim3(bx, by);
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 
-		uchar4* devPtr;
+		uchar4* d_render_final;
 		size_t  size;
 
-		cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
 
-		kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, 0);
+
+		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
+		cudaMemcpy(d_render_final, d_sum, memsize, cudaMemcpyDeviceToDevice);
+		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		free(h_img_ptr);
+		cudaFree(d_sum);
+		cudaFree(d_render_final);
+		morphing_param++;
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
@@ -236,6 +407,10 @@ int main(int argc, char **argv)
 		glutPostRedisplay();
 		glutMainLoopEvent();
 
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "write short took "
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+			<< " milliseconds\n";
 	}
 
 	// set up GLUT and kick off main loop
