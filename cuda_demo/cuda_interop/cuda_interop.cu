@@ -356,10 +356,6 @@ int main(int argc, char **argv)
 		cudaMalloc((void**)&d_out_2, memsize);
 		cudaMemcpy(d_out_2, h_out_2, memsize, cudaMemcpyHostToDevice);
 
-		uchar4 * d_sum;
-		cudaMalloc((void**)&d_sum, memsize);
-		cudaMemcpy(d_sum, h_sum, memsize, cudaMemcpyHostToDevice);
-
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
 		float reverse_tau = 1.0f - tau;
@@ -367,9 +363,7 @@ int main(int argc, char **argv)
 
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
-		kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_2, width, height, tau);
-
-		cudaMemcpy(h_sum, d_sum, memsize, cudaMemcpyDeviceToHost);
+		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 
 		cudaFree(d_in_1);
 		cudaFree(d_out_1);
@@ -392,12 +386,11 @@ int main(int argc, char **argv)
 
 
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
-		cudaMemcpy(d_render_final, d_sum, memsize, cudaMemcpyDeviceToDevice);
+		//cudaMemcpy(d_render_final, d_sum, memsize, cudaMemcpyDeviceToDevice);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		cudaFree(d_sum);
 		cudaFree(d_render_final);
 		morphing_param++;
 		//Does not seem "necessary"
