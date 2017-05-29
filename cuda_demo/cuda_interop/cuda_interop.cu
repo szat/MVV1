@@ -369,6 +369,12 @@ int main(int argc, char **argv)
 		std::cout << "write short took "
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 			<< " milliseconds\n";
+
+		free(h_in_1);
+		free(h_in_2);
+		free(h_raster1);
+		free(h_raster2);
+		free(h_affine_data);
 	}
 
 	cudaFree(d_render_final);
