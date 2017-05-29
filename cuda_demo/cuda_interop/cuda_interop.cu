@@ -369,8 +369,6 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_2, width, height, tau);
 
-		cudaMemcpy(h_out_1, d_out_1, memsize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(h_out_2, d_out_2, memsize, cudaMemcpyDeviceToHost);
 		cudaMemcpy(h_sum, d_sum, memsize, cudaMemcpyDeviceToHost);
 
 		cudaFree(d_in_1);
@@ -380,12 +378,6 @@ int main(int argc, char **argv)
 		cudaFree(d_out_2);
 		cudaFree(d_raster2);
 		cudaFree(d_affine_data);
-
-
-		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "write short took "
-			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-			<< " milliseconds\n";
 
 		dim3 blockSize(32, 32);
 		int bx = (width + 32 - 1) / 32;
@@ -415,6 +407,10 @@ int main(int argc, char **argv)
 		glutPostRedisplay();
 		glutMainLoopEvent();
 
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "write short took "
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+			<< " milliseconds\n";
 	}
 
 	// set up GLUT and kick off main loop
