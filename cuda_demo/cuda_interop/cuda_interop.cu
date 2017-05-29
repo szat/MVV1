@@ -244,21 +244,16 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 
-	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
-
-	cudaGraphicsMapResources(1, &resource, NULL);
-
 	uchar4* d_render_final;
-	size_t  size;
+	cudaMalloc((void**)&d_render_final, width * height * sizeof(uchar4));
 
-	cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
+	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
+	size_t  size;
 
 	dim3 blockSize(32, 32);
 	int bx = (width + 32 - 1) / 32;
 	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-
-	cudaGraphicsUnmapResources(1, &resource, NULL);
 
 	int morphing_param = 0;
 
@@ -334,6 +329,7 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
+		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
 		cudaFree(d_in_1);
 		cudaFree(d_out_1);
@@ -344,17 +340,8 @@ int main(int argc, char **argv)
 		cudaFree(d_affine_data);
 
 		cudaGraphicsMapResources(1, &resource, NULL);
-
-		//uchar4* d_render_final;
-		size_t  size;
-
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
-		//cudaMemcpy(d_render_final, d_sum, memsize, cudaMemcpyDeviceToDevice);
-		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
-
 		cudaGraphicsUnmapResources(1, &resource, NULL);
-
-
 
 		morphing_param++;
 
