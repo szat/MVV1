@@ -85,10 +85,27 @@ __global__ void morph_image(uchar4 *ptr, int w, int h, int param) {
 	//atomicAdd(&counter, 1);
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x = (ptr[i].x + 10 * param) % 255;
+	ptr[i].x = (ptr[i].x + 1 * param) % 255;
 	ptr[i].y = ptr[i].y;
-	ptr[i].z = (ptr[i].z + 10 * param) % 255;
+	ptr[i].z = (ptr[i].z + 1 * param) % 255;
 	ptr[i].w = ptr[i].w;
+}
+
+__global__ void flip_y(uchar4 *ptr, int w, int h) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	if ((r >= h) || (c >= w)) return;
+
+	// only flip top
+	if (r < h / 2) {
+		int diff = h - r;
+		int i_flip = diff * w + c;
+		uchar4 temp = ptr[i_flip];
+		ptr[i_flip] = ptr[i];
+		ptr[i] = temp;
+	}
 }
 
 static void key_func(unsigned char key, int x, int y) {
@@ -227,7 +244,7 @@ int main(int argc, char **argv)
 
 		cudaGraphicsResourceGetMappedPointer((void**)&d_img_display, &size, resource);
 
-
+		flip_y << < gridSize, blockSize >> >(d_img_display, width, height);
 		morph_image << <gridSize, blockSize >> >(d_img_display, width, height, morphing_param);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
