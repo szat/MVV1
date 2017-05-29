@@ -36,9 +36,9 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	char * result = new char[length];
 	ifile.read(result, length);
 	uchar4 * result_uchar4 = reinterpret_cast<uchar4*>(result);
-	result = nullptr;
 	free(length_array);
 	free(int_array);
+	free(result);
 	ifile.close();
 	return result_uchar4;
 }
@@ -53,9 +53,9 @@ short * read_short_array(std::string full_path, int &length) {
 	char * result = new char[length * 2];
 	ifile.read(result, length * 2);
 	short * short_result = reinterpret_cast<short*>(result);
-	result = nullptr;
 	free(length_array);
 	free(int_array);
+	free(result);
 	ifile.close();
 	return short_result;
 }
@@ -70,9 +70,9 @@ float * read_float_array(std::string full_path, int &length) {
 	char * char_result = new char[length * 4];
 	ifile.read(char_result, length * 4);
 	float * float_result = reinterpret_cast<float*>(char_result);
-	char_result = nullptr;
 	free(length_array);
 	free(int_array);
+	free(char_result);
 	ifile.close();
 	return float_result;
 }
