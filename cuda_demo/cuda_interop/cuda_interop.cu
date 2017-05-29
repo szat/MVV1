@@ -200,16 +200,16 @@ int main(int argc, char **argv)
 
 	cudaGraphicsMapResources(1, &resource, NULL);
 
-	uchar4* d_img_display;
+	uchar4* d_render_final;
 	size_t  size;
 
-	cudaGraphicsResourceGetMappedPointer((void**)&d_img_display, &size, resource);
+	cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 
 	dim3 blockSize(32, 32);
 	int bx = (width + 32 - 1) / 32;
 	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-	shift_image << <gridSize, blockSize >> >(d_img_display, d_img_ptr, width, height, param);
+	shift_image << <gridSize, blockSize >> >(d_render_final, d_img_ptr, width, height, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
@@ -229,8 +229,22 @@ int main(int argc, char **argv)
 		int length_1 = 0;
 		int width_1 = 0;
 		int height_1 = 0;
-		uchar4* h_onload_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-		cudaMemcpy(d_img_display, h_onload_ptr, memsize, cudaMemcpyHostToDevice);
+		int length_2 = 0;
+		int width_2 = 0;
+		int height_2 = 0;
+		uchar4* h_onload_ptr_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		uchar4* h_onload_ptr_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
+
+		uchar4* d_onload_ptr_1;
+		uchar4* d_onload_ptr_2;
+
+		cudaMalloc((void**)&d_onload_ptr_1, memsize);
+		cudaMalloc((void**)&d_onload_ptr_2, memsize);
+		cudaMemcpy(d_onload_ptr_1, h_onload_ptr_1, memsize, cudaMemcpyHostToDevice);
+		cudaMemcpy(d_onload_ptr_2, h_onload_ptr_2, memsize, cudaMemcpyHostToDevice);
+
+		cudaMemcpy(d_render_final, h_onload_ptr_1, memsize, cudaMemcpyHostToDevice);
+
 
 		dim3 blockSize(32, 32);
 		int bx = (width + 32 - 1) / 32;
@@ -239,17 +253,18 @@ int main(int argc, char **argv)
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 
-		uchar4* d_img_display;
+		uchar4* d_render_final;
 		size_t  size;
 
-		cudaGraphicsResourceGetMappedPointer((void**)&d_img_display, &size, resource);
+		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 
-		flip_y << < gridSize, blockSize >> >(d_img_display, width, height);
-		morph_image << <gridSize, blockSize >> >(d_img_display, width, height, morphing_param);
+		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
+		morph_image << <gridSize, blockSize >> >(d_render_final, width, height, morphing_param);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		free(h_onload_ptr);
+		free(h_onload_ptr_1);
+		free(h_onload_ptr_2);
 		morphing_param++;
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
