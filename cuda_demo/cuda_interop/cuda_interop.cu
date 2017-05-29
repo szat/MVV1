@@ -60,7 +60,7 @@ using namespace std;
 GLuint  bufferObj;
 cudaGraphicsResource *resource;
 __device__ int counter;
-__device__ volatile int param = 50;
+__device__ volatile int param = 100;
 
 __global__ void kernel(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
 	// map from threadIdx/BlockIdx to pixel position
@@ -86,9 +86,9 @@ __global__ void kernel_2(uchar4 *ptr, int w, int h, int param) {
 	//atomicAdd(&counter, 1);
 
 	// accessing uchar4 vs unsigned char*
-	ptr[i].x = ptr[i].x + 10;
+	ptr[i].x = ptr[i].x + param;
 	ptr[i].y = ptr[i].y;
-	ptr[i].z = ptr[i].z + 10;
+	ptr[i].z = ptr[i].z + param;
 	ptr[i].w = ptr[i].w;
 }
 
@@ -123,21 +123,6 @@ void timerEvent(int value)
 
 int main(int argc, char **argv)
 {
-	string img_path_1 = "../../data_store/binary/david_1.bin";
-	string img_path_2 = "../../data_store/binary/david_2.bin";
-
-	int length_1 = 0;
-	int width_1 = 0;
-	int height_1 = 0;
-	uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-
-		
-	//h_img_ptr = (uchar4*)(bgra.data);
-	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, WIDTH*HEIGHT * sizeof(uchar4));
-	cudaMemcpy(d_img_ptr, h_img_ptr, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
-
-
 	cudaDeviceProp  prop;
 	int dev;
 
@@ -145,13 +130,6 @@ int main(int argc, char **argv)
 	prop.major = 1;
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
-
-	// tell CUDA which dev we will be using for graphic interop
-	// from the programming guide:  Interoperability with OpenGL
-	//     requires that the CUDA device be specified by
-	//     cudaGLSetGLDevice() before any other runtime calls.
-
-
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
@@ -173,27 +151,10 @@ int main(int argc, char **argv)
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, WIDTH * HEIGHT * sizeof(uchar4), NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
-	//which one to pick? goes along with postrediplay
-	//glutIdleFunc(draw_func);
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
-
-	cudaGraphicsMapResources(1, &resource, NULL);
-
-	uchar4* devPtr;
-	size_t  size;
-
-	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
-
-	dim3 blockSize(32, 32);
-	int bx = (WIDTH + 32 - 1) / 32;
-	int by = (HEIGHT + 32 - 1) / 32;
-	dim3 gridSize = dim3(bx, by);
-	kernel << <gridSize, blockSize >> >(devPtr, d_img_ptr, WIDTH, HEIGHT, param);
-
-	cudaGraphicsUnmapResources(1, &resource, NULL);
-
+	
 	/*
 	int addXdir = 1;
 	int * devAddXdir;
@@ -201,41 +162,49 @@ int main(int argc, char **argv)
 	cudaMemcpy(devAddXdir, &addXdir, sizeof(int), cudaMemcpyHostToDevice);
 	*/
 
+	uchar4* d_img_ptr_1;
+	cudaMalloc((void**)&d_img_ptr_1, WIDTH*HEIGHT * sizeof(uchar4));
+
+	int counter = 0;
+
+	dim3 blockSize(32, 32);
+	int bx = (WIDTH + 32 - 1) / 32;
+	int by = (HEIGHT + 32 - 1) / 32;
+	dim3 gridSize = dim3(bx, by);
+
 	for (;;) {
-		
+		printf("Counter: %d \n", counter);
+		counter++;
+
+		auto t1 = std::chrono::high_resolution_clock::now();
+
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
-
 		int length_1 = 0;
 		int width_1 = 0;
 		int height_1 = 0;
-		uchar4* h_img_ptr = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		uchar4* h_img_ptr_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
+		cudaMemcpy(d_img_ptr_1, h_img_ptr_1, WIDTH*HEIGHT * sizeof(uchar4), cudaMemcpyHostToDevice);
 		
-
-		dim3 blockSize(32, 32);
-		int bx = (WIDTH + 32 - 1) / 32;
-		int by = (HEIGHT + 32 - 1) / 32;
-		dim3 gridSize = dim3(bx, by);
-
 		cudaGraphicsMapResources(1, &resource, NULL);
-
-		uchar4* devPtr;
 		size_t  size;
+		cudaGraphicsResourceGetMappedPointer((void**)&d_img_ptr_1, &size, resource);
 
-		cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
-
-		kernel_2 << <gridSize, blockSize >> >(devPtr, WIDTH, HEIGHT, 0);
+		kernel_2 << <gridSize, blockSize >> >(d_img_ptr_1, WIDTH, HEIGHT, counter);
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
-
-		free(h_img_ptr);
+		
+		free(h_img_ptr_1);
+		
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
+
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "took " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()	<< " ms\n";
 
 		//only gluMainLoopEvent() seems necessary
 		glutPostRedisplay();
 		glutMainLoopEvent();
-
 	}
 
 	// set up GLUT and kick off main loop
