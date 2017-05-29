@@ -207,16 +207,6 @@ int main(int argc, char **argv)
 	int height = 1000;
 	int memsize = width * height * sizeof(uchar4);
 
-	// use calloc
-	//uchar4* h_img_ptr = (uchar4*)calloc(0, sizeof(uchar4));
-	
-	uchar4* h_img_ptr = new uchar4[width * height];
-	
-	uchar4* d_img_ptr;
-	cudaMalloc((void**)&d_img_ptr, memsize);
-	cudaMemcpy(d_img_ptr, h_img_ptr, memsize, cudaMemcpyHostToDevice);
-
-
 	cudaDeviceProp  prop;
 	int dev;
 
@@ -252,8 +242,6 @@ int main(int argc, char **argv)
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
-	//which one to pick? goes along with postrediplay
-	//glutIdleFunc(draw_func);
 	glutDisplayFunc(draw_func);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
@@ -269,17 +257,11 @@ int main(int argc, char **argv)
 	int bx = (width + 32 - 1) / 32;
 	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
-	shift_image << <gridSize, blockSize >> >(d_render_final, d_img_ptr, width, height, param);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
-	/*
-	int addXdir = 1;
-	int * devAddXdir;
-	cudaMalloc((void**)&devAddXdir, sizeof(int));
-	cudaMemcpy(devAddXdir, &addXdir, sizeof(int), cudaMemcpyHostToDevice);
-	*/
 	int morphing_param = 0;
+
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -299,7 +281,6 @@ int main(int argc, char **argv)
 		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 		uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 
-
 		// RASTER READ
 		int num_pixels_1 = 0;
 		int num_pixels_2 = 0;
@@ -315,15 +296,6 @@ int main(int argc, char **argv)
 			cout << "Incompatible image sizes. Program will now crash.\n";
 			exit(-1);
 		}
-
-		uchar4 *h_out_1;
-		uchar4 *h_out_2;
-		uchar4 *h_sum;
-
-		// there must be a faster way to initialize these arrays to all zeros
-		h_out_1 = new uchar4[width * height];
-		h_out_2 = new uchar4[width * height];
-		h_sum = new uchar4[width * height];
 
 		//--Sending the data to the GPU memory
 		cout << "declaring device data-structures..." << endl;
@@ -344,17 +316,15 @@ int main(int argc, char **argv)
 		cudaMalloc((void**)&d_in_1, memsize);
 		cudaMemcpy(d_in_1, h_in_1, memsize, cudaMemcpyHostToDevice);
 
-		uchar4 * d_out_1;
-		cudaMalloc((void**)&d_out_1, memsize);
-		cudaMemcpy(d_out_1, h_out_1, memsize, cudaMemcpyHostToDevice);
-
 		uchar4 * d_in_2;
 		cudaMalloc((void**)&d_in_2, memsize);
 		cudaMemcpy(d_in_2, h_in_2, memsize, cudaMemcpyHostToDevice);
 
+		uchar4 * d_out_1;
+		cudaMalloc((void**)&d_out_1, memsize);
+
 		uchar4 * d_out_2;
 		cudaMalloc((void**)&d_out_2, memsize);
-		cudaMemcpy(d_out_2, h_out_2, memsize, cudaMemcpyHostToDevice);
 
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
@@ -373,17 +343,10 @@ int main(int argc, char **argv)
 		cudaFree(d_raster2);
 		cudaFree(d_affine_data);
 
-		dim3 blockSize(32, 32);
-		int bx = (width + 32 - 1) / 32;
-		int by = (height + 32 - 1) / 32;
-		dim3 gridSize = dim3(bx, by);
-
 		cudaGraphicsMapResources(1, &resource, NULL);
 
-		uchar4* d_render_final;
+		//uchar4* d_render_final;
 		size_t  size;
-
-
 
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 		//cudaMemcpy(d_render_final, d_sum, memsize, cudaMemcpyDeviceToDevice);
@@ -391,8 +354,10 @@ int main(int argc, char **argv)
 
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
-		cudaFree(d_render_final);
+		
+
 		morphing_param++;
+
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
@@ -405,7 +370,8 @@ int main(int argc, char **argv)
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 			<< " milliseconds\n";
 	}
-
+	
+	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
 	glutMainLoop();
 
