@@ -121,36 +121,6 @@ void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w,
 	}
 }
 
-__global__ void shift_image(uchar4 *ptr, uchar4* d_img_ptr, int w, int h, int param) {
-	// map from threadIdx/BlockIdx to pixel position
-	int c = blockIdx.x*blockDim.x + threadIdx.x;
-	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = r * w + c;
-	if ((r >= h) || (c >= w)) return;
-
-	// accessing uchar4 vs unsigned char*
-	ptr[i].x = (d_img_ptr[i].x + param) % 255;
-	ptr[i].y = d_img_ptr[i].y;
-	ptr[i].z = (d_img_ptr[i].z + param) % 200;
-	ptr[i].w = d_img_ptr[i].w;
-}
-
-__global__ void morph_image(uchar4 *ptr, int w, int h, int param) {
-	// map from threadIdx/BlockIdx to pixel position
-	int c = blockIdx.x*blockDim.x + threadIdx.x;
-	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = r * w + c;
-	if ((r >= h) || (c >= w)) return;
-
-	//atomicAdd(&counter, 1);
-
-	// accessing uchar4 vs unsigned char*
-	ptr[i].x = (ptr[i].x + 1 * param) % 255;
-	ptr[i].y = ptr[i].y;
-	ptr[i].z = (ptr[i].z + 1 * param) % 255;
-	ptr[i].w = ptr[i].w;
-}
-
 __global__ void flip_y(uchar4 *ptr, int w, int h) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
