@@ -60,6 +60,7 @@ cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
 
+
 __global__
 void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
@@ -94,6 +95,39 @@ void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w,
 	}
 
 
+}
+
+
+__global__
+void convert_uchar3_to_uchar4(uchar3 *input, uchar4 *output, int w, int h) {
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int index = (row * w + col);
+
+	if (index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+	uchar4 new_uchar4 = uchar4();
+	new_uchar4.x = input[index].x;
+	new_uchar4.y = input[index].y;
+	new_uchar4.z = input[index].z;
+	output[index] = new_uchar4;
+}
+
+__global__
+void convert_uchar4_to_uchar3(uchar4 *input, uchar3 *output, int w, int h) {
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int index = (row * w + col);
+
+	if (index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+	uchar3 new_uchar3 = uchar3();
+	new_uchar3.x = input[index].x;
+	new_uchar3.y = input[index].y;
+	new_uchar3.z = input[index].z;
+	output[index] = new_uchar3;
 }
 
 __global__
@@ -246,6 +280,9 @@ int main(int argc, char **argv)
 		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
 		uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
 
+		uchar3 *h_in_1_3 = new uchar3[width * height];
+		uchar3 *h_in_2_3 = new uchar3[width * height];
+
 		// RASTER READ
 		int num_pixels_1 = 0;
 		int num_pixels_2 = 0;
@@ -284,6 +321,17 @@ int main(int argc, char **argv)
 		uchar4 * d_in_2;
 		cudaMalloc((void**)&d_in_2, memsize);
 		cudaMemcpy(d_in_2, h_in_2, memsize, cudaMemcpyHostToDevice);
+
+		uchar3 * d_in_1_3;
+		uchar3 * d_in_2_3;
+		cudaMalloc((void**)&d_in_1_3, width * height * 3);
+		cudaMalloc((void**)&d_in_2_3, width * height * 3);
+		cudaMemcpy(d_in_1_3, h_in_1_3, memsize, cudaMemcpyHostToDevice);
+		cudaMemcpy(d_in_2_3, h_in_1_3, memsize, cudaMemcpyHostToDevice);
+
+		convert_uchar4_to_uchar3 << < gridSize, blockSize >> >(d_in_1, d_in_1_3, width, height);
+		convert_uchar4_to_uchar3 << < gridSize, blockSize >> >(d_in_2, d_in_2_3, width, height);
+
 
 		uchar4 * d_out_1;
 		cudaMalloc((void**)&d_out_1, memsize);
