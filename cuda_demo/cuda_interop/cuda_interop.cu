@@ -271,7 +271,7 @@ int main(int argc, char **argv)
 	int morphing_param = 0;
 
 	for (;;) {
-		auto t1 = std::chrono::high_resolution_clock::now();
+		
 
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
@@ -344,6 +344,7 @@ int main(int argc, char **argv)
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
+		auto t1 = std::chrono::high_resolution_clock::now();
 		cudaFree(d_in_1);
 		cudaFree(d_out_1);
 		cudaFree(d_raster1);
@@ -351,6 +352,9 @@ int main(int argc, char **argv)
 		cudaFree(d_out_2);
 		cudaFree(d_raster2);
 		cudaFree(d_affine_data);
+		auto t2 = std::chrono::high_resolution_clock::now();
+		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		std::cout << "Average: " << count << "ms";
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
@@ -364,11 +368,6 @@ int main(int argc, char **argv)
 		//only gluMainLoopEvent() seems necessary
 		glutPostRedisplay();
 		glutMainLoopEvent();
-
-		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "write short took "
-			<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-			<< " milliseconds\n";
 
 		free(h_in_1);
 		free(h_in_2);

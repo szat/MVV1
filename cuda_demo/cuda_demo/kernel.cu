@@ -250,8 +250,8 @@ int main(int argc, char ** argv) {
 	float reverse_tau = 1.0f - tau;
 	int reversal_offset = 0;
 
-	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 4, tau, false);
-	kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 4, reverse_tau, true);
+	kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, W, H, d_affine_data, 8, tau, false);
+	kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, W, H, d_affine_data, 8, reverse_tau, true);
 	kernel2D_add << <gridSize, blockSize >> > (d_sum, d_out_1, d_out_2, W, H, tau);
 
 	cudaMemcpy(h_out_1, d_out_1, mem_alloc, cudaMemcpyDeviceToHost);
