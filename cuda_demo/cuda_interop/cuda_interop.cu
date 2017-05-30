@@ -93,8 +93,22 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w,
 			}
 		}
 	}
+}
 
+__global__ 
+void reset_img(uchar3 *input, int w, int h) {
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int index = (row * w + col);
 
+	if (index >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+	uchar3 new_uchar3 = uchar3();
+	new_uchar3.x = 0;
+	new_uchar3.y = 0;
+	new_uchar3.z = 0;
+	input[index] = new_uchar3;
 }
 
 
@@ -270,6 +284,24 @@ int main(int argc, char **argv)
 
 	int morphing_param = 0;
 
+	short *d_raster1;
+	cudaMalloc((void**)&d_raster1, width * height * sizeof(short));
+
+	short *d_raster2;
+	cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
+
+	uchar3 * d_in_1;
+	cudaMalloc((void**)&d_in_1, memsize_uchar3);
+
+	uchar3 * d_in_2;
+	cudaMalloc((void**)&d_in_2, memsize_uchar3);
+
+	uchar3 * d_out_1;
+	cudaMalloc((void**)&d_out_1, memsize_uchar3);
+
+	uchar3 * d_out_2;
+	cudaMalloc((void**)&d_out_2, memsize_uchar3);
+
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -324,27 +356,10 @@ int main(int argc, char **argv)
 		cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
 		cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
 
-		short *d_raster1;
-		cudaMalloc((void**)&d_raster1, width * height * sizeof(short));
 		cudaMemcpy(d_raster1, h_raster1, width * height * sizeof(short), cudaMemcpyHostToDevice);
-
-		short *d_raster2;
-		cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
 		cudaMemcpy(d_raster2, h_raster2, width * height * sizeof(short), cudaMemcpyHostToDevice);
-
-		uchar3 * d_in_1;
-		cudaMalloc((void**)&d_in_1, memsize_uchar3);
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
-
-		uchar3 * d_in_2;
-		cudaMalloc((void**)&d_in_2, memsize_uchar3);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
-
-		uchar3 * d_out_1;
-		cudaMalloc((void**)&d_out_1, memsize_uchar3);
-
-		uchar3 * d_out_2;
-		cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
 		auto t5 = std::chrono::high_resolution_clock::now();
 		count = std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count();
@@ -358,19 +373,16 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
+		reset_img << < gridSize, blockSize >> > (d_out_1, width, height);
+		reset_img << < gridSize, blockSize >> > (d_out_2, width, height);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
 		auto t6 = std::chrono::high_resolution_clock::now();
 		count = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
 		std::cout << "Kernels " << count << "ms" << endl;
 
-		cudaFree(d_in_1);
-		cudaFree(d_out_1);
-		cudaFree(d_raster1);
-		cudaFree(d_in_2);
-		cudaFree(d_out_2);
-		cudaFree(d_raster2);
-		cudaFree(d_affine_data);
+
+		//cudaFree(d_affine_data);
 
 
 		cudaGraphicsMapResources(1, &resource, NULL);
@@ -397,6 +409,12 @@ int main(int argc, char **argv)
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t1).count() << "ms" << endl;
 	}
 
+	cudaFree(d_in_1);
+	cudaFree(d_out_1);
+	cudaFree(d_raster1);
+	cudaFree(d_in_2);
+	cudaFree(d_out_2);
+	cudaFree(d_raster2);
 	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
 	glutMainLoop();
