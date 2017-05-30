@@ -271,7 +271,7 @@ int main(int argc, char **argv)
 	int morphing_param = 0;
 
 	for (;;) {
-		
+		auto t1 = std::chrono::high_resolution_clock::now();
 
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
@@ -289,16 +289,28 @@ int main(int argc, char **argv)
 		uchar3 *h_in_1 = read_uchar3_array(img_path_1, length_1, width_1, height_1);
 		uchar3 *h_in_2 = read_uchar3_array(img_path_2, length_2, width_2, height_2);
 
+		auto t2 = std::chrono::high_resolution_clock::now();
+		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		std::cout << "Read uchar3: " << count << "ms" << endl;
+
 		// RASTER READ
 		int num_pixels_1 = 0;
 		int num_pixels_2 = 0;
 		short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
 		short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
 
+		auto t3 = std::chrono::high_resolution_clock::now();
+		count = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
+		std::cout << "Read raster: " << count << "ms" << endl;
+
 		// AFFINE READ
 		int num_floats = 0;
 		float *h_affine_data = read_float_array(affine_path, num_floats);
 		int num_triangles = num_floats / 12;
+
+		auto t4 = std::chrono::high_resolution_clock::now();
+		count = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+		std::cout << "Read affine: " << count << "ms" << endl;
 
 		if (height_1 != height_2 || width_1 != width_2) {
 			cout << "Incompatible image sizes. Program will now crash.\n";
@@ -334,6 +346,10 @@ int main(int argc, char **argv)
 		uchar3 * d_out_2;
 		cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
+		auto t5 = std::chrono::high_resolution_clock::now();
+		count = std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count();
+		std::cout << "Malloc " << count << "ms" << endl;
+
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
 		float reverse_tau = 1.0f - tau;
@@ -344,7 +360,10 @@ int main(int argc, char **argv)
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
-		auto t1 = std::chrono::high_resolution_clock::now();
+		auto t6 = std::chrono::high_resolution_clock::now();
+		count = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
+		std::cout << "Kernels " << count << "ms" << endl;
+
 		cudaFree(d_in_1);
 		cudaFree(d_out_1);
 		cudaFree(d_raster1);
@@ -352,9 +371,7 @@ int main(int argc, char **argv)
 		cudaFree(d_out_2);
 		cudaFree(d_raster2);
 		cudaFree(d_affine_data);
-		auto t2 = std::chrono::high_resolution_clock::now();
-		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-		std::cout << "Average: " << count << "ms";
+
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
@@ -374,6 +391,10 @@ int main(int argc, char **argv)
 		free(h_raster1);
 		free(h_raster2);
 		free(h_affine_data);
+		auto t7 = std::chrono::high_resolution_clock::now();
+		count = std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t6).count();
+		std::cout << "Cleanup: " << count << "ms" << endl;
+		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t1).count() << "ms" << endl;
 	}
 
 	cudaFree(d_render_final);
