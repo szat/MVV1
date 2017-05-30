@@ -258,7 +258,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(draw_func);
 
 	uchar4* d_render_final;
-	cudaMalloc((void**)&d_render_final, width * height * sizeof(uchar4));
+	cudaMalloc((void**)&d_render_final, memsize_uchar4);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 	size_t  size;
