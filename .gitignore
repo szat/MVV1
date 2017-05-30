@@ -60,3 +60,4 @@ user_debug.txt
 *.tlog
 *.ilk
 *.vcxproj.filters
+*.deps
