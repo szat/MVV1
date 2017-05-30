@@ -62,7 +62,7 @@ __device__ volatile int param = 50;
 
 
 __global__
-void kernel2D_subpix(uchar4* d_output, uchar4* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
 	if (tau > 1 || tau < 0) return;
 
@@ -131,7 +131,7 @@ void convert_uchar4_to_uchar3(uchar4 *input, uchar3 *output, int w, int h) {
 }
 
 __global__
-void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w, int h, float tau) {
+void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w, int h, float tau) {
 	//tau is from a to b
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
@@ -143,10 +143,18 @@ void kernel2D_add(uchar4* d_output, uchar4* d_input_1, uchar4* d_input_2, int w,
 
 
 	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
-		d_output[raster_index] = d_input_2[raster_index];
+		uchar4 new_uchar4 = uchar4();
+		new_uchar4.x = d_input_2[raster_index].x;
+		new_uchar4.y = d_input_2[raster_index].y;
+		new_uchar4.z = d_input_2[raster_index].z;
+		d_output[raster_index] = new_uchar4;
 	}
 	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
-		d_output[raster_index] = d_input_1[raster_index];
+		uchar4 new_uchar4 = uchar4();
+		new_uchar4.x = d_input_1[raster_index].x;
+		new_uchar4.y = d_input_1[raster_index].y;
+		new_uchar4.z = d_input_1[raster_index].z;
+		d_output[raster_index] = new_uchar4;
 	}
 	else {
 		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
@@ -333,19 +341,19 @@ int main(int argc, char **argv)
 		convert_uchar4_to_uchar3 << < gridSize, blockSize >> >(d_in_2, d_in_2_3, width, height);
 
 
-		uchar4 * d_out_1;
-		cudaMalloc((void**)&d_out_1, memsize);
+		uchar3 * d_out_1;
+		cudaMalloc((void**)&d_out_1, width * height * 3);
 
-		uchar4 * d_out_2;
-		cudaMalloc((void**)&d_out_2, memsize);
+		uchar3 * d_out_2;
+		cudaMalloc((void**)&d_out_2, width * height * 3);
 
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
 		float reverse_tau = 1.0f - tau;
 		int reversal_offset = 0;
 
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1_3, d_raster1, width, height, d_affine_data, 4, tau, false);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2_3, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
