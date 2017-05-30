@@ -23,7 +23,7 @@ return result_uchar;
 }
 */
 
-uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &height) {
+uchar3 * read_uchar3_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
 	std::ifstream ifile(full_path, std::ios::binary);
 	char * length_array = new char[12];
@@ -35,12 +35,12 @@ uchar4 * read_uchar4_array(std::string full_path, int &length, int &width, int &
 	height = int_array[2];
 	char * result = new char[length];
 	ifile.read(result, length);
-	uchar4 * result_uchar4 = reinterpret_cast<uchar4*>(result);
+	uchar3 * result_uchar3 = reinterpret_cast<uchar3*>(result);
 	result = nullptr;
 	free(length_array);
 	free(int_array);
 	ifile.close();
-	return result_uchar4;
+	return result_uchar3;
 }
 
 short * read_short_array(std::string full_path, int &length) {

@@ -217,7 +217,8 @@ int main(int argc, char **argv)
 	// should be preloaded from a video config file
 	int width = 667;
 	int height = 1000;
-	int memsize = width * height * sizeof(uchar4);
+	int memsize_uchar3 = width * height * sizeof(uchar3);
+	int memsize_uchar4 = width * height * sizeof(uchar4);
 
 	cudaDeviceProp  prop;
 	int dev;
@@ -251,7 +252,7 @@ int main(int argc, char **argv)
 	// of the bitmap these calls exist starting in OpenGL 1.5
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize, NULL, GL_DYNAMIC_DRAW_ARB);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize_uchar4, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
@@ -285,11 +286,8 @@ int main(int argc, char **argv)
 		int width_2 = 0;
 		int height_1 = 0;
 		int height_2 = 0;
-		uchar4 *h_in_1 = read_uchar4_array(img_path_1, length_1, width_1, height_1);
-		uchar4 *h_in_2 = read_uchar4_array(img_path_2, length_2, width_2, height_2);
-
-		uchar3 *h_in_1_3 = new uchar3[width * height];
-		uchar3 *h_in_2_3 = new uchar3[width * height];
+		uchar3 *h_in_1 = read_uchar3_array(img_path_1, length_1, width_1, height_1);
+		uchar3 *h_in_2 = read_uchar3_array(img_path_2, length_2, width_2, height_2);
 
 		// RASTER READ
 		int num_pixels_1 = 0;
@@ -322,38 +320,27 @@ int main(int argc, char **argv)
 		cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
 		cudaMemcpy(d_raster2, h_raster2, width * height * sizeof(short), cudaMemcpyHostToDevice);
 
-		uchar4 * d_in_1;
-		cudaMalloc((void**)&d_in_1, memsize);
-		cudaMemcpy(d_in_1, h_in_1, memsize, cudaMemcpyHostToDevice);
+		uchar3 * d_in_1;
+		cudaMalloc((void**)&d_in_1, memsize_uchar3);
+		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		uchar4 * d_in_2;
-		cudaMalloc((void**)&d_in_2, memsize);
-		cudaMemcpy(d_in_2, h_in_2, memsize, cudaMemcpyHostToDevice);
-
-		uchar3 * d_in_1_3;
-		uchar3 * d_in_2_3;
-		cudaMalloc((void**)&d_in_1_3, width * height * 3);
-		cudaMalloc((void**)&d_in_2_3, width * height * 3);
-		cudaMemcpy(d_in_1_3, h_in_1_3, memsize, cudaMemcpyHostToDevice);
-		cudaMemcpy(d_in_2_3, h_in_1_3, memsize, cudaMemcpyHostToDevice);
-
-		convert_uchar4_to_uchar3 << < gridSize, blockSize >> >(d_in_1, d_in_1_3, width, height);
-		convert_uchar4_to_uchar3 << < gridSize, blockSize >> >(d_in_2, d_in_2_3, width, height);
-
+		uchar3 * d_in_2;
+		cudaMalloc((void**)&d_in_2, memsize_uchar3);
+		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
 		uchar3 * d_out_1;
-		cudaMalloc((void**)&d_out_1, width * height * 3);
+		cudaMalloc((void**)&d_out_1, memsize_uchar3);
 
 		uchar3 * d_out_2;
-		cudaMalloc((void**)&d_out_2, width * height * 3);
+		cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
 		float reverse_tau = 1.0f - tau;
 		int reversal_offset = 0;
 
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1_3, d_raster1, width, height, d_affine_data, 4, tau, false);
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2_3, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 

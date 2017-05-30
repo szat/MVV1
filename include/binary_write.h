@@ -83,18 +83,17 @@ void save_img(std::string tar_path, cv::Mat &img) {
 	cv::Size size = img.size();
 	int height = size.height;
 	int width = size.width;
-	int len = height * width * 4;
+	int len = height * width * 3;
 
 	uchar *pixels = new uchar[len];
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			cv::Vec3b data = img.at<cv::Vec3b>(i, j);
-			int index = (i * width + j) * 4;
+			int index = (i * width + j) * 3;
 			pixels[index] = data[0];
 			pixels[index + 1] = data[1];
 			pixels[index + 2] = data[2];
-			pixels[index + 3] = (uchar)0;
 		}
 	}
 
