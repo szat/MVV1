@@ -111,6 +111,23 @@ void reset_img(uchar3 *input, int w, int h) {
 	input[index] = new_uchar3;
 }
 
+__global__
+void reset_image(uchar3* input, int w, int h) {
+	int col = blockIdx.x*blockDim.x + threadIdx.x;
+	int row = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = (row * w + col);
+
+	// should not need to do this check if everything is good, must be an extra pixel
+	if (i >= w * h) return;
+	if ((row >= h) || (col >= w)) return;
+
+	uchar3 blank = uchar3();
+	blank.x = 0;
+	blank.y = 0;
+	blank.z = 0;
+	input[i] = blank;
+}
+
 
 __global__
 void convert_uchar3_to_uchar4(uchar3 *input, uchar4 *output, int w, int h) {
@@ -289,13 +306,10 @@ int main(int argc, char **argv)
 
 	short *d_raster2;
 	cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
-
 	uchar3 * d_in_1;
 	cudaMalloc((void**)&d_in_1, memsize_uchar3);
-
 	uchar3 * d_in_2;
 	cudaMalloc((void**)&d_in_2, memsize_uchar3);
-
 	uchar3 * d_out_1;
 	cudaMalloc((void**)&d_out_1, memsize_uchar3);
 
@@ -377,10 +391,12 @@ int main(int argc, char **argv)
 		reset_img << < gridSize, blockSize >> > (d_out_2, width, height);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
+		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
+		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
+
 		auto t6 = std::chrono::high_resolution_clock::now();
 		count = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
 		std::cout << "Kernels " << count << "ms" << endl;
-
 
 		cudaFree(d_affine_data);
 
