@@ -410,12 +410,12 @@ int main()
 	// Horrible hackish way of avoiding merge conflicts while we do testing
 
 	if (str == "danny") {
-		//danny_test();
-		adrian_test();
+		danny_test();
+		//adrian_test();
 	}
 	else if (str == "adrian") {
-		//adrian_test();
-		danny_test();
+		adrian_test();
+		//danny_test();
 	}
 	else {
 		cout << "Invalid user";

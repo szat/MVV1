@@ -26,7 +26,7 @@ int test_bs() {
 	pMOG2 = createBackgroundSubtractorMOG2(); //MOG2 approach
 
 	//Open Video File
-	string first_frame_path = "../../data_store/background_substraction/111_png/input/1.png"; 
+	string first_frame_path = "C:/Users/Adrian/Documents/saisiecol1/cam-000/img_000000.png"; 
 	//read the first file of the sequenc
 	frame = imread(first_frame_path);
 	if (frame.empty()) {
@@ -35,47 +35,38 @@ int test_bs() {
 		exit(EXIT_FAILURE);
 	}
 	//current image filename
-	string fn(first_frame_path);
+	//string fn(first_frame_path);
 	//read input data. ESC or 'q' for quitting
+
+	int counter = 0;
 	while ((char)keyboard != 'q' && (char)keyboard != 27) {
-		//update the background model
-		pMOG2->apply(frame, fgMaskMOG2);
-		//get the frame number and write it on the current frame
-		size_t index = fn.find_last_of("/");
-		if (index == string::npos) {
-			index = fn.find_last_of("\\");
+		//string next_frame_path = prefix + nextFrameNumberString + suffix;
+		string frame_number_string = to_string(counter);
+		string next_frame_path = "C:/Users/Adrian/Documents/saisiecol1/cam-000/img_000000";
+		int length = frame_number_string.length();
+		for (int i = 0; i < length; ++i) {
+			next_frame_path.pop_back();
 		}
-		size_t index2 = fn.find_last_of(".");
-		string prefix = fn.substr(0, index + 1);
-		string suffix = fn.substr(index2);
-		string frameNumberString = fn.substr(index + 1, index2 - index - 1);
-		istringstream iss(frameNumberString);
-		int frameNumber = 0;
-		iss >> frameNumber;
-		rectangle(frame, cv::Point(10, 2), cv::Point(100, 20),
-			cv::Scalar(255, 255, 255), -1);
-		putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
-			FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-		//show the current frame and the fg masks
-		imshow("Frame", frame);
-		imshow("FG Mask MOG 2", fgMaskMOG2);
-		//get the input from the keyboard
-		keyboard = waitKey(30);
-		//search for the next image in the sequence
-		ostringstream oss;
-		oss << (frameNumber + 1);
-		string nextFrameNumberString = oss.str();
-		string next_frame_path = prefix + nextFrameNumberString + suffix;
-		//read the next frame
+		next_frame_path += frame_number_string;
+		next_frame_path += ".png";
+		cout << next_frame_path << endl;
+		counter++;
+		
+		cout << "counter is " << counter << endl;
 		frame = imread(next_frame_path);
 		if (frame.empty()) {
 			//error in opening the next image in the sequence
 			cerr << "Unable to open image frame: " << next_frame_path << endl;
 			exit(EXIT_FAILURE);
 		}
-		//update the path of the current frame
-		fn.assign(next_frame_path);
-	}
 
+		pMOG2->apply(frame, fgMaskMOG2);
+
+		imshow("Frame", frame);
+		imshow("FG Mask MOG 2", fgMaskMOG2);
+
+		keyboard = waitKey(30);
+	}
+	
 	return 0;
 }
