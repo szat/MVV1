@@ -382,7 +382,7 @@ int main(int argc, char **argv)
 		std::cout << "Kernels " << count << "ms" << endl;
 
 
-		//cudaFree(d_affine_data);
+		cudaFree(d_affine_data);
 
 
 		cudaGraphicsMapResources(1, &resource, NULL);
