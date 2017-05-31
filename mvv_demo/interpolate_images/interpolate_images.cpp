@@ -30,8 +30,9 @@ Mat affine_transform(Vec6f sourceTri, Vec6f targetTri) {
 	*/
 }
 
-vector<Mat> get_affine_transforms(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
+vector<Mat> get_affine_transforms_forward(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
 	// Start off by calculating affine transformation of two triangles.
+	int numZeros = 0;
 
 	int numTriangles = sourceT.size();
 
@@ -48,8 +49,76 @@ vector<Mat> get_affine_transforms(vector<Vec6f> sourceT, vector<Vec6f> targetT) 
 		targetP[1] = cv::Point2f(targetTri[2], targetTri[3]);
 		targetP[2] = cv::Point2f(targetTri[4], targetTri[5]);
 		cv::Mat trans = cv::getAffineTransform(sourceP, targetP);
+		if (trans.at<double>(0, 0) == 0 && trans.at<double>(0, 1) == 0 && trans.at<double>(0, 2) == 0 &&
+			trans.at<double>(1, 0) == 0 && trans.at<double>(1, 1) == 0 && trans.at<double>(1, 2) == 0) {
+			numZeros++;
+		}
 		transforms.push_back(trans);
 	}
+	cout << "Number of forward null transforms: " << numZeros << endl;
+	return transforms;
+}
+
+void reverse_transform(Mat forward, Mat &reverse) {
+	// Simply put, this reverses the transform using the formula:
+	// X' = AX+B, so
+	// X = A^(-1)X - A^(-1)B
+	double a = forward.at<double>(0, 0);
+	double b = forward.at<double>(0, 1);
+	double c = forward.at<double>(1, 0);
+	double d = forward.at<double>(1, 1);
+	double b00 = forward.at<double>(0, 2);
+	double b11 = forward.at<double>(1, 2);
+
+	double det = a*d - b*c;
+	if (det != 0) {
+		double inv_det = (double)1 / det;
+		// check for invertibility
+		double inv_a = inv_det * d;
+		double inv_b = -1 * inv_det * b;
+		double inv_c = -1 * inv_det * c;
+		double inv_d = inv_det * a;
+		double inv_b00 = inv_a * b00 + inv_b * b11;
+		double inv_b11 = inv_c * b00 + inv_d * b11;
+		reverse.at<double>(0, 0) = inv_a;
+		reverse.at<double>(0, 1) = inv_b;
+		reverse.at<double>(0, 2) = inv_b00;
+		reverse.at<double>(1, 0) = inv_c;
+		reverse.at<double>(1, 1) = inv_d;
+		reverse.at<double>(1, 2) = inv_b11;
+	}
+	else {
+		cout << "Invalid determinant" << endl;
+	}
+}
+
+vector<Mat> get_affine_transforms_reverse(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<Mat> forward_transforms) {
+	// Start off by calculating affine transformation of two triangles.
+	int numZeros = 0;
+
+	int numTriangles = sourceT.size();
+
+	vector<Mat> transforms = vector<Mat>();
+	for (int i = 0; i < numTriangles; i++) {
+		Vec6f sourceTri = sourceT[i];
+		Vec6f targetTri = targetT[i];
+		cv::Point2f sourceP[3];
+		sourceP[0] = cv::Point2f(sourceTri[0], sourceTri[1]);
+		sourceP[1] = cv::Point2f(sourceTri[2], sourceTri[3]);
+		sourceP[2] = cv::Point2f(sourceTri[4], sourceTri[5]);
+		cv::Point2f targetP[3];
+		targetP[0] = cv::Point2f(targetTri[0], targetTri[1]);
+		targetP[1] = cv::Point2f(targetTri[2], targetTri[3]);
+		targetP[2] = cv::Point2f(targetTri[4], targetTri[5]);
+		cv::Mat trans = cv::getAffineTransform(sourceP, targetP);
+		if (trans.at<double>(0, 0) == 0 && trans.at<double>(0, 1) == 0 && trans.at<double>(0, 2) == 0 &&
+			trans.at<double>(1, 0) == 0 && trans.at<double>(1, 1) == 0 && trans.at<double>(1, 2) == 0) {
+			reverse_transform(forward_transforms[i], trans);
+			numZeros++;
+		}
+		transforms.push_back(trans);
+	}
+	cout << "Number of reverse null transforms: " << numZeros << endl;
 	return transforms;
 }
 

@@ -4,7 +4,9 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 
-std::vector<cv::Mat> get_affine_transforms(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT);
+std::vector<cv::Mat> get_affine_transforms_forward(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT);
+
+std::vector<cv::Mat> get_affine_transforms_reverse(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT, std::vector<cv::Mat> forward_transforms);
 
 std::vector<cv::Vec6f> get_interpolated_triangles(std::vector<cv::Vec6f> sourceT, std::vector<cv::Vec6f> targetT, std::vector<std::vector<std::vector<double>>> affine, int tInt);
 
