@@ -22,9 +22,11 @@
 #include "good_features.h"
 #include "affine_akaze.h"
 #include "knn_test.h"
+#include "background_substraction.h"
 
 #include "interpolate_images.h"
 #include "polygon_raster.h"
+
 
 #define VERSION "1.0.0"
 #define APPLICATION_NAME "MVV"
@@ -380,6 +382,7 @@ int adrian_test() {
 	std::cout << "It took me " << time_span.count() / 10 << " milliseconds." << endl;
 	return 0;
 	*/
+	/*
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -390,6 +393,8 @@ int adrian_test() {
 	string img1_path = "david_1.jpg";
 	string img2_path = "david_2.jpg";
 	save_frame_master(img1_path, img2_path);
+	*/
+	test_bs();
 	return 0;
 }
 
@@ -405,10 +410,12 @@ int main()
 	// Horrible hackish way of avoiding merge conflicts while we do testing
 
 	if (str == "danny") {
-		danny_test();
+		//danny_test();
+		adrian_test();
 	}
 	else if (str == "adrian") {
-		adrian_test();
+		//adrian_test();
+		danny_test();
 	}
 	else {
 		cout << "Invalid user";

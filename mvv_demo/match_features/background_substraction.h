@@ -1,5 +1,6 @@
 #pragma once
 
+<<<<<<< HEAD
 #include <iostream>
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -10,3 +11,6 @@
 #include <math.h>
 
 void test_background_substraction();
+=======
+void test_bs();
+>>>>>>> de2fd2dbadfc1845415ec5cfc0f8ee3da74c835d
