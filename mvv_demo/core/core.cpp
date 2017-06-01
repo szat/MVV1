@@ -209,8 +209,8 @@ void save_frame_master(string img1_path, string img2_path) {
 	save_raster("../../data_store/raster/rasterA.bin", gridA, widthA, heightA);
 	save_raster("../../data_store/raster/rasterB.bin", gridB, widthB, heightB);
 
-	vector<Mat> affine_forward = get_affine_transforms(trianglesA, trianglesB);
-	vector<Mat> affine_reverse = get_affine_transforms(trianglesB, trianglesA);
+	vector<Mat> affine_forward = get_affine_transforms_forward(trianglesA, trianglesB);
+	vector<Mat> affine_reverse = get_affine_transforms_reverse(trianglesB, trianglesA, affine_forward);
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
 	write_float_array("../../data_store/affine/affine_1.bin", affine_params, trianglesA.size() * 12);
@@ -411,11 +411,9 @@ int main()
 
 	if (str == "danny") {
 		danny_test();
-		//adrian_test();
 	}
 	else if (str == "adrian") {
-		//adrian_test();
-		danny_test();
+		adrian_test();
 	}
 	else {
 		cout << "Invalid user";
