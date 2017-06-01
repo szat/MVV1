@@ -64,6 +64,40 @@ void test_image(string filename, string directory) {
 	}
 }
 
+void test_raster(string filename, string directory, int expected_width, int expected_height) {
+	bool success = true;
+	int header_offset = 4;
+	string full_path = directory + filename;
+
+	long file_size = get_file_size(full_path);
+
+	int length = 0;
+	short * result = read_short_array(full_path, length);
+
+	if (length == expected_width * expected_height * 2) {
+		cout << "Binary body length corresponds to what we would expect" << endl;
+	}
+	else {
+		cout << "Error: Binary body length does not correspond to desired outcome" << endl;
+		success = false;
+	}
+
+	if (file_size == expected_width * expected_height *2  + header_offset) {
+		cout << "Binary file length corresponds to what we would expect" << endl;
+	}
+	else {
+		cout << "Error: Binary file length does not correspond to desired outcome" << endl;
+		success = false;
+	}
+
+	if (success) {
+		cout << "File is valid" << endl;
+	}
+	else {
+		cout << "File is invalid" << endl;
+	}
+}
+
 
 int main()
 {
@@ -74,7 +108,7 @@ int main()
 	cout << "Beginning mvv validate" << endl;
 	
 
-	string directory = "..\\..\\data_store\\binary\\";
+	string binary_directory = "..\\..\\data_store\\binary\\";
 	string david_1_filename = "david_1.bin";
 	string david_2_filename = "david_2.bin";
 	string judo_1_filename = "judo_1.bin";
@@ -83,11 +117,31 @@ int main()
 	// One part of the algorithm that is suspect is the saving of the images in binary format. We will invoke
 	// test_image on david and the judo shot.
 
-	test_image(david_1_filename, directory);
-	test_image(david_2_filename, directory);
-	test_image(judo_1_filename, directory);
-	test_image(judo_2_filename, directory);
+	test_image(david_1_filename, binary_directory);
+	test_image(david_2_filename, binary_directory);
+	test_image(judo_1_filename, binary_directory);
+	test_image(judo_2_filename, binary_directory);
 	
+	// in addition to binary checks (right number of bytes), we should have an opencv render
+	// of the images and of the raster
+
+	// we should also check the affine transforms
+
+	string raster_directory = "..\\..\\data_store\\raster\\";
+	string david_1_raster_filename = "rasterA_david.bin";
+	string david_2_raster_filename = "rasterB_david.bin";
+	string judo_1_raster_filename = "rasterA_judo.bin";
+	string judo_2_raster_filename = "rasterB_judo.bin";
+
+	int david_width = 667;
+	int david_height = 1000;
+	int judo_width = 1035;
+	int judo_height = 780;
+
+	test_raster(david_1_raster_filename, raster_directory, david_width, david_height);
+	test_raster(david_2_raster_filename, raster_directory, david_width, david_height);
+	test_raster(judo_1_raster_filename, raster_directory, judo_width, judo_height);
+	test_raster(judo_2_raster_filename, raster_directory, judo_width, judo_height);
 
 	cin.get();
 

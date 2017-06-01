@@ -326,10 +326,10 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 int danny_test() {
 	// master function for constructing and saving a frame
 	
-	string src_path_1 = "../../data_store/images/judo_1.jpg";
-	string tar_path_1 = "../../data_store/binary/judo_1.bin";
-	string src_path_2 = "../../data_store/images/judo_2.jpg";
-	string tar_path_2 = "../../data_store/binary/judo_2.bin";
+	string src_path_1 = "../../data_store/images/david_1.jpg";
+	string tar_path_1 = "../../data_store/binary/david_1.bin";
+	string src_path_2 = "../../data_store/images/david_2.jpg";
+	string tar_path_2 = "../../data_store/binary/david_2.bin";
 
 	save_img_binary(src_path_1, tar_path_1, src_path_2, tar_path_2);
 
