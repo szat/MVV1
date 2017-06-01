@@ -413,7 +413,7 @@ int main()
 		danny_test();
 	}
 	else if (str == "adrian") {
-		adrian_test();
+		adrian_test();	
 	}
 	else {
 		cout << "Invalid user";
