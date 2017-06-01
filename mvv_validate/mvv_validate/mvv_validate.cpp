@@ -4,12 +4,31 @@
 #include "stdafx.h"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <vector>
+#include <ctime>
+#include <stdlib.h>
 #include <iostream>
-//#include "binary_write.h"
-//#include "binary_read.h"
+#include <chrono>
+#include <fstream>
+// vector_types is from CUDA, we need it for uchar3 and uchar4 formats
+// although they are trivial structs, it needs to accord with the rest of CUDA
+#include <vector_types.h>
+#include "binary_read.h"
 
 using namespace std;
 using namespace cv;
+
+
+
+
+void test_image(string filename, string directory) {
+	bool success = true;
+	string full_path = directory + filename;
+	
+
+
+}
+
 
 int main()
 {
@@ -20,10 +39,20 @@ int main()
 	cout << "Beginning mvv validate" << endl;
 	
 
-	string file_path = "..\\..\\data_store\\images\\david_1.jpg";
-	//string file_path_2 = "C:\Users\Danny\Documents\GitHub\mvv\data_store\images\david_1.jpg";
-	Mat tester = imread(file_path, IMREAD_GRAYSCALE);
+	string directory = "..\\..\\data_store\\binary\\";
+	string david_1_filename = "david_1.bin";
+	string david_2_filename = "david_2.bin";
+	//string judo_1_filename = "judo_1.bin";
+	//string judo_2_filename = "judo_2.bin";
 
+	// One part of the algorithm that is suspect is the saving of the images in binary format. We will invoke
+	// test_image on david and the judo shot.
+
+	test_image(david_1_filename, directory);
+	test_image(david_2_filename, directory);
+	//test_image(judo_1_filename, directory);
+	//test_image(judo_2_filename, directory);
+	
 
 	cin.get();
 
