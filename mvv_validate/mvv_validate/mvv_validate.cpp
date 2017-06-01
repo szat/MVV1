@@ -74,7 +74,7 @@ void test_raster(string filename, string directory, int expected_width, int expe
 	int length = 0;
 	short * result = read_short_array(full_path, length);
 
-	if (length == expected_width * expected_height * 2) {
+	if (length == expected_width * expected_height ) {
 		cout << "Binary body length corresponds to what we would expect" << endl;
 	}
 	else {
@@ -82,7 +82,8 @@ void test_raster(string filename, string directory, int expected_width, int expe
 		success = false;
 	}
 
-	if (file_size == expected_width * expected_height *2  + header_offset) {
+	int expected_file_size = expected_width * expected_height * 2 + header_offset;
+	if (file_size == expected_file_size) {
 		cout << "Binary file length corresponds to what we would expect" << endl;
 	}
 	else {
