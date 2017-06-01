@@ -31,7 +31,6 @@ void write_short_array(std::string full_path, short * input, int length) {
 	memcpy(length_array, int_array, 4);
 	ofile.write(length_array, 4);
 	memcpy(char_input, input, length * 2);
-	ofile.write(length_array, 4);
 	ofile.write(char_input, length * 2);
 }
 
