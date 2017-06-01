@@ -131,7 +131,7 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Poin
 	return matched_result;
 }
 
-MatchedGeometry read_matched_points_from_file(string source_path, string target_path) {
+MatchedGeometry read_matched_points_from_file(string img1_path, string img2_path) {
 	// Please note that:
 	// A: source image
 	// B: target image
@@ -139,11 +139,11 @@ MatchedGeometry read_matched_points_from_file(string source_path, string target_
 
 	cout << "Initializing matched geometry routine" << endl;
 
-	string imgA_path = source_path;
-	string imgB_path = target_path;
-	string root_path = "../data_store";
-	Mat imgA = cv::imread(root_path + "/" + imgA_path, IMREAD_GRAYSCALE);
-	Mat imgB = cv::imread(root_path + "/" + imgB_path, IMREAD_GRAYSCALE);
+	//string imgA_path = source_path;
+	//string imgB_path = target_path;
+	//string root_path = "../data_store";
+	Mat imgA = cv::imread(img1_path, IMREAD_GRAYSCALE);
+	Mat imgB = cv::imread(img2_path, IMREAD_GRAYSCALE);
 
 	Size desired_size = imgB.size();
 	resize(imgA, imgA, desired_size);
@@ -333,9 +333,9 @@ int danny_test() {
 
 	save_img_binary(src_path_1, tar_path_1, src_path_2, tar_path_2);
 
-	string img1_path = "david_1.jpg";
-	string img2_path = "david_2.jpg";
-	save_frame_master(img1_path, img2_path);
+	//string img1_path = "david_1.jpg";
+	//string img2_path = "david_2.jpg";
+	save_frame_master(src_path_1, src_path_2);
 	
 	/*
 	string src_path_1 = "../../data_store/images/img_background_1.jpg";
@@ -414,8 +414,8 @@ int main()
 		//adrian_test();
 	}
 	else if (str == "adrian") {
-		adrian_test();
-		//danny_test();
+		//adrian_test();
+		danny_test();
 	}
 	else {
 		cout << "Invalid user";
