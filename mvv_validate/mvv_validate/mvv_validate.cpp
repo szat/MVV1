@@ -144,6 +144,12 @@ int main()
 	test_raster(judo_1_raster_filename, raster_directory, judo_width, judo_height);
 	test_raster(judo_2_raster_filename, raster_directory, judo_width, judo_height);
 
+	// making sure none of the affine transformations map off the page
+	// checking if there are any that are zero (although this should not cause a fatal 
+	// exception, it has worked before with this)
+
+
+
 	cin.get();
 
     return 0;
