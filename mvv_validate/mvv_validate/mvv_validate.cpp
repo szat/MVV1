@@ -8,25 +8,60 @@
 #include <ctime>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <fstream>
 // vector_types is from CUDA, we need it for uchar3 and uchar4 formats
 // although they are trivial structs, it needs to accord with the rest of CUDA
-#include <vector_types.h>
+#include <fake_types.h>
 #include "binary_read.h"
 
 using namespace std;
 using namespace cv;
 
 
-
+long get_file_size(std::string filename)
+{
+	struct stat stat_buf;
+	int rc = stat(filename.c_str(), &stat_buf);
+	return rc == 0 ? stat_buf.st_size : -1;
+}
 
 void test_image(string filename, string directory) {
 	bool success = true;
+	int header_offset = 12;
 	string full_path = directory + filename;
-	
 
+	long file_size = get_file_size(full_path);
 
+	int length = 0;
+	int width = 0;
+	int height = 0;
+	uchar3 * result = read_uchar3_array(full_path, length, width, height);
+
+	if (length == width * height * 3) {
+		cout << "Binary body length corresponds to what we would expect" << endl;
+	}
+	else {
+		cout << "Error: Binary body length does not correspond to desired outcome" << endl;
+		success = false;
+	}
+
+	if (file_size == width * height * 3 + header_offset) {
+		cout << "Binary file length corresponds to what we would expect" << endl;
+	}
+	else {
+		cout << "Error: Binary file length does not correspond to desired outcome" << endl;
+		success = false;
+	}
+
+	cout << "Length: " << length << " Width: " << width << " Height: " << height << endl;
+	if (success) {
+		cout << "File is valid" << endl;
+	}
+	else {
+		cout << "File is invalid" << endl;
+	}
 }
 
 
@@ -42,16 +77,16 @@ int main()
 	string directory = "..\\..\\data_store\\binary\\";
 	string david_1_filename = "david_1.bin";
 	string david_2_filename = "david_2.bin";
-	//string judo_1_filename = "judo_1.bin";
-	//string judo_2_filename = "judo_2.bin";
+	string judo_1_filename = "judo_1.bin";
+	string judo_2_filename = "judo_2.bin";
 
 	// One part of the algorithm that is suspect is the saving of the images in binary format. We will invoke
 	// test_image on david and the judo shot.
 
 	test_image(david_1_filename, directory);
 	test_image(david_2_filename, directory);
-	//test_image(judo_1_filename, directory);
-	//test_image(judo_2_filename, directory);
+	test_image(judo_1_filename, directory);
+	test_image(judo_2_filename, directory);
 	
 
 	cin.get();
