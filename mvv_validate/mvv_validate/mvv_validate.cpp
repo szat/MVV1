@@ -64,7 +64,7 @@ void test_image(string filename, string directory) {
 	}
 }
 
-void test_raster(string filename, string directory, int expected_width, int expected_height) {
+short * test_raster(string filename, string directory, int expected_width, int expected_height) {
 	bool success = true;
 	int header_offset = 4;
 	string full_path = directory + filename;
@@ -97,6 +97,47 @@ void test_raster(string filename, string directory, int expected_width, int expe
 	else {
 		cout << "File is invalid" << endl;
 	}
+	return result;
+}
+
+void test_affine(string affine_directory, string file_path, short *raster_A, short *raster_B, int width, int height) {
+	int length = 0;
+	string full_path = affine_directory + file_path;
+	float * affine_params = read_float_array(full_path, length);
+
+	bool valid = true;
+
+	int num_triangles = length / 12;
+
+	if (length % 12 != 0) {
+		cout << "Invalid number of floats";
+	}
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int triangle = raster_A[i * width + j];
+			int offset = 0;
+			float f_x = (float)j;
+			float f_y = (float)i;
+			float a_00 = affine_params[triangle * 12 + offset];
+			float a_01 = affine_params[triangle * 12 + offset + 1];
+			float b_00 = affine_params[triangle * 12 + offset + 2];
+			float a_10 = affine_params[triangle * 12 + offset + 3];
+			float a_11 = affine_params[triangle * 12 + offset + 4];
+			float b_11 = affine_params[triangle * 12 + offset + 5];
+			float final_j = a_00 * f_x + a_01 * f_y + b_00;
+			float final_i = a_10 * f_y + a_11 * f_y + b_11;
+			int final_i_int = (int)final_i;
+			int final_j_int = (int)final_j;
+
+			if (final_i_int < 0 || final_i_int > height || final_j_int < 0 || final_j_int > width) {
+				valid = false;
+				cout << "Out of bounds, i = " << final_i_int << ", j = " << final_j_int << endl;
+			}
+		}
+	}
+
+
 }
 
 
@@ -139,16 +180,21 @@ int main()
 	int judo_width = 1035;
 	int judo_height = 780;
 
-	test_raster(david_1_raster_filename, raster_directory, david_width, david_height);
-	test_raster(david_2_raster_filename, raster_directory, david_width, david_height);
-	test_raster(judo_1_raster_filename, raster_directory, judo_width, judo_height);
-	test_raster(judo_2_raster_filename, raster_directory, judo_width, judo_height);
+	short *david_1_raster = test_raster(david_1_raster_filename, raster_directory, david_width, david_height);
+	short *david_2_raster = test_raster(david_2_raster_filename, raster_directory, david_width, david_height);
+	short *judo_1_raster = test_raster(judo_1_raster_filename, raster_directory, judo_width, judo_height);
+	short *judo_2_raster = test_raster(judo_2_raster_filename, raster_directory, judo_width, judo_height);
 
 	// making sure none of the affine transformations map off the page
 	// checking if there are any that are zero (although this should not cause a fatal 
 	// exception, it has worked before with this)
 
 
+	string affine_directory = "..\\..\\data_store\\affine\\";
+	string affine_david = "affine_david";
+	string affine_judo = "affine_judo";
+	test_affine(affine_directory, affine_david, david_1_raster, david_2_raster, david_width, david_height);
+	//test_affine(affine_directory, affine_judo, judo_1_raster, judo_2_raster, judo_width, judo_height);
 
 	cin.get();
 

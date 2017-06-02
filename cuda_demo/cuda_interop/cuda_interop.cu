@@ -62,7 +62,7 @@ __device__ volatile int param = 50;
 
 
 __global__
-void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d_error_tracker, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
 	if (tau > 1 || tau < 0) return;
 
@@ -72,8 +72,14 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w,
 	//int color_index = raster_index * 3;
 
 	// should not need to do this check if everything is good, must be an extra pixel
-	if (raster_index >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
+	if (raster_index >= w * h) { 
+		d_error_tracker[0]++;
+		return;
+	}
+	if ((row >= h) || (col >= w)) {
+		d_error_tracker[1]++;
+		return;
+	}
 
 	short affine_index = d_raster1[raster_index];
 	short offset = (affine_index - 1) * 12;
@@ -87,7 +93,10 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w,
 			for (int j = 0; j < subDiv; j++) {
 				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
-				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) return;
+				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) { 
+					d_error_tracker[2]++;
+					return;
+				}
 				int new_i = new_r * w + new_c;
 				d_output[new_i] = d_input[raster_index];
 			}
@@ -316,7 +325,17 @@ int main(int argc, char **argv)
 	uchar3 * d_out_2;
 	cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
+	int * h_error_tracker = new int[3];
+	h_error_tracker[0] = 0;
+	h_error_tracker[1] = 0;
+	h_error_tracker[2] = 0;
+	int * d_error_tracker;
+	cudaMalloc((void**)&d_error_tracker, 3 * sizeof(int));
+	cudaMemcpy(d_error_tracker, h_error_tracker, 3 * sizeof(int), cudaMemcpyHostToDevice);
+
 	for (;;) {
+
+
 		auto t1 = std::chrono::high_resolution_clock::now();
 
 		string img_path_1 = "../../data_store/binary/david_1.bin";
@@ -335,28 +354,16 @@ int main(int argc, char **argv)
 		uchar3 *h_in_1 = read_uchar3_array(img_path_1, length_1, width_1, height_1);
 		uchar3 *h_in_2 = read_uchar3_array(img_path_2, length_2, width_2, height_2);
 
-		auto t2 = std::chrono::high_resolution_clock::now();
-		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-		std::cout << "Read uchar3: " << count << "ms" << endl;
-
 		// RASTER READ
 		int num_pixels_1 = 0;
 		int num_pixels_2 = 0;
 		short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
 		short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
 
-		auto t3 = std::chrono::high_resolution_clock::now();
-		count = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
-		std::cout << "Read raster: " << count << "ms" << endl;
-
 		// AFFINE READ
 		int num_floats = 0;
 		float *h_affine_data = read_float_array(affine_path, num_floats);
 		int num_triangles = num_floats / 12;
-
-		auto t4 = std::chrono::high_resolution_clock::now();
-		count = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
-		std::cout << "Read affine: " << count << "ms" << endl;
 
 		if (height_1 != height_2 || width_1 != width_2) {
 			cout << "Incompatible image sizes. Program will now crash.\n";
@@ -375,17 +382,13 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		auto t5 = std::chrono::high_resolution_clock::now();
-		count = std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count();
-		std::cout << "Malloc " << count << "ms" << endl;
-
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
 		float reverse_tau = 1.0f - tau;
 		int reversal_offset = 0;
 
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, d_error_tracker, width, height, d_affine_data, 4, tau, false);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, d_error_tracker, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		reset_img << < gridSize, blockSize >> > (d_out_1, width, height);
 		reset_img << < gridSize, blockSize >> > (d_out_2, width, height);
@@ -393,10 +396,6 @@ int main(int argc, char **argv)
 
 		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
-
-		auto t6 = std::chrono::high_resolution_clock::now();
-		count = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
-		std::cout << "Kernels " << count << "ms" << endl;
 
 		cudaFree(d_affine_data);
 
@@ -419,10 +418,14 @@ int main(int argc, char **argv)
 		free(h_raster1);
 		free(h_raster2);
 		free(h_affine_data);
-		auto t7 = std::chrono::high_resolution_clock::now();
-		count = std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t6).count();
-		std::cout << "Cleanup: " << count << "ms" << endl;
-		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t1).count() << "ms" << endl;
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+
+
+		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyHostToDevice);
+		cout << "Raster index OOB: " << h_error_tracker[0] << endl;
+		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
+		cout << "Post-processing pixel OOB: " << h_error_tracker[2] << endl;
 	}
 
 	cudaFree(d_in_1);
