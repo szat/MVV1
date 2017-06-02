@@ -44,17 +44,13 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 	int raster_index = (row * w + col);
 	//int color_index = raster_index * 3;
 
-
-	d_error_tracker[0] = 10;
-	d_error_tracker[1] = 100;
-	d_error_tracker[2] = 1000;
 	// should not need to do this check if everything is good, must be an extra pixel
 	if (raster_index >= w * h) { 
-		//d_error_tracker[0]++;
+		d_error_tracker[0]++;
 		return;
 	}
 	if ((row >= h) || (col >= w)) {
-		//d_error_tracker[1]++;
+		d_error_tracker[1]++;
 		return;
 	}
 
@@ -71,7 +67,7 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) { 
-					//d_error_tracker[2]++;
+					d_error_tracker[2]++;
 					return;
 				}
 				int new_i = new_r * w + new_c;
@@ -157,7 +153,6 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 	// should not need to do this check if everything is good, must be an extra pixel
 	if (raster_index >= w * h) return;
 	if ((row >= h) || (col >= w)) return;
-
 
 	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
 		uchar4 new_uchar4 = uchar4();
@@ -317,9 +312,9 @@ int main(int argc, char **argv)
 
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
-		string raster1_path = "../../data_store/raster/rasterA.bin";
-		string raster2_path = "../../data_store/raster/rasterB.bin";
-		string affine_path = "../../data_store/affine/affine_1.bin";
+		string raster1_path = "../../data_store/raster/rasterA_david.bin";
+		string raster2_path = "../../data_store/raster/rasterB_david.bin";
+		string affine_path = "../../data_store/affine/affine_david.bin";
 
 		// BINARY IMAGE READ
 		int length_1 = 0;
