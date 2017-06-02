@@ -1,30 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//
-// Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
-//
-// Please refer to the NVIDIA end user license agreement (EULA) associated
-// with this source code for terms and conditions that govern your use of
-// this software. Any use, reproduction, disclosure, or distribution of
-// this software and related documentation outside the terms of the EULA
-// is strictly prohibited.
-//
-////////////////////////////////////////////////////////////////////////////
-
-/*
-This example demonstrates how to use the Cuda OpenGL bindings to
-dynamically modify a vertex buffer using a Cuda kernel.
-
-The steps are:
-1. Create an empty vertex buffer object (VBO)
-2. Register the VBO with Cuda
-3. Map the VBO for writing from Cuda
-4. Run Cuda kernel to modify the vertex positions
-5. Unmap the VBO
-6. Render the results using OpenGL
-
-Host code
-*/
-
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
@@ -54,8 +27,8 @@ using namespace std;
 #define REFRESH_DELAY     2 //ms
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
-
 GLuint  bufferObj;
+
 cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
@@ -71,13 +44,17 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 	int raster_index = (row * w + col);
 	//int color_index = raster_index * 3;
 
+
+	d_error_tracker[0] = 10;
+	d_error_tracker[1] = 100;
+	d_error_tracker[2] = 1000;
 	// should not need to do this check if everything is good, must be an extra pixel
 	if (raster_index >= w * h) { 
-		d_error_tracker[0]++;
+		//d_error_tracker[0]++;
 		return;
 	}
 	if ((row >= h) || (col >= w)) {
-		d_error_tracker[1]++;
+		//d_error_tracker[1]++;
 		return;
 	}
 
@@ -94,7 +71,7 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) { 
-					d_error_tracker[2]++;
+					//d_error_tracker[2]++;
 					return;
 				}
 				int new_i = new_r * w + new_c;
@@ -422,7 +399,7 @@ int main(int argc, char **argv)
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 
 
-		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyDeviceToHost);
 		cout << "Raster index OOB: " << h_error_tracker[0] << endl;
 		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
 		cout << "Post-processing pixel OOB: " << h_error_tracker[2] << endl;
