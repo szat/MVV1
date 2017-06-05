@@ -427,10 +427,9 @@ int main()
 		cout << "Invalid user";
 	}
 
-
 	cout << "Finished. Press enter twice to terminate program.";
 
 	cin.get();
 
     return 0;
-} 
+}
