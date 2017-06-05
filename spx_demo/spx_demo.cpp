@@ -55,7 +55,8 @@ int main()
 	while (true) {
 		Mat converted;
 		cvtColor(input_image, converted, COLOR_BGR2HSV);
-		
+		//converted = input_image.clone();
+
 		cout << "New computation!" << endl;
 
 		Ptr<SuperpixelSLIC> slic = createSuperpixelSLIC(converted, algorithm + SLIC, region_size, float(ruler));
