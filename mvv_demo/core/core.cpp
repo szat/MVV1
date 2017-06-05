@@ -14,6 +14,7 @@
 
 #include "binary_write.h"
 #include "merge_background.h"
+#include "flash_detection.h"
 
 #include "build_geometry.h"
 #include "generate_test_points.h"
@@ -324,6 +325,8 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 }
 
 int danny_test() {
+	// MAIN CALCULATIONS
+	/*
 	// master function for constructing and saving a frame
 	
 	string src_path_1 = "../../data_store/images/david_1.jpg";
@@ -336,13 +339,18 @@ int danny_test() {
 	//string img1_path = "david_1.jpg";
 	//string img2_path = "david_2.jpg";
 	save_frame_master(src_path_1, src_path_2);
-	
+	*/
+
+	// BACKGROUND MERGING
 	/*
 	string src_path_1 = "../../data_store/images/img_background_1.jpg";
 	string src_path_2 = "../../data_store/images/img_background_2.jpg";
 	string dst_path = "../../data_store/binary/background.bin";
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
+
+	// FLASH DETECTION
+	cout << "Test flash: " << test_flash() << endl;
 	return 0;
 }
 
