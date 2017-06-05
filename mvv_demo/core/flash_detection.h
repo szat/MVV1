@@ -5,4 +5,4 @@
 #include <vector>
 #include <string>
 
-int test_flash();
+std::pair<int, int> test_flash(std::string video_directory, std::string video_path_1, std::string video_path_2);

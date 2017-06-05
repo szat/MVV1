@@ -350,7 +350,9 @@ int danny_test() {
 	*/
 
 	// FLASH DETECTION
-	cout << "Test flash: " << test_flash() << endl;
+	pair<int, int> flash_result = test_flash("dir", "path1", "path2");
+	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
+	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 	return 0;
 }
 
