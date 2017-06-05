@@ -14,14 +14,15 @@
 
 using namespace std;
 using namespace cv;
+using namespace cv::ximgproc;
 
 int main()
 {
 	cout << "Welcome to spx_demo, code to try out the SLIC segmentation method!" << endl;
 	cout << "Press any key to exit." << endl;
 
-	string window_name = "SLIC Superpixels";
-	string img_file = "..\\data_store\\images\\mona_lisa_1.jpg.jpg";
+	
+	string img_file = "..\\data_store\\images\\mona_lisa_1.jpg";
 
 	Mat input_image;
 
@@ -40,14 +41,38 @@ int main()
 	int min_element_size = 50;
 	int num_iterations = 3;
 
-	namedWindow(window_name, 0);
-	createTrackbar("Algorithm", window_name, &algorithm, 2, 0);
-	createTrackbar("Region size", window_name, &region_size, 200, 0);
-	createTrackbar("Ruler", window_name, &ruler, 100, 0);
-	createTrackbar("Connectivity", window_name, &min_element_size, 100, 0);
-	createTrackbar("Iterations", window_name, &num_iterations, 12, 0);
+	Mat converted;
+	cvtColor(input_image, converted, COLOR_BGR2HSV);
+	Ptr<SuperpixelSLIC> slic = createSuperpixelSLIC(converted, algorithm + SLIC, region_size, float(ruler));
+	slic->iterate(num_iterations);
+	if (min_element_size > 0) {
+		slic->enforceLabelConnectivity(min_element_size);
+	}
+	Mat result, mask;
+	result = input_image;
+	slic->getLabelContourMask(mask, true);
+	result.setTo(Scalar(0, 0, 255), mask);
 
-	cin.ignore();
+	Mat labels;
+	slic->getLabels(labels);
+	const int num_label_bits = 2;
+	labels &= (1 << num_label_bits) - 1;
+	labels *= 1 << (16 - num_label_bits);
+
+	string window_name_r = "SLIC result";
+	//string window_name_m = "SLIC mask";
+	//string window_name_l = "SLIC label";
+	
+	namedWindow(window_name_r);
+	//namedWindow(window_name_m);
+	//namedWindow(window_name_l);
+
+	imshow(window_name_r, result);
+	//imshow(window_name_m, mask);
+	//imshow(window_name_l, labels);
+
+	waitKey();
+
     return 0;
 }
 
