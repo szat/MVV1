@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 using namespace std;
 using namespace cv;
@@ -47,7 +48,7 @@ Mat crush_to_contour(Mat & labels) {
 
 			int current = labels.at<int>(i, j);
 			if (current == up && current == down && current == left && current == right) {
-				crushed.at<int>(i, j) = 0;
+				crushed.at<int>(i, j) = -1;
 			}
 		}
 	}
@@ -67,14 +68,38 @@ vector<Point2d> get_contour_starting_pts(Mat & labels) {
 			}
 		}
 	}
-
 	return out;
 }
 
-vector<Point2d> get_contour(Mat & labels, int label) {
-	//check for maximal number of segments
+vector<Point2d> get_one_contour(Mat & crushed, int label) {
 	vector<Point2d> out;
-	//find first instance of the label
+	for (int i = 0; i < crushed.rows; i++) {
+		for (int j = 0; j < crushed.cols; j++) {
+			if (crushed.at<int>(i, j) == label) {
+				Point2d pt(i, j);
+				out.push_back(pt);
+			}
+		}
+	}
+	return out;
+}
+
+vector<vector<Point2d>> get_contour(Mat & crushed, vector<Point2d> & starting_pts) {
+	vector<vector<Point2d>> out;
+	for (int i = 0; i < starting_pts.size(); i++) {
+		vector<Point2d> contour;
+		out.push_back(contour);
+	}
+
+	for (int i = 0; i < crushed.rows; i++) {
+		for (int j = 0; j < crushed.cols; j++) {
+			if (crushed.at<int>(i, j) != -1) {
+				Point2d pt(i, j);
+				out.at((int)crushed.at<int>(i, j)).push_back(pt);
+			}
+		}
+	}
+
 	return out;
 }
 
@@ -127,6 +152,16 @@ int main()
 	cout << "The last one should start at " << starting_pts.at(starting_pts.size() - 1).x << " , " << starting_pts.at(starting_pts.size() - 1).y << endl;
 
 	Mat crushed_viz = visualize_labels(crushed);
+
+	auto t1 = std::chrono::high_resolution_clock::now();
+	vector<vector<Point2d>> contours = get_contour(crushed, starting_pts);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+
+	for (int i = 0; i < 1000; i = i + 30) {
+		cout << "for label " << i << " one method returns " << contours.at(i).size() << endl;
+		cout << "for label " << i << " the other methods returns " << get_one_contour(crushed, i).size() << endl;
+	}
 
 	cout << "Computation done!" << endl;
 
