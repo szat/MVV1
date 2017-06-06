@@ -224,6 +224,50 @@ void timerEvent(int value)
 	}
 }
 
+float * calculate_blur_coefficients(int blur_radius) {
+	/*
+	time for some normalization
+	normalization constraints for this gaussian:
+	
+	- the sum of the (2r+1)^2 gaussian 
+	- for now i've just hard-coded a pseudo-gaussian
+	*/ 
+	
+	// I DON'T EVEN CARE HOW DUMB THIS IS TO HARD-CODE IT
+	// I'M TAKING THIS OUT
+	// TEMPORARY
+
+	float *test_coefficients = new float[(blur_radius * 2 + 1) * (blur_radius * 2 + 1)];
+	test_coefficients[0] = 0.01;
+	test_coefficients[1] = 0.025;
+	test_coefficients[2] = 0.05;
+	test_coefficients[3] = 0.025;
+	test_coefficients[4] = 0.01;
+	test_coefficients[5] = 0.025;
+	test_coefficients[6] = 0.05;
+	test_coefficients[7] = 0.07;
+	test_coefficients[8] = 0.05;
+	test_coefficients[9] = 0.025;
+	test_coefficients[10] = 0.05;
+	test_coefficients[11] = 0.07;
+	test_coefficients[12] = 0.08;
+	test_coefficients[13] = 0.07;
+	test_coefficients[14] = 0.05;
+	test_coefficients[15] = 0.025;
+	test_coefficients[16] = 0.05;
+	test_coefficients[17] = 0.07;
+	test_coefficients[18] = 0.05;
+	test_coefficients[19] = 0.025;
+	test_coefficients[20] = 0.01;
+	test_coefficients[21] = 0.025;
+	test_coefficients[22] = 0.05;
+	test_coefficients[23] = 0.025;
+	test_coefficients[24] = 0.01;
+
+	return test_coefficients;
+}
+
+
 int main(int argc, char **argv)
 {
 	// should be preloaded from a video config file
@@ -231,6 +275,17 @@ int main(int argc, char **argv)
 	int height = 1000;
 	int memsize_uchar3 = width * height * sizeof(uchar3);
 	int memsize_uchar4 = width * height * sizeof(uchar4);
+
+	// Gaussian blur coefficients and calculation
+	int blur_radius = 2;
+	float *blur_coefficients = calculate_blur_coefficients(blur_radius);
+
+	float total = 0.0f;
+	for (int i = 0; i < 25; i++) {
+		total = total + blur_coefficients[i];
+	}
+
+	cout << total;
 
 	cudaDeviceProp  prop;
 	int dev;
@@ -365,6 +420,7 @@ int main(int argc, char **argv)
 		reset_img << < gridSize, blockSize >> > (d_out_1, width, height);
 		reset_img << < gridSize, blockSize >> > (d_out_2, width, height);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
+
 
 		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
