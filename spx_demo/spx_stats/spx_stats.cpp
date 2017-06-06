@@ -17,6 +17,8 @@ using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
 
+//TODO check for maximal number of superpixels
+
 Mat visualize_labels(Mat labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
 
@@ -52,8 +54,27 @@ Mat crush_to_contour(Mat & labels) {
 	return crushed;
 }
 
-vector<Point2d> get_contour(Mat & labels, int label) {
+vector<Point2d> get_contour_starting_pts(Mat & labels) {
 	vector<Point2d> out;
+	int counter = 0;
+	
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			if (labels.at<int>(i, j) == counter) {
+				Point2d start(i, j);
+				out.push_back(start);
+				counter++;
+			}
+		}
+	}
+
+	return out;
+}
+
+vector<Point2d> get_contour(Mat & labels, int label) {
+	//check for maximal number of segments
+	vector<Point2d> out;
+	//find first instance of the label
 	return out;
 }
 
@@ -99,6 +120,11 @@ int main()
 	Mat label_viz = visualize_labels(labels);
 
 	Mat crushed = crush_to_contour(labels);
+
+	vector<Point2d> starting_pts = get_contour_starting_pts(labels);
+
+	cout << "The length of starting_pts is " << starting_pts.size() << endl;
+	cout << "The last one should start at " << starting_pts.at(starting_pts.size() - 1).x << " , " << starting_pts.at(starting_pts.size() - 1).y << endl;
 
 	Mat crushed_viz = visualize_labels(crushed);
 
