@@ -16,7 +16,6 @@ using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
 
-
 int main()
 {
 	cout << "Welcome to spx_demo, code to try out the SLIC segmentation method!" << endl;
@@ -55,10 +54,18 @@ int main()
 
 	Mat labels;
 	slic->getLabels(labels);
-	const int num_label_bits = 2;
-	labels &= (1 << num_label_bits) - 1;
-	labels *= 1 << (16 - num_label_bits);
-	
+
+	Mat label_viz(labels.size(), CV_8UC3);
+
+	int width = labels.size().width;
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			label_viz.at<Vec3b>(i, j)[0] = labels.at<int>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j)  - labels.at<int>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j)/2 % 255;
+		}
+	}
+
 	cout << "Computation done!" << endl;
 
     return 0;
