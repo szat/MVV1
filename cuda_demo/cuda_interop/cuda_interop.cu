@@ -177,14 +177,16 @@ void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, in
 
 	int box_width = 2 * blur_radius + 1;
 
-	for (int i = min; i <= max; i++) {
-		for (int j = min; j < max; j++) {
+	for (int i = 0; i <= box_width; i++) {
+		for (int j = 0; j < box_width; j++) {
 			// get new index
-			int new_index = index + i * w + j;
+			int i_offset = min + i;
+			int j_offset = min + j;
+			int new_index = index + i_offset * w + j_offset;
 			// check if out of bounds
 			if (new_index > 0 && new_index < w * h) {
 				// if inside bounds, add to total 
-				float coeff = d_blur_coeff[box_width * (i + blur_radius) + (j + blur_radius)];
+				float coeff = 0.04;
 				gaussian_r = gaussian_r + coeff * d_render_final[new_index].x;
 				gaussian_g = gaussian_r + coeff * d_render_final[new_index].y;
 				gaussian_b = gaussian_r + coeff * d_render_final[new_index].z;
