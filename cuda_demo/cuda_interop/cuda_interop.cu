@@ -160,6 +160,52 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 	}
 }
 
+__global__
+void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int index = r * w + c;
+	if ((r >= h) || (c >= w)) return;
+
+	float gaussian_r = 0;
+	float gaussian_g = 0;
+	float gaussian_b = 0;
+
+	int min = -1 * blur_radius;
+	int max = blur_radius;
+
+	int box_width = 2 * blur_radius + 1;
+
+	for (int i = min; i <= max; i++) {
+		for (int j = min; j < max; j++) {
+			// get new index
+			int new_index = index + i * w + j;
+			// check if out of bounds
+			if (new_index > 0 && new_index < w * h) {
+				// if inside bounds, add to total 
+				float coeff = d_blur_coeff[box_width * (i + blur_radius) + (j + blur_radius)];
+				gaussian_r = gaussian_r + coeff * d_render_final[new_index].x;
+				gaussian_g = gaussian_r + coeff * d_render_final[new_index].y;
+				gaussian_b = gaussian_r + coeff * d_render_final[new_index].z;
+			}
+			// this will cause light backgrounds to darken
+			// TODO: Fix this bug
+		}
+	}
+
+	// sync threads
+	__syncthreads();
+
+	uchar4 result = uchar4();
+	result.x = gaussian_r;
+	result.y = gaussian_g;
+	result.z = gaussian_b;
+
+	d_render_final[index] = result;
+}
+
+
 __global__ void flip_y(uchar4 *ptr, int w, int h) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
@@ -263,14 +309,12 @@ int main(int argc, char **argv)
 
 	// Gaussian blur coefficients and calculation
 	int blur_radius = 2;
-	float *blur_coefficients = calculate_blur_coefficients(blur_radius);
+	int num_coeff = (blur_radius + 1) * (blur_radius + 1);
+	float *h_blur_coeff = calculate_blur_coefficients(blur_radius);
 
-	float total = 0.0f;
-	for (int i = 0; i < 25; i++) {
-		total = total + blur_coefficients[i];
-	}
-
-	cout << total;
+	float *d_blur_coeff;
+	cudaMalloc((void**)&d_blur_coeff, num_coeff * sizeof(float));
+	cudaMemcpy(d_blur_coeff, h_blur_coeff, num_coeff * sizeof(float), cudaMemcpyHostToDevice);
 
 	cudaDeviceProp  prop;
 	int dev;
@@ -403,7 +447,7 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, d_error_tracker, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
-
+		gaussian_blur << < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius);
 
 		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
