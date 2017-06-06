@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spx_demo", "spx_demo.vcxproj", "{F7735ABA-E56B-47AD-8086-390FDC620B0B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spx_stats", "..\spx_stats\spx_stats.vcxproj", "{578EBD01-7D49-45FF-999E-DB0D54294747}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spx_stats", "spx_stats\spx_stats.vcxproj", "{578EBD01-7D49-45FF-999E-DB0D54294747}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
