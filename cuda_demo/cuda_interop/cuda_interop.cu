@@ -77,21 +77,6 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 	}
 }
 
-__global__ 
-void reset_img(uchar3 *input, int w, int h) {
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int index = (row * w + col);
-
-	if (index >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
-
-	uchar3 new_uchar3 = uchar3();
-	new_uchar3.x = 0;
-	new_uchar3.y = 0;
-	new_uchar3.z = 0;
-	input[index] = new_uchar3;
-}
 
 __global__
 void reset_image(uchar3* input, int w, int h) {
@@ -417,8 +402,6 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, d_error_tracker, width, height, d_affine_data, 4, tau, false);
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, d_error_tracker, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
-		reset_img << < gridSize, blockSize >> > (d_out_1, width, height);
-		reset_img << < gridSize, blockSize >> > (d_out_2, width, height);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
 
 
