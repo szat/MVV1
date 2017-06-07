@@ -254,45 +254,31 @@ void timerEvent(int value)
 	}
 }
 
-float * calculate_blur_coefficients(int blur_radius) {
+float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	/*
 	time for some normalization
 	normalization constraints for this gaussian:
+	*/
+	float *test_coefficients = new float[(blur_radius * 2 + 1)];
 	
-	- the sum of the (2r+1)^2 gaussian 
-	- for now i've just hard-coded a pseudo-gaussian
-	*/ 
-	
-	// I DON'T EVEN CARE HOW DUMB THIS IS TO HARD-CODE IT
-	// I'M TAKING THIS OUT
-	// TEMPORARY
+	// this value must be positive or it will mess up the blur
+	blur_param = abs(blur_param);
 
-	float *test_coefficients = new float[(blur_radius * 2 + 1) * (blur_radius * 2 + 1)];
-	test_coefficients[0] = 0.01;
-	test_coefficients[1] = 0.025;
-	test_coefficients[2] = 0.05;
-	test_coefficients[3] = 0.025;
-	test_coefficients[4] = 0.01;
-	test_coefficients[5] = 0.025;
-	test_coefficients[6] = 0.05;
-	test_coefficients[7] = 0.07;
-	test_coefficients[8] = 0.05;
-	test_coefficients[9] = 0.025;
-	test_coefficients[10] = 0.05;
-	test_coefficients[11] = 0.07;
-	test_coefficients[12] = 0.08;
-	test_coefficients[13] = 0.07;
-	test_coefficients[14] = 0.05;
-	test_coefficients[15] = 0.025;
-	test_coefficients[16] = 0.05;
-	test_coefficients[17] = 0.07;
-	test_coefficients[18] = 0.05;
-	test_coefficients[19] = 0.025;
-	test_coefficients[20] = 0.01;
-	test_coefficients[21] = 0.025;
-	test_coefficients[22] = 0.05;
-	test_coefficients[23] = 0.025;
-	test_coefficients[24] = 0.01;
+	// f(x) = a*e^(-x^2/b)
+	// setting central value
+	test_coefficients[blur_radius] = 1.0f;
+	for (int i = 1; i <= blur_radius; i++) {
+		float exponent = -1.0f * (float)i*(float)i / blur_param;
+		float coeff = exp(exponent);
+		test_coefficients[blur_radius - i] = coeff;
+		test_coefficients[blur_radius + i] = coeff;
+	}
+	float total = 0;
+	for (int i = 0; i < blur_radius * 2 + 1; i++) {
+		cout << test_coefficients[i] << endl;
+		total += test_coefficients[i];
+	}
+	cout << "Total: " << total << endl;
 
 	return test_coefficients;
 }
@@ -307,9 +293,10 @@ int main(int argc, char **argv)
 	int memsize_uchar4 = width * height * sizeof(uchar4);
 
 	// Gaussian blur coefficients and calculation
-	int blur_radius = 2;
-	int num_coeff = (blur_radius + 1) * (blur_radius + 1);
-	float *h_blur_coeff = calculate_blur_coefficients(blur_radius);
+	int blur_radius = 5;
+	float blur_param = 4.0f;
+	int num_coeff = (2 * blur_radius + 1);
+	float *h_blur_coeff = calculate_blur_coefficients(blur_radius, blur_param);
 
 	float *d_blur_coeff;
 	cudaMalloc((void**)&d_blur_coeff, num_coeff * sizeof(float));
