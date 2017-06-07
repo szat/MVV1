@@ -161,7 +161,7 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 }
 
 __global__
-void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius) {
+void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius, bool vertical) {
 	// map from threadIdx/BlockIdx to pixel position
 	int c = blockIdx.x*blockDim.x + threadIdx.x;
 	int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -176,10 +176,17 @@ void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, in
 	int max = blur_radius;
 
 	int box_width = 2 * blur_radius + 1;
+	int new_index = 0;
 
 	for (int i = min; i <= max; i++) {
-		// get new index
-		int new_index = index + i;
+		// switch depending on the direction of the gaussian blur
+		if (vertical) {
+			new_index = index + i * w;
+		}
+		else {
+			new_index = index + i;
+		}
+
 		int coeff_index = i + blur_radius;
 		float coeff = d_blur_coeff[coeff_index];
 
@@ -194,13 +201,10 @@ void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, in
 	// sync threads
 	__syncthreads();
 
-
-
 	uchar4 result = uchar4();
 	result.x = gaussian_r;
 	result.y = gaussian_g;
 	result.z = gaussian_b;
-
 	d_render_final[index] = result;
 }
 
@@ -434,13 +438,16 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, d_error_tracker, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
 		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
-		gaussian_blur << < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius);
+		// horizontal and then vertical
+		// gaussian filters are separable into two 1D blur effects
+		// boolean flag indicates if the blur is vertical
+		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, false);
+		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, true);
 
 		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
 
 		cudaFree(d_affine_data);
-
 
 		cudaGraphicsMapResources(1, &resource, NULL);
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
