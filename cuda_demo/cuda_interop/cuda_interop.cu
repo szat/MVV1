@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 	// Gaussian blur coefficients and calculation
 	int blur_radius = 5;
 	// smaller numbere means more blur
-	float blur_param = 3.0f;
+	float blur_param = 1.25f;
 	int num_coeff = (2 * blur_radius + 1);
 	float *h_blur_coeff = calculate_blur_coefficients(blur_radius, blur_param);
 
@@ -381,10 +381,7 @@ int main(int argc, char **argv)
 	cudaMemcpy(d_error_tracker, h_error_tracker, 3 * sizeof(int), cudaMemcpyHostToDevice);
 
 	for (;;) {
-
-
 		auto t1 = std::chrono::high_resolution_clock::now();
-
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
 		string raster1_path = "../../data_store/raster/rasterA_david.bin";
@@ -441,9 +438,11 @@ int main(int argc, char **argv)
 		// horizontal and then vertical
 		// gaussian filters are separable into two 1D blur effects
 		// boolean flag indicates if the blur is vertical
+
 		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, false);
 		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, true);
 
+		// deblur
 		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
 
@@ -467,14 +466,13 @@ int main(int argc, char **argv)
 		free(h_raster1);
 		free(h_raster2);
 		free(h_affine_data);
-		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
-
 
 		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyDeviceToHost);
 		cout << "Raster index OOB: " << h_error_tracker[0] << endl;
 		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
 		cout << "Post-processing pixel OOB: " << h_error_tracker[2] << endl;
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << "ns" << endl;
 	}
 
 	cudaFree(d_in_1);
