@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 	// Gaussian blur coefficients and calculation
 	int blur_radius = 5;
 	// smaller numbere means more blur
-	float blur_param = 4.0f;
+	float blur_param = 3.0f;
 	int num_coeff = (2 * blur_radius + 1);
 	float *h_blur_coeff = calculate_blur_coefficients(blur_radius, blur_param);
 
