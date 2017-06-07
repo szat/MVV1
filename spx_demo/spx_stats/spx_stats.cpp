@@ -7,6 +7,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/ximgproc.hpp>
+#include <opencv2/bgsegm.hpp>
+#include <opencv2/videoio.hpp>
 
 #include <stdio.h>
 #include <iostream>
@@ -17,6 +19,7 @@
 using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
+using namespace cv::bgsegm;
 
 //TODO check for maximal number of superpixels
 
@@ -103,6 +106,23 @@ vector<vector<Point2d>> get_contour(Mat & crushed, vector<Point2d> & starting_pt
 	return out;
 }
 
+static Ptr<BackgroundSubtractor> createBGSubtractorByName(const String& algoName)
+{
+	Ptr<BackgroundSubtractor> algo;
+	if (algoName == String("GMG"))
+		algo = createBackgroundSubtractorGMG(20, 0.7);
+	else if (algoName == String("CNT"))
+		algo = createBackgroundSubtractorCNT();
+	else if (algoName == String("KNN"))
+		algo = createBackgroundSubtractorKNN();
+	else if (algoName == String("MOG"))
+		algo = createBackgroundSubtractorMOG();
+	else if (algoName == String("MOG2"))
+		algo = createBackgroundSubtractorMOG2();
+
+	return algo;
+}
+
 int main()
 {
 	cout << "Welcome to spx_demo, code to try out the SLIC segmentation method!" << endl;
@@ -165,6 +185,34 @@ int main()
 
 	cout << "Computation done!" << endl;
 
+
+	// Playing with background segmentation    
+	VideoCapture cap;
+	cap.open(0); //webcam
+
+	Ptr<BackgroundSubtractor> bgfs = createBGSubtractorByName("GMG");	//"GMG","CNT","CNT","KNN","MOG","MOG","MOG2"
+	Mat frame, fgmask, segm;
+
+	namedWindow("FG Segmentation", WINDOW_NORMAL);
+
+	for (;;)
+	{
+		cap >> frame;
+		if (frame.empty())
+			break;
+
+		bgfs->apply(frame, fgmask);
+
+		frame.convertTo(segm, CV_8U, 0.5);
+		add(frame, Scalar(100, 100, 0), segm, fgmask);
+
+		imshow("FG Segmentation", segm);
+
+		int c = waitKey(30);
+		if (c == 'q' || c == 'Q' || (c & 255) == 27)
+			break;
+	}
+	
     return 0;
 }
 

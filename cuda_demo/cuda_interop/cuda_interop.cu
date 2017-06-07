@@ -393,7 +393,6 @@ int main(int argc, char **argv)
 		auto t2 = std::chrono::high_resolution_clock::now();
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 
-
 		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyDeviceToHost);
 		cout << "Raster index OOB: " << h_error_tracker[0] << endl;
 		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
