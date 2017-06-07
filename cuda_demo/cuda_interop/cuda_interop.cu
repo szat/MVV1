@@ -180,8 +180,8 @@ void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, in
 	for (int i = min; i <= max; i++) {
 		// get new index
 		int new_index = index + i;
-		
-		float coeff = 0.2;
+		int coeff_index = i + blur_radius;
+		float coeff = d_blur_coeff[coeff_index];
 
 		gaussian_r = gaussian_r + coeff * d_render_final[new_index].x;
 		gaussian_g = gaussian_g + coeff * d_render_final[new_index].y;
@@ -259,28 +259,28 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	time for some normalization
 	normalization constraints for this gaussian:
 	*/
-	float *test_coefficients = new float[(blur_radius * 2 + 1)];
-	
+	int num_coeff = blur_radius * 2 + 1;
+	float *coefficients = new float[num_coeff];
 	// this value must be positive or it will mess up the blur
 	blur_param = abs(blur_param);
 
 	// f(x) = a*e^(-x^2/b)
 	// setting central value
-	test_coefficients[blur_radius] = 1.0f;
+	coefficients[blur_radius] = 1.0f;
 	for (int i = 1; i <= blur_radius; i++) {
 		float exponent = -1.0f * (float)i*(float)i / blur_param;
 		float coeff = exp(exponent);
-		test_coefficients[blur_radius - i] = coeff;
-		test_coefficients[blur_radius + i] = coeff;
+		coefficients[blur_radius - i] = coeff;
+		coefficients[blur_radius + i] = coeff;
 	}
-	float total = 0;
-	for (int i = 0; i < blur_radius * 2 + 1; i++) {
-		cout << test_coefficients[i] << endl;
-		total += test_coefficients[i];
+	float non_normalized_total = 0;
+	for (int i = 0; i < num_coeff; i++) {
+		non_normalized_total += coefficients[i];
 	}
-	cout << "Total: " << total << endl;
-
-	return test_coefficients;
+	for (int j = 0; j < num_coeff; j++) {
+		coefficients[j] = coefficients[j] / non_normalized_total;
+	}
+	return coefficients;
 }
 
 
@@ -294,6 +294,7 @@ int main(int argc, char **argv)
 
 	// Gaussian blur coefficients and calculation
 	int blur_radius = 5;
+	// smaller numbere means more blur
 	float blur_param = 4.0f;
 	int num_coeff = (2 * blur_radius + 1);
 	float *h_blur_coeff = calculate_blur_coefficients(blur_radius, blur_param);
