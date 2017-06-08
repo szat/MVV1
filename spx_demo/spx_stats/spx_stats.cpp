@@ -10,6 +10,7 @@
 #include <opencv2/bgsegm.hpp>
 #include <opencv2/videoio.hpp>
 
+
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -22,6 +23,20 @@ using namespace cv::ximgproc;
 using namespace cv::bgsegm;
 
 //TODO check for maximal number of superpixels
+
+class SuperPx {
+public:
+	int label;
+	int size;
+
+	double length;      // Length of a box
+	double breadth;     // Breadth of a box
+	double height;      // Height of a box
+
+	double getVolume(void) {
+		return length * breadth * height;
+	}
+};
 
 Mat visualize_labels(Mat labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
@@ -87,6 +102,78 @@ vector<Point2d> get_one_contour(Mat & crushed, int label) {
 	return out;
 }
 
+float get_variance(Mat & image, Mat & labels, int label) {
+	float variance = 0;
+	int n = 0;
+	float mean = 0;
+
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j++) {
+			if (labels.at<int>(i, j) == 0) {
+				float x = image.at<Vec3b>(Point(i, j))[2];
+				n++;
+				float delta = x - mean;
+				mean += delta / n;
+				float delta2 = x - mean;
+				variance += delta*delta2;
+			}
+		}
+	}
+	if(n >= 2)	return variance / (n - 1);
+	else return 0;
+}
+
+float get_features(Mat & image, Mat & labels, int number_of_spx, int number_of_features) {
+	float mean = 0;
+	int count = 0;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j++) {
+			if (labels.at<int>(i, j) == 0) {
+				count++;
+				mean = mean + image.at<Vec3b>(Point(i, j))[2];
+			}
+		}
+	}
+	return mean / count;
+	/*
+	//initialization
+	vector<vector<float>> spx_features;
+	for (int i = 0; i < number_of_spx; i++) {
+		vector<float> features;
+		for (int j = 0; j < number_of_features; j++) {
+			features.push_back(0);
+		}
+		spx_features.push_back(features);
+	}
+
+	//So each spx has a feature vector of sie number_of_features
+	vector<float> spx_size;
+	for (int i = 0; i < number_of_spx; i++) {
+		spx_size.push_back(0);
+	}
+
+	Mat temp = image.clone(); 
+	//cvtColor(image, temp, CV_8UC3);
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j++) {
+			spx_size.at(labels.at<int>(i, j))++;
+			Vec3b color = temp.at<Vec3b>(Point(i, j));
+			spx_features.at(labels.at<int>(i, j)).at(0) += (int)color[0];
+			spx_features.at(labels.at<int>(i, j)).at(1) += (int)color[1];
+			spx_features.at(labels.at<int>(i, j)).at(2) += (int)color[2]; 
+		}
+	}
+
+	for (int i = 0; i < number_of_spx; i++) {
+		spx_features.at(i).at(0) = spx_features.at(i).at(0) / spx_size.at(i);
+		spx_features.at(i).at(1) = spx_features.at(i).at(1) / spx_size.at(i);
+		spx_features.at(i).at(2) = spx_features.at(i).at(2) / spx_size.at(i);
+	}
+
+	return spx_features;	
+	*/
+}
+
 vector<vector<Point2d>> get_contour(Mat & crushed, vector<Point2d> & starting_pts) {
 	vector<vector<Point2d>> out;
 	for (int i = 0; i < starting_pts.size(); i++) {
@@ -125,6 +212,7 @@ static Ptr<BackgroundSubtractor> createBGSubtractorByName(const String& algoName
 
 int main()
 {
+	/*
 	cout << "Welcome to spx_demo, code to try out the SLIC segmentation method!" << endl;
 	cout << "Press any key to exit." << endl;
 
@@ -178,37 +266,50 @@ int main()
 	auto t2 = std::chrono::high_resolution_clock::now();
 	std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 
-	for (int i = 0; i < 1000; i = i + 30) {
-		cout << "for label " << i << " one method returns " << contours.at(i).size() << endl;
-		cout << "for label " << i << " the other methods returns " << get_one_contour(crushed, i).size() << endl;
-	}
-
 	cout << "Computation done!" << endl;
 
+	int number_of_spx = slic->getNumberOfSuperpixels();
+	float spx_features = get_features(img, labels, number_of_spx, 3);
+	float spx_varaince = get_variance(img, labels, 0);
+	*/
+	
+	// Playing with background segmentation
 
-	// Playing with background segmentation    
-	VideoCapture cap;
-	cap.open(0); //webcam
+	std::cout << "Using OpenCV version " << CV_VERSION << "\n" << std::endl;
+	std::cout << getBuildInformation();
 
-	Ptr<BackgroundSubtractor> bgfs = createBGSubtractorByName("GMG");	//"GMG","CNT","CNT","KNN","MOG","MOG","MOG2"
-	Mat frame, fgmask, segm;
+	VideoCapture capture("C:/Users/Adrian/Desktop/MVI_5482.avi");
+	if (!capture.isOpened()) {
+		std::cout << "cannot read video!\n";
+		return -1;
+	}
 
-	namedWindow("FG Segmentation", WINDOW_NORMAL);
+	Mat frame;
+	//namedWindow("frame");
+	namedWindow("foreground");
 
-	for (;;)
+	double rate = capture.get(CV_CAP_PROP_FPS);
+	int delay = 1000 / rate;
+
+	Ptr<BackgroundSubtractor> bgfs = createBGSubtractorByName("MOG");	
+	//KNN not that bad, MOG2 better, seems fast
+	//"GMG","CNT","CNT","KNN","MOG","MOG","MOG2"
+	Mat fgmask, segm;
+
+	while (true)
 	{
-		cap >> frame;
-		if (frame.empty())
+		if (!capture.read(frame)) {
 			break;
+		}
+		//imshow("frame", frame);
 
 		bgfs->apply(frame, fgmask);
-
 		frame.convertTo(segm, CV_8U, 0.5);
 		add(frame, Scalar(100, 100, 0), segm, fgmask);
 
-		imshow("FG Segmentation", segm);
+		imshow("foreground", segm);
 
-		int c = waitKey(30);
+		int c = waitKey(20);
 		if (c == 'q' || c == 'Q' || (c & 255) == 27)
 			break;
 	}
