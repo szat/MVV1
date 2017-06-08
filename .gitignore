@@ -61,3 +61,7 @@ user_debug.txt
 *.ilk
 *.vcxproj.filters
 *.deps
+
+# Video files
+*.mp4
+*.avi
