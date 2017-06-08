@@ -350,7 +350,11 @@ int danny_test() {
 	*/
 
 	// FLASH DETECTION
-	pair<int, int> flash_result = test_flash("dir", "path1", "path2");
+	string flash_dir = "../../data_store/flash/";
+	string flash_video_1 = "flash_1.MP4";
+	string flash_video_2 = "";
+
+	pair<int, int> flash_result = test_flash(flash_dir, flash_video_1, flash_video_2);
 	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
 	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 	return 0;
