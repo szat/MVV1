@@ -212,6 +212,21 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	*/
 
 	//Finding Contours
+	for (int i = 1; i < labels_in.rows - 1; i++) {
+		for (int j = 1; j < labels_in.cols - 1; j++) {
+			int id = labels_in.at<int>(i, j);
+			if (labels_in.at<int>(i - 1, j - 1) != id || labels_in.at<int>(i - 1, j) != id || labels_in.at<int>(i - 1, j + 1) != id ||
+				labels_in.at<int>(i, j - 1) != id || labels_in.at<int>(i, j + 1) != id ||
+				labels_in.at<int>(i + 1, j - 1) != id || labels_in.at<int>(i + 1, j) != id || labels_in.at<int>(i + 1, j + 1) != id)
+			{
+				Point contour_point;
+				contour_point.x += j;
+				contour_point.y += i;
+				contours_out.at(labels_in.at<int>(i, j)).push_back(contour_point);
+			}
+		}
+	}
+
 }
 
 int main()
@@ -251,21 +266,10 @@ int main()
 	Mat labels;
 	slic->getLabels(labels);
 
-	Mat only_contour = labels.clone();
-	for (int i = 1; i < only_contour.rows-1; i++) {
-		for (int j = 1; j < only_contour.cols-1; j++) {
-			int id = only_contour.at<int>(i, j);
-			if (labels.at<int>(i - 1, j - 1) != id || labels.at<int>(i - 1, j) != id || labels.at<int>(i - 1, j + 1) != id ||
-				labels.at<int>(i, j - 1) != id										 || labels.at<int>(i, j + 1) != id ||
-				labels.at<int>(i + 1, j - 1) != id || labels.at<int>(i + 1, j) != id || labels.at<int>(i + 1, j + 1) != id)
-			{	
-				only_contour.at<int>(i, j) = 0;
-			}
-		}
-	}
+
 
 	Mat label_viz = visualize_labels(labels);
-	Mat contour_viz = visualize_labels(only_contour);
+	
 		
 	int spx_nb = slic->getNumberOfSuperpixels();
 
@@ -273,9 +277,13 @@ int main()
 	vector<Point> centers_out;
 	vector<int> spx_sizes_out;
 	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
-	
-	circle(result, centers_out.at(853), 2, Scalar(0, 0, 255), 2,0);
 
+	/*
+	circle(result, centers_out.at(309), 2, Scalar(0, 255, 255), 2, 0);
+	for (int i = 0; i < contours_out.at(309).size(); i++) {
+		circle(result, contours_out.at(309).at(i), 1, Scalar(0, 0, 255), 1, 0);
+	}
+	*/
 
 	int width = labels.size().width;
 	int height = labels.size().height;
