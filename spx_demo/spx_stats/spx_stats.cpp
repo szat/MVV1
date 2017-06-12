@@ -291,7 +291,9 @@ int main()
 	double rate = capture.get(CV_CAP_PROP_FPS);
 	int delay = 1000 / rate;
 
-	Ptr<BackgroundSubtractor> bgfs = createBGSubtractorByName("MOG");	
+	Ptr<BackgroundSubtractor> bgfs = createBGSubtractorByName("MOG2");	
+	//in MOG2, 255 for foreground and 127 for shadow
+
 	//KNN not that bad, MOG2 better, seems fast
 	//"GMG","CNT","CNT","KNN","MOG","MOG","MOG2"
 	Mat fgmask, segm;
@@ -310,8 +312,9 @@ int main()
 		imshow("foreground", segm);
 
 		int c = waitKey(20);
-		if (c == 'q' || c == 'Q' || (c & 255) == 27)
+		if (c == 'q' || c == 'Q' || (c & 255) == 27) {
 			break;
+		}
 	}
 	
     return 0;

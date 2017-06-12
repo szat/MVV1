@@ -95,7 +95,6 @@ void reset_image(uchar3* input, int w, int h) {
 	input[i] = blank;
 }
 
-
 __global__
 void convert_uchar3_to_uchar4(uchar3 *input, uchar4 *output, int w, int h) {
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
