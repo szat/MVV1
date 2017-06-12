@@ -329,6 +329,15 @@ int main()
 
 	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
 
+	Mat img_viz = img.clone();
+	for (int i = 0; i < contours_out.size(); i++) {
+		for (int ii = 0; ii < contours_out.at(i).size(); ii++) {
+			int x = contours_out.at(i).at(ii).x;
+			int y = contours_out.at(i).at(ii).y;
+			Vec3b color; color[0] = 0; color[1] = 0; color[2] = 0;
+			img_viz.at<Vec3b>(y, x) = color;
+		}
+	}
 
 	/*
 	string img_file = "..\\data_store\\images\\david_1.jpg";
