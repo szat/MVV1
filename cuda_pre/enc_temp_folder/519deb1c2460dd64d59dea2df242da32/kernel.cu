@@ -300,7 +300,7 @@ int compute_and_save_spx(string img_file,  string spx_name) {
 int main()
 {
 	//Getting the label mask from segmentation
-	compute_and_save_spx("..\\data_store\\images\\david_1.jpg", "david_1.bin");
+	//compute_and_save_spx("..\\data_store\\images\\david_1.jpg", "david_1.bin");
 
 	string img_file = "..\\data_store\\images\\david_1.jpg";
 	Mat img;

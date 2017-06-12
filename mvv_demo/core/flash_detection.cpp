@@ -42,9 +42,10 @@ void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width,
 int get_flash_maxima(string video_path) {
 
 	VideoCapture capture(video_path); // open the default camera
-	if (!capture.isOpened())  // check if we succeeded
+	if (!capture.isOpened()) { // check if we succeeded
 		cout << "Error opening video" << endl;
 		return 0;
+	}
 
 	int width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
 	int height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
