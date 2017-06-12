@@ -244,15 +244,13 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	}
 }
 
-int compute_and_save_spx(string img_file,  string spx_name) {
-	Mat img = imread(img_file);
+int compute_and_save_spx(string img_path,  string save_path) {
+	Mat img = imread(img_path);
 	if (img.empty())
 	{
-		cout << "Could not open image..." << img_file << "\n";
+		cout << "Could not open image..." << img_path << "\n";
 		return -1;
 	}
-
-	string save_path = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/" + spx_name;
 
 	Mat converted;
 	cvtColor(img, converted, COLOR_BGR2HSV);
@@ -299,36 +297,38 @@ int compute_and_save_spx(string img_file,  string spx_name) {
 int main()
 {
 	//Getting the label mask from segmentation
-	compute_and_save_spx("..\\data_store\\images\\david_1.jpg", "david_1.bin");
+	string img_path = "..\\data_store\\images\\david_1.jpg";
+	string save_path = "..\\data_store\\spx\\david_1_spx.bin";
+	
+	//TOGGLE THIS, no catch code yet
+	//compute_and_save_spx(img_path, save_path);
 
-	string img_file = "..\\data_store\\images\\david_1.jpg";
 	Mat img;
+	int width = img.size().width;
+	int height = img.size().height;
+	int nb_px = width & height;
 
-	img = imread(img_file);
+	img = imread(img_path);
 	if (img.empty())
 	{
-		cout << "Could not open image..." << img_file << "\n";
+		cout << "Could not open image..." << img_path << "\n";
 		return -1;
 	}
-
-	int nb_px = img.rows * img.cols;
 	
-	short * spx_data_2 = read_short_array("C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/david_1.bin", nb_px);
+	short * spx_data = read_short_array(save_path, nb_px);
+	int spx_nb = spx_data[0] + 1;
 
-	Mat loaded = Mat(size(img), CV_16U, spx_data_2);
-
-	//Mat label_viz = visualize_labels_int(labels);
-	Mat loaded_viz = visualize_labels_short(loaded);
-
-	int spx_nb = (int)loaded.at<short>(0, 0)+1;
-
+	Mat labels = Mat(size(img), CV_16U, spx_data);
+	Mat labels_viz = visualize_labels_short(labels);
+	
 	cout << "biggest index " << spx_nb << endl;
 
 	vector<Contour> contours_out;
 	vector<Point> centers_out;
 	vector<int> spx_sizes_out;
 
-	get_spx_data(loaded, spx_nb, spx_sizes_out, centers_out, contours_out);
+	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
+
 
 	/*
 	string img_file = "..\\data_store\\images\\david_1.jpg";
