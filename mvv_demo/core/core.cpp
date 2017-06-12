@@ -324,11 +324,21 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 	cout << "done";
 }
 
+void flash_test() {
+	string flash_dir = "../../data_store/flash/";
+	string flash_video_1 = "flash_1.mp4";
+	string flash_video_2 = "flash_2.mp4";
+
+	pair<int, int> flash_result = get_flash_timing(flash_dir, flash_video_1, flash_video_2);
+	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
+	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
+}
+
 int danny_test() {
 	// MAIN CALCULATIONS
 	
 	// master function for constructing and saving a frame
-	/*
+	
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -339,7 +349,7 @@ int danny_test() {
 	//string img1_path = "david_1.jpg";
 	//string img2_path = "david_2.jpg";
 	save_frame_master(src_path_1, src_path_2);
-	*/
+	
 
 	// BACKGROUND MERGING
 	/*
@@ -348,16 +358,6 @@ int danny_test() {
 	string dst_path = "../../data_store/binary/background.bin";
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
-
-	// FLASH DETECTION
-	
-	string flash_dir = "../../data_store/flash/";
-	string flash_video_1 = "flash_1.mp4";
-	string flash_video_2 = "flash_2.mp4";
-
-	pair<int, int> flash_result = get_flash_timing(flash_dir, flash_video_1, flash_video_2);
-	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
-	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 	
 	return 0;
 }

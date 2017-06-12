@@ -14,6 +14,12 @@ using namespace cv;
 
 
 int calculate_intensity_maxima(vector<float> intensity) {
+	/*
+	Takes an input of per-frame intensity and returns the index
+	at which the greatest step difference occurs. We will have to
+	do some testing, but this seems like a decently reliable way
+	of figuring out where the flash occurs.
+	*/
 	int len = intensity.size();
 	float max_diff = 0;
 	int max_diff_index = 0;
@@ -24,6 +30,8 @@ int calculate_intensity_maxima(vector<float> intensity) {
 			max_diff_index = i + 1;
 		}
 	}
+	cout << "Max diff: " << max_diff << endl;
+	cout << "Max frame: " << max_diff_index << endl;
 
 	return max_diff_index;
 }
@@ -31,16 +39,16 @@ int calculate_intensity_maxima(vector<float> intensity) {
 void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width, int height) {
 	Mat intensity_frame;
 	cvtColor(frame, intensity_frame, CV_BGR2Lab);
+	// Here the CIELAB color space is used, with the Luminosity
+	// channel being taken as the 'intensity' of the frame.
 	Mat channels[3];
 	split(intensity_frame, channels);
 	Scalar intensity_average = mean(channels[0]);
-	cout << intensity_average << endl;
 	float intensity = intensity_average[0, 0];
 	intensity_values.push_back(intensity);
 }
 
 int get_flash_maxima(string video_path) {
-
 	VideoCapture capture(video_path); // open the default camera
 	if (!capture.isOpened()) { // check if we succeeded
 		cout << "Error opening video" << endl;
@@ -50,23 +58,20 @@ int get_flash_maxima(string video_path) {
 	int width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
 	int height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-	namedWindow("frame", 1);
 	vector<float> intensity = vector<float>();
 	Mat frame;
 	for (;;)
 	{
 		if (!capture.read(frame)) {
-			cout << "Error reading frame";
-			return 0;
+			cout << "Error reading frame" << endl;
+			break;
 		}
 		get_frame_intensity(frame, intensity, width, height);
-		//if (waitKey(30) >= 0) break;
 	}
 
 	int flash_frame = calculate_intensity_maxima(intensity);
 	return flash_frame;
 }
-
 
 pair<int,int> get_flash_timing(string video_directory, string video_path_1, string video_path_2) {
 	pair<int, int> maxima_timing = pair<int, int>(0, 0);

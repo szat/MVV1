@@ -117,7 +117,6 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	}
 	*/
 
-
 	//if a center is not in the spx it represents, find a near representative
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
