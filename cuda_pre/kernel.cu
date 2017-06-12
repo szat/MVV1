@@ -329,6 +329,7 @@ int main()
 
 	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
 
+	//To draw all the spx boundaries
 	Mat img_viz = img.clone();
 	for (int i = 0; i < contours_out.size(); i++) {
 		for (int ii = 0; ii < contours_out.at(i).size(); ii++) {
@@ -339,85 +340,18 @@ int main()
 		}
 	}
 
-	/*
-	string img_file = "..\\data_store\\images\\david_1.jpg";
-	Mat img;
-
-	img = imread(img_file);
-	if (img.empty())
-	{
-		cout << "Could not open image..." << img_file << "\n";
-		return -1;
+	//To visualize a single spx
+	int spx_id = 800;
+	circle(img_viz, centers_out.at(spx_id), 2, Scalar(0, 0, 255), 1, 0);
+	for (int ii = 0; ii < contours_out.at(spx_id).size(); ii++) {
+		int x = contours_out.at(spx_id).at(ii).x;
+		int y = contours_out.at(spx_id).at(ii).y;
+		Vec3b color; 
+		color[0] = 0; 
+		color[1] = 0; 
+		color[2] = 255;
+		img_viz.at<Vec3b>(y, x) = color;
 	}
-	
-	Mat converted;
-	cvtColor(img, converted, COLOR_BGR2HSV);
 
-	int algorithm = 0;
-	int region_size = 25;
-	int ruler = 45;
-	int min_element_size = 50;
-	int num_iterations = 6;
-
-	cout << "New computation!" << endl;
-
-	Ptr<SuperpixelSLIC> slic = createSuperpixelSLIC(converted, algorithm + SLIC, region_size, float(ruler));
-	slic->iterate(num_iterations);
-	if (min_element_size > 0) 	slic->enforceLabelConnectivity(min_element_size);
-
-	Mat result, mask;
-	result = img.clone();
-	slic->getLabelContourMask(mask, true);
-
-	result.setTo(Scalar(0, 255, 0), mask);
-
-	Mat labels;
-	slic->getLabels(labels);
-
-	Mat labels_short;
-
-	labels.convertTo(labels_short, CV_16U);
-	Mat labels_flat = labels_short.reshape(1, 1);
-	int nb_px = labels_short.rows  * labels_short.cols;
-
-	short* spx_data = reinterpret_cast<short*>(labels_flat.data);
-	write_short_array("C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/spx_1.bin", spx_data, nb_px);
-
-	short * spx_data_2 = read_short_array("C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/spx_1.bin", nb_px);
-
-	Mat loaded = Mat(size(labels), CV_16U, spx_data_2); 
-
-	Mat label_viz = visualize_labels_int(labels);
-	Mat loaded_viz = visualize_labels_short(loaded);
-		
-	int spx_nb = slic->getNumberOfSuperpixels();
-
-	cout << "number of superpixels" << spx_nb;
-	double min, max;
-	cv::minMaxLoc(loaded, &min, &max);
-	cout << "max " << max << endl;
-	cout << "min" << min << endl;
-
-	vector<Contour> contours_out;
-	vector<Point> centers_out;
-	vector<int> spx_sizes_out;
-	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
-
-	*/
-
-	/*
-	circle(result, centers_out.at(309), 2, Scalar(0, 255, 255), 2, 0);
-	for (int i = 0; i < contours_out.at(309).size(); i++) {
-		circle(result, contours_out.at(309).at(i), 1, Scalar(0, 0, 255), 1, 0);
-	}
-	*/
-
-	/*
-	int width = labels.size().width;
-	int height = labels.size().height;
-
-	int memsize = width * height * sizeof(int);
-
-	*/
     return 0;
 }
