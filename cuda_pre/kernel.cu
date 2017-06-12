@@ -13,6 +13,9 @@
 #include <string>
 #include <queue>
 
+#include <binary_read.h>
+#include <binary_write.h>
+
 using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
@@ -42,7 +45,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     c[i] = a[i] + b[i];
 }
 
-Mat visualize_labels(Mat labels) {
+Mat visualize_labels_int(Mat labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
 
 	int width = labels.size().width;
@@ -51,6 +54,20 @@ Mat visualize_labels(Mat labels) {
 			label_viz.at<Vec3b>(i, j)[0] = labels.at<int>(i, j) % 255;
 			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j) - labels.at<int>(i, j) % 255;
 			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j) / 2 % 255;
+		}
+	}
+	return label_viz;
+}
+
+Mat visualize_labels_short(Mat labels) {
+	Mat label_viz(labels.size(), CV_8UC3);
+
+	int width = labels.size().width;
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			label_viz.at<Vec3b>(i, j)[0] = labels.at<short>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<short>(i, j) - labels.at<short>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<short>(i, j) / 2 % 255;
 		}
 	}
 	return label_viz;
@@ -77,7 +94,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	//A center is an average of the positions of the pixels for a label
 	for (int i = 0; i < labels_in.rows; i++) {
 		for (int j = 0; j < labels_in.cols; j++) {
-			int id = labels_in.at<int>(i, j);
+			int id = labels_in.at<short>(i, j);
 			sizes_out.at(id)++;
 			//This is correct, double checked
 			centers_out.at(id).x += j;
@@ -94,18 +111,17 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
 		}
 	}
 	*/
 
-
 	//if a center is not in the spx it represents, find a near representative
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			Point new_center;
 			int ray = (int)sqrt((float)sizes_out.at(i));
 			int rows = labels_in.rows;
@@ -115,7 +131,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				int new_row = row - j;
 				int new_col = col - j;			
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -126,7 +142,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row;
 				new_col = col - j;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -136,7 +152,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col - j;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -147,7 +163,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row - 1;
 				new_col = col;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -157,7 +173,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -168,7 +184,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row - 1;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -179,7 +195,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -190,7 +206,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -205,7 +221,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
 		}
 	}
@@ -214,34 +230,28 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	//Finding Contours
 	for (int i = 1; i < labels_in.rows - 1; i++) {
 		for (int j = 1; j < labels_in.cols - 1; j++) {
-			int id = labels_in.at<int>(i, j);
-			if (labels_in.at<int>(i - 1, j - 1) != id || labels_in.at<int>(i - 1, j) != id || labels_in.at<int>(i - 1, j + 1) != id ||
-				labels_in.at<int>(i, j - 1) != id || labels_in.at<int>(i, j + 1) != id ||
-				labels_in.at<int>(i + 1, j - 1) != id || labels_in.at<int>(i + 1, j) != id || labels_in.at<int>(i + 1, j + 1) != id)
+			int id = labels_in.at<short>(i, j);
+			if (labels_in.at<short>(i - 1, j - 1) != id || labels_in.at<short>(i - 1, j) != id || labels_in.at<short>(i - 1, j + 1) != id ||
+				labels_in.at<short>(i, j - 1) != id || labels_in.at<short>(i, j + 1) != id ||
+				labels_in.at<short>(i + 1, j - 1) != id || labels_in.at<short>(i + 1, j) != id || labels_in.at<short>(i + 1, j + 1) != id)
 			{
 				Point contour_point;
 				contour_point.x += j;
 				contour_point.y += i;
-				contours_out.at(labels_in.at<int>(i, j)).push_back(contour_point);
+				contours_out.at(labels_in.at<short>(i, j)).push_back(contour_point);
 			}
 		}
 	}
-
 }
 
-int main()
-{
-	//Getting the label mask from segmentation
-	string img_file = "..\\data_store\\images\\david_1.jpg";
-	Mat img;
-
-	img = imread(img_file);
+int compute_and_save_spx(string img_path,  string save_path) {
+	Mat img = imread(img_path);
 	if (img.empty())
 	{
-		cout << "Could not open image..." << img_file << "\n";
+		cout << "Could not open image..." << img_path << "\n";
 		return -1;
 	}
-	
+
 	Mat converted;
 	cvtColor(img, converted, COLOR_BGR2HSV);
 
@@ -257,38 +267,91 @@ int main()
 	slic->iterate(num_iterations);
 	if (min_element_size > 0) 	slic->enforceLabelConnectivity(min_element_size);
 
-	Mat result, mask;
-	result = img.clone();
-	slic->getLabelContourMask(mask, true);
-
-	result.setTo(Scalar(0, 255, 0), mask);
+	//Mat mask;
+	//slic->getLabelContourMask(mask, true);
 
 	Mat labels;
 	slic->getLabels(labels);
 
-
-
-	Mat label_viz = visualize_labels(labels);
-	
-		
 	int spx_nb = slic->getNumberOfSuperpixels();
+
+	//The biggest ID of superpixel will be spx_nb-1, swap that one with the superpixel at position (0,0)
+	
+	labels.setTo(spx_nb + 1, labels == spx_nb - 1);
+	int temp = labels.at<int>(0, 0);
+	labels.setTo(spx_nb - 1, labels == labels.at<int>(0, 0));
+	labels.setTo(temp, labels == spx_nb + 1);
+
+	Mat labels_short;
+
+	labels.convertTo(labels_short, CV_16U);
+	Mat labels_flat = labels_short.reshape(1, 1);
+	int nb_px = labels_short.rows  * labels_short.cols;
+
+	short* spx_data = reinterpret_cast<short*>(labels_flat.data);
+	write_short_array(save_path, spx_data, nb_px);
+	
+	return 0;
+}
+
+int main()
+{
+	//Getting the label mask from segmentation
+	string img_path = "..\\data_store\\images\\david_1.jpg";
+	string save_path = "..\\data_store\\spx\\david_1_spx.bin";
+	
+	//TOGGLE THIS, no catch code yet
+	//compute_and_save_spx(img_path, save_path);
+
+	Mat img;
+	int width = img.size().width;
+	int height = img.size().height;
+	int nb_px = width & height;
+
+	img = imread(img_path);
+	if (img.empty())
+	{
+		cout << "Could not open image..." << img_path << "\n";
+		return -1;
+	}
+	
+	short * spx_data = read_short_array(save_path, nb_px);
+	int spx_nb = spx_data[0] + 1;
+
+	Mat labels = Mat(size(img), CV_16U, spx_data);
+	Mat labels_viz = visualize_labels_short(labels);
+	
+	cout << "biggest index " << spx_nb << endl;
 
 	vector<Contour> contours_out;
 	vector<Point> centers_out;
 	vector<int> spx_sizes_out;
+
 	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
 
-	/*
-	circle(result, centers_out.at(309), 2, Scalar(0, 255, 255), 2, 0);
-	for (int i = 0; i < contours_out.at(309).size(); i++) {
-		circle(result, contours_out.at(309).at(i), 1, Scalar(0, 0, 255), 1, 0);
+	//To draw all the spx boundaries
+	Mat img_viz = img.clone();
+	for (int i = 0; i < contours_out.size(); i++) {
+		for (int ii = 0; ii < contours_out.at(i).size(); ii++) {
+			int x = contours_out.at(i).at(ii).x;
+			int y = contours_out.at(i).at(ii).y;
+			Vec3b color; color[0] = 0; color[1] = 0; color[2] = 0;
+			img_viz.at<Vec3b>(y, x) = color;
+		}
 	}
-	*/
 
-	int width = labels.size().width;
-	int height = labels.size().height;
-
-	int memsize = width * height * sizeof(int);
+	//To visualize a single spx
+	int spx_id = 800;
+	circle(img_viz, centers_out.at(spx_id), 2, Scalar(0, 0, 255), 1, 0);
+	for (int ii = 0; ii < contours_out.at(spx_id).size(); ii++) {
+		int x = contours_out.at(spx_id).at(ii).x;
+		int y = contours_out.at(spx_id).at(ii).y;
+		Vec3b color; 
+		color[0] = 0; 
+		color[1] = 0; 
+		color[2] = 255;
+		img_viz.at<Vec3b>(y, x) = color;
+	}
 
     return 0;
 }
