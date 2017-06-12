@@ -94,7 +94,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	//A center is an average of the positions of the pixels for a label
 	for (int i = 0; i < labels_in.rows; i++) {
 		for (int j = 0; j < labels_in.cols; j++) {
-			int id = labels_in.at<int>(i, j);
+			int id = labels_in.at<short>(i, j);
 			sizes_out.at(id)++;
 			//This is correct, double checked
 			centers_out.at(id).x += j;
@@ -111,7 +111,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
 		}
 	}
@@ -121,7 +121,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			Point new_center;
 			int ray = (int)sqrt((float)sizes_out.at(i));
 			int rows = labels_in.rows;
@@ -131,7 +131,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				int new_row = row - j;
 				int new_col = col - j;			
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -142,7 +142,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row;
 				new_col = col - j;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -152,7 +152,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col - j;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -163,7 +163,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row - 1;
 				new_col = col;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -173,7 +173,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -184,7 +184,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row - 1;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -195,7 +195,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -206,7 +206,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 				new_row = row + 1;
 				new_col = col + 1;
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
-					if (i == labels_in.at<int>(new_row, new_col)) {
+					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
 						new_center.y = new_row;
 						centers_out.at(i) = new_center;
@@ -221,7 +221,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	for (int i = 0; i < spx_nb_in; i++) {
 		int col = centers_out.at(i).x;
 		int row = centers_out.at(i).y;
-		if (i != labels_in.at<int>(row, col)) {
+		if (i != labels_in.at<short>(row, col)) {
 			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
 		}
 	}
@@ -230,15 +230,15 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	//Finding Contours
 	for (int i = 1; i < labels_in.rows - 1; i++) {
 		for (int j = 1; j < labels_in.cols - 1; j++) {
-			int id = labels_in.at<int>(i, j);
-			if (labels_in.at<int>(i - 1, j - 1) != id || labels_in.at<int>(i - 1, j) != id || labels_in.at<int>(i - 1, j + 1) != id ||
-				labels_in.at<int>(i, j - 1) != id || labels_in.at<int>(i, j + 1) != id ||
-				labels_in.at<int>(i + 1, j - 1) != id || labels_in.at<int>(i + 1, j) != id || labels_in.at<int>(i + 1, j + 1) != id)
+			int id = labels_in.at<short>(i, j);
+			if (labels_in.at<short>(i - 1, j - 1) != id || labels_in.at<short>(i - 1, j) != id || labels_in.at<short>(i - 1, j + 1) != id ||
+				labels_in.at<short>(i, j - 1) != id || labels_in.at<short>(i, j + 1) != id ||
+				labels_in.at<short>(i + 1, j - 1) != id || labels_in.at<short>(i + 1, j) != id || labels_in.at<short>(i + 1, j + 1) != id)
 			{
 				Point contour_point;
 				contour_point.x += j;
 				contour_point.y += i;
-				contours_out.at(labels_in.at<int>(i, j)).push_back(contour_point);
+				contours_out.at(labels_in.at<short>(i, j)).push_back(contour_point);
 			}
 		}
 	}
