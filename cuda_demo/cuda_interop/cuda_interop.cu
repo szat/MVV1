@@ -383,9 +383,9 @@ int main(int argc, char **argv)
 		auto t1 = std::chrono::high_resolution_clock::now();
 		string img_path_1 = "../../data_store/binary/david_1.bin";
 		string img_path_2 = "../../data_store/binary/david_2.bin";
-		string raster1_path = "../../data_store/raster/rasterA_david.bin";
-		string raster2_path = "../../data_store/raster/rasterB_david.bin";
-		string affine_path = "../../data_store/affine/affine_david.bin";
+		string raster1_path = "../../data_store/raster/rasterA.bin";
+		string raster2_path = "../../data_store/raster/rasterB.bin";
+		string affine_path = "../../data_store/affine/affine_1.bin";
 
 		// BINARY IMAGE READ
 		int length_1 = 0;
@@ -471,7 +471,7 @@ int main(int argc, char **argv)
 		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
 		cout << "Post-processing pixel OOB: " << h_error_tracker[2] << endl;
 		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << "ns" << endl;
+		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 	}
 
 	cudaFree(d_in_1);
