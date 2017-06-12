@@ -13,6 +13,9 @@
 #include <string>
 #include <queue>
 
+#include <binary_read.h>
+#include <binary_write.h>
+
 using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
@@ -42,7 +45,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     c[i] = a[i] + b[i];
 }
 
-Mat visualize_labels(Mat labels) {
+Mat visualize_labels_int(Mat labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
 
 	int width = labels.size().width;
@@ -51,6 +54,20 @@ Mat visualize_labels(Mat labels) {
 			label_viz.at<Vec3b>(i, j)[0] = labels.at<int>(i, j) % 255;
 			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j) - labels.at<int>(i, j) % 255;
 			label_viz.at<Vec3b>(i, j)[1] = labels.at<int>(i, j) / 2 % 255;
+		}
+	}
+	return label_viz;
+}
+
+Mat visualize_labels_short(Mat labels) {
+	Mat label_viz(labels.size(), CV_8UC3);
+
+	int width = labels.size().width;
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			label_viz.at<Vec3b>(i, j)[0] = labels.at<short>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<short>(i, j) - labels.at<short>(i, j) % 255;
+			label_viz.at<Vec3b>(i, j)[1] = labels.at<short>(i, j) / 2 % 255;
 		}
 	}
 	return label_viz;
@@ -229,6 +246,32 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 
 }
 
+int compute_and_save_spx(string img_file,  string spx_name) {
+	Mat img = imread(img_file);
+	if (img.empty())
+	{
+		cout << "Could not open image..." << img_file << "\n";
+		return -1;
+	}
+
+	string save_path = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/" + spx_name;
+
+	Mat converted;
+	cvtColor(img, converted, COLOR_BGR2HSV);
+
+	int algorithm = 0;
+	int region_size = 25;
+	int ruler = 45;
+	int min_element_size = 50;
+	int num_iterations = 6;
+
+	cout << "New computation!" << endl;
+
+	Ptr<SuperpixelSLIC> slic = createSuperpixelSLIC(converted, algorithm + SLIC, region_size, float(ruler));
+	slic->iterate(num_iterations);
+	if (min_element_size > 0) 	slic->enforceLabelConnectivity(min_element_size);
+}
+
 int main()
 {
 	//Getting the label mask from segmentation
@@ -266,10 +309,22 @@ int main()
 	Mat labels;
 	slic->getLabels(labels);
 
+	Mat labels_short;
+
+	labels.convertTo(labels_short, CV_16U);
+	Mat labels_flat = labels_short.reshape(1, 1);
+	int nb_px = labels_short.rows  * labels_short.cols;
+
+	short* spx_data = reinterpret_cast<short*>(labels_flat.data);
+	write_short_array("C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/spx_1.bin", spx_data, nb_px);
+
+	short * spx_data_2 = read_short_array("C:/Users/Adrian/Documents/GitHub/mvv/data_store/spx/spx_1.bin", nb_px);
+
+	Mat loaded = Mat(size(labels), CV_16U, spx_data_2); 
 
 
-	Mat label_viz = visualize_labels(labels);
-	
+	Mat label_viz = visualize_labels_int(labels);
+	Mat loaded_viz = visualize_labels_short(loaded);
 		
 	int spx_nb = slic->getNumberOfSuperpixels();
 
