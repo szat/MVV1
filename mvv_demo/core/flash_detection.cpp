@@ -24,6 +24,8 @@ int calculate_intensity_maxima(vector<float> intensity) {
 			max_diff_index = i + 1;
 		}
 	}
+	cout << "Max diff: " << max_diff << endl;
+	cout << "Max frame: " << max_diff_index << endl;
 
 	return max_diff_index;
 }
@@ -34,17 +36,16 @@ void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width,
 	Mat channels[3];
 	split(intensity_frame, channels);
 	Scalar intensity_average = mean(channels[0]);
-	cout << intensity_average << endl;
 	float intensity = intensity_average[0, 0];
 	intensity_values.push_back(intensity);
 }
 
 int get_flash_maxima(string video_path) {
-
 	VideoCapture capture(video_path); // open the default camera
-	if (!capture.isOpened())  // check if we succeeded
+	if (!capture.isOpened()) {  // check if we succeeded
 		cout << "Error opening video" << endl;
 		return 0;
+	}
 
 	int width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
 	int height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -56,7 +57,7 @@ int get_flash_maxima(string video_path) {
 	{
 		if (!capture.read(frame)) {
 			cout << "Error reading frame";
-			return 0;
+			break;
 		}
 		get_frame_intensity(frame, intensity, width, height);
 		//if (waitKey(30) >= 0) break;
