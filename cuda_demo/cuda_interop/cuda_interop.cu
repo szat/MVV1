@@ -1,4 +1,7 @@
-// includes, system
+// The following line starts the program without a console window.
+// Comment this out when you want to debug the application.
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +25,6 @@
 using namespace std;
 
 #define REFRESH_DELAY     2 //ms
-#define RELEASE_MODE true
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
@@ -286,14 +288,7 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 
 int main(int argc, char **argv)
 {
-	FreeConsole();
 	cout << "Program startup" << endl;
-	if (RELEASE_MODE) {
-		cout << "NDim is in release mode" << endl;
-	}
-	else {
-		cout << "NDim is in debug mode" << endl;
-	}
 	// should be preloaded from a video config file
 	int width = 667;
 	int height = 1000;
