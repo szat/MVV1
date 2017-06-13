@@ -7,6 +7,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/ximgproc.hpp>
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
 
 #include <stdio.h>
 #include <iostream>
@@ -20,6 +22,7 @@
 #include <AKAZEConfig.h>
 //#include "cuda_akaze.h"
 #include "cudautils.h"
+#include <cuda_profiler_api.h>
 
 using namespace std;
 using namespace cv;
@@ -239,7 +242,7 @@ int compute_and_save_spx(string img_path, string save_path) {
 	int region_size = 25;
 	int ruler = 45;
 	int min_element_size = 50;
-	int num_iterations = 6;
+	int num_iterations = 8;
 
 	cout << "New computation!" << endl;
 
@@ -277,8 +280,8 @@ int compute_and_save_spx(string img_path, string save_path) {
 int main()
 {
 	//Getting the label mask from segmentation
-	string img_path = "..\\data_store\\images\\david_1.jpg";
-	string save_path = "..\\data_store\\spx\\david_1_spx.bin";
+	string img_path = "..\\data_store\\images\\c1_img_000177.png";
+	string save_path = "..\\data_store\\spx\\c1_img_000177_spx.bin";
 
 	//TOGGLE THIS, no catch code yet
 	//compute_and_save_spx(img_path, save_path);
@@ -332,6 +335,22 @@ int main()
 		color[2] = 255;
 		img_viz.at<Vec3b>(y, x) = color;
 	}
+
+	//Clustering code, we will attempt to group superpixels that belong to each other color wise
+	//First convert the color space to Lab for instance, so that the luminosity can be ignored. 
+	//Second blur the image
+	//Do clustering, for instance K-means (could evventually use the gap statistic) or GMM/EM
+
+	//img is loaded, lets work with that
+	Mat img_hsl;
+	cvtColor(img, img_hsl, COLOR_BGR2HLS);
+	Mat img_hsl_float;
+	img_hsl.convertTo(img_hsl_float, CV_32F);
+	Mat hslChannels[3];
+	split(img_hsl_float, hslChannels);
+	Mat samples;
+	vconcat(hslChannels[0].reshape(1, 1), hslChannels[1].reshape(1, 1), samples);
+	samples = samples.t();
 
 	//AKAZE CODE
 	AKAZEOptions options;
@@ -388,12 +407,30 @@ int main()
 	options.img_height = img1.rows;
 	libAKAZECU::AKAZE evolution1(options);
 
-	//libAKAZECU::AKAZE evolution1(options);
-
 	// Create the second HKAZE object
 	options.img_width = img2.cols;
 	options.img_height = img2.rows;
-	//libAKAZECU::AKAZE evolution2(options);
+	libAKAZECU::AKAZE evolution2(options);
+
+	t1 = cv::getTickCount();
+
+	cudaProfilerStart();
+
+	evolution1.Create_Nonlinear_Scale_Space(img1_32);
+	evolution1.Feature_Detection(kpts1);
+	evolution1.Compute_Descriptors(kpts1, desc1);
+
+	evolution2.Create_Nonlinear_Scale_Space(img2_32);
+	evolution2.Feature_Detection(kpts2);
+	evolution2.Compute_Descriptors(kpts2, desc2);
+
+	t2 = cv::getTickCount();
+	takaze = 1000.0*(t2 - t1) / cv::getTickFrequency();
+
+	// Show matching statistics
+	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
+	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
+	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
 
 	return 0;
 }
