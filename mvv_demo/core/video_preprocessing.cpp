@@ -1,4 +1,4 @@
-#include "flash_detection.h"
+#include "video_preprocessing.h"
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include "opencv2/objdetect.hpp"
@@ -84,4 +84,38 @@ pair<int,int> get_flash_timing(string video_directory, string video_path_1, stri
 
 	maxima_timing = pair<int, int>(flash_maxima_1, flash_maxima_2);
 	return maxima_timing;
+}
+
+void save_trimmed_videos(pair<int,int> flash_result, string input_dir, string output_dir, string input_1, string input_2, string output_1, string output_2) {
+	cout << "Trimming videos" << endl;
+	string input_path_1 = input_dir + input_1;
+	string input_path_2 = input_dir + input_2;
+	string output_path_1 = output_dir + output_1;
+	string output_path_2 = output_dir + output_2;
+
+	VideoCapture in_capture_1(input_path_1);
+	Mat img;
+
+	if (!in_capture_1.isOpened()) {  // check if we succeeded
+		cout << "Error opening video" << endl;
+	}
+
+	//CV_CAP_PROP_FRAME_COUNT
+
+
+	int width_1 = in_capture_1.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height_1 = in_capture_1.get(CV_CAP_PROP_FRAME_HEIGHT);
+	int length_1 = in_capture_1.get(CV_CAP_PROP_FRAME_COUNT);
+
+	VideoWriter out_capture_1(output_path_1, CV_FOURCC('D', 'I', 'V', 'X'), 30, Size(width_1, height_1));
+
+	while (true)
+	{
+		in_capture_1 >> img;
+		if (img.empty())
+			break;
+
+		out_capture_1.write(img);
+	}
+
 }

@@ -5,11 +5,8 @@
 #include <math.h>
 #include <ctime>
 
-#ifdef _WIN32
-#  define WINDOWS_LEAN_AND_MEAN
-#  define NOMINMAX
-#  include <windows.h>
-#endif
+#include <windows.h>
+
 
 // OpenGL Graphics includes
 #include <helper_gl.h>
@@ -25,6 +22,7 @@
 using namespace std;
 
 #define REFRESH_DELAY     2 //ms
+#define RELEASE_MODE true
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
@@ -286,9 +284,16 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	return coefficients;
 }
 
-
 int main(int argc, char **argv)
 {
+	FreeConsole();
+	cout << "Program startup" << endl;
+	if (RELEASE_MODE) {
+		cout << "NDim is in release mode" << endl;
+	}
+	else {
+		cout << "NDim is in debug mode" << endl;
+	}
 	// should be preloaded from a video config file
 	int width = 667;
 	int height = 1000;
