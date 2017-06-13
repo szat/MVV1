@@ -288,6 +288,9 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 
 int main(int argc, char **argv)
 {
+	int window_width = 1920;
+	int window_height = 1080;
+
 	cout << "Program startup" << endl;
 	// should be preloaded from a video config file
 	int width = 667;
@@ -327,7 +330,8 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
-	glutCreateWindow("bitmap");
+	glutCreateWindow("MVV Player v1.00");
+	glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
