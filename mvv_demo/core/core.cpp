@@ -345,7 +345,7 @@ int danny_test() {
 	// MAIN CALCULATIONS
 	
 	// master function for constructing and saving a frame
-	/*
+	
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -356,7 +356,7 @@ int danny_test() {
 	//string img1_path = "david_1.jpg";
 	//string img2_path = "david_2.jpg";
 	save_frame_master(src_path_1, src_path_2);
-	*/
+	
 
 	// BACKGROUND MERGING
 	/*
@@ -366,7 +366,7 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	video_preprocessing();
+	//video_preprocessing();
 
 	return 0;
 }
