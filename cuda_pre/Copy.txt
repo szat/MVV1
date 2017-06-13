@@ -17,7 +17,6 @@
 #include <binary_write.h>
 
 #include <AKAZE.h>
-#include <AKAZEConfig.h>
 //#include "cuda_akaze.h"
 #include "cudautils.h"
 
@@ -66,7 +65,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 		center.x = 0;
 		center.y = 0;
 		centers_out.push_back(center);
-
+		
 		Contour contour;
 		contours_out.push_back(contour);
 	}
@@ -89,11 +88,11 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 
 	/*
 	for (int i = 0; i < spx_nb_in; i++) {
-	int col = centers_out.at(i).x;
-	int row = centers_out.at(i).y;
-	if (i != labels_in.at<short>(row, col)) {
-	cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
-	}
+		int col = centers_out.at(i).x;
+		int row = centers_out.at(i).y;
+		if (i != labels_in.at<short>(row, col)) {
+			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
+		}
 	}
 	*/
 
@@ -109,7 +108,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 
 			for (int j = 0; j < ray; j++) {
 				int new_row = row - j;
-				int new_col = col - j;
+				int new_col = col - j;			
 				if (new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols) {
 					if (i == labels_in.at<short>(new_row, new_col)) {
 						new_center.x = new_col;
@@ -199,11 +198,11 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 
 	/*
 	for (int i = 0; i < spx_nb_in; i++) {
-	int col = centers_out.at(i).x;
-	int row = centers_out.at(i).y;
-	if (i != labels_in.at<short>(row, col)) {
-	cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
-	}
+		int col = centers_out.at(i).x;
+		int row = centers_out.at(i).y;
+		if (i != labels_in.at<short>(row, col)) {
+			cout << "spx " << i << " has center at (" << row << " , " << col << ")" << endl;
+		}
 	}
 	*/
 
@@ -224,7 +223,7 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	}
 }
 
-int compute_and_save_spx(string img_path, string save_path) {
+int compute_and_save_spx(string img_path,  string save_path) {
 	Mat img = imread(img_path);
 	if (img.empty())
 	{
@@ -256,7 +255,7 @@ int compute_and_save_spx(string img_path, string save_path) {
 	int spx_nb = slic->getNumberOfSuperpixels();
 
 	//The biggest ID of superpixel will be spx_nb-1, swap that one with the superpixel at position (0,0)
-
+	
 	labels.setTo(spx_nb + 1, labels == spx_nb - 1);
 	int temp = labels.at<int>(0, 0);
 	labels.setTo(spx_nb - 1, labels == labels.at<int>(0, 0));
@@ -270,7 +269,7 @@ int compute_and_save_spx(string img_path, string save_path) {
 
 	short* spx_data = reinterpret_cast<short*>(labels_flat.data);
 	write_short_array(save_path, spx_data, nb_px);
-
+	
 	return 0;
 }
 
@@ -279,7 +278,7 @@ int main()
 	//Getting the label mask from segmentation
 	string img_path = "..\\data_store\\images\\david_1.jpg";
 	string save_path = "..\\data_store\\spx\\david_1_spx.bin";
-
+	
 	//TOGGLE THIS, no catch code yet
 	//compute_and_save_spx(img_path, save_path);
 
@@ -294,13 +293,13 @@ int main()
 		cout << "Could not open image..." << img_path << "\n";
 		return -1;
 	}
-
+	
 	short * spx_data = read_short_array(save_path, nb_px);
 	int spx_nb = spx_data[0] + 1;
 
 	Mat labels = Mat(size(img), CV_16U, spx_data);
 	Mat labels_viz = visualize_labels_short(labels);
-
+	
 	cout << "biggest index " << spx_nb << endl;
 
 	vector<Contour> contours_out;
@@ -326,15 +325,15 @@ int main()
 	for (int ii = 0; ii < contours_out.at(spx_id).size(); ii++) {
 		int x = contours_out.at(spx_id).at(ii).x;
 		int y = contours_out.at(spx_id).at(ii).y;
-		Vec3b color;
-		color[0] = 0;
-		color[1] = 0;
+		Vec3b color; 
+		color[0] = 0; 
+		color[1] = 0; 
 		color[2] = 255;
 		img_viz.at<Vec3b>(y, x) = color;
 	}
 
 	//AKAZE CODE
-	AKAZEOptions options;
+	AKAZEOptions options = AKAZEOptions();
 	cv::Mat img1, img1_32, img2, img2_32, img1_rgb, img2_rgb, img_com, img_r;
 	string img_path1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_1.jpg";
 	string img_path2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_2.jpg";
@@ -388,12 +387,10 @@ int main()
 	options.img_height = img1.rows;
 	libAKAZECU::AKAZE evolution1(options);
 
-	//libAKAZECU::AKAZE evolution1(options);
-
 	// Create the second HKAZE object
 	options.img_width = img2.cols;
 	options.img_height = img2.rows;
 	//libAKAZECU::AKAZE evolution2(options);
 
-	return 0;
+    return 0;
 }
