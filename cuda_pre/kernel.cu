@@ -2,6 +2,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -9,6 +10,8 @@
 #include <opencv2/ximgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
+#include <opencv2/ml.hpp>
+#include <opencv2/ml/ml.hpp>
 
 #include <stdio.h>
 #include <iostream>
@@ -27,6 +30,7 @@
 using namespace std;
 using namespace cv;
 using namespace cv::ximgproc;
+using namespace ml;
 
 Mat visualize_labels_int(Mat labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
@@ -342,8 +346,10 @@ int main()
 	//Do clustering, for instance K-means (could evventually use the gap statistic) or GMM/EM
 
 	//img is loaded, lets work with that
+	cv::Mat small_img = cv::Mat(img, cv::Rect(0, 0, 20, 200)).clone();
+
 	Mat img_hsl;
-	cvtColor(img, img_hsl, COLOR_BGR2HLS);
+	cvtColor(small_img, img_hsl, COLOR_BGR2HLS);
 	Mat img_hsl_float;
 	img_hsl.convertTo(img_hsl_float, CV_32F);
 	Mat hslChannels[3];
@@ -351,6 +357,30 @@ int main()
 	Mat samples;
 	vconcat(hslChannels[0].reshape(1, 1), hslChannels[1].reshape(1, 1), samples);
 	samples = samples.t();
+	cout << "nb rows " << samples.rows << endl;
+	cout << "nb cols " << samples.cols << endl;
+	//k-means
+
+	Ptr<ml::EM> em = ml::EM::create();
+	bool status = em->isTrained();
+	status = em->trainEM(samples);
+	cout << "cluster number " << em->getClustersNumber() << endl;
+	status = em->isTrained();
+
+	//Ptr<SVM> svm = SVM::create();
+	//EMclassifier->trainEM(samples);
+
+	//Ptr<ml::TrainData> stuff = ml::TrainData::create();
+
+	//ml::EM classifier(5);
+
+	//ml::EM classifier;
+	//Ptr<ml::EM> ml::EM::create(const Params& params = Params())
+
+
+
+
+
 
 	//AKAZE CODE
 	AKAZEOptions options;
