@@ -12,19 +12,48 @@ having something that performs well and looks good.
 -video_context.cpp
 
 
+2 kernel files
+-loader_kernels
+-video_kernels
 
-
-
+You definitely can play video using openGL without needing cuda (total overkill for our
+purposes here), so we don't need to make use of cuda in the menu context.
 
 
 
 Technical/code considerations:
 ------------------------------
--persistant 
-
+-persistant video settings
 
 
 Design considerations:
 ----------------------
 
--3 
+LOADER CONTEXT:
+---------------
+-Currently, there is a bug where the screen flashes white for a split second befor glut
+resizes the display to fullscreen. If we could change this somehow to black, there would
+be no visual discontinuity.
+-The NDim company logo will appear, and then the logo will explode and fly into thousands of pieces that fly off the screen at various speeds. This effect will be accomplished
+using trianglulation and piecewise affine transforms. This loader will also be
+accompanied by a cool audio effect/music of some sort.
+
+
+MENU CONTEXT:
+-------------
+-The layout of the page will be four static tiles, each displaying an image.
+-When your mouse hovers over one of the images, it will start playing a precompiled
+video in a loop.
+-There will be an [x] button at the top right to exit the application.
+-Within the video context, there will be an additional [b] button to go back to the menu
+context.
+
+
+VIDEO CONTEXT:
+--------------
+-No options menu, volume/speed sliders will be at the bottom of the video page
+-There will be an [x] button at the top right to exit the application.
+-Within the video context, there will be an additional [b] button to go back to the menu
+context.
+
+

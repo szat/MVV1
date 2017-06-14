@@ -286,7 +286,6 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 }
 
 
-
 int main(int argc, char **argv)
 {
 	int window_width = 1920;
