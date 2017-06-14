@@ -243,9 +243,9 @@ int compute_and_save_spx(string img_path, string save_path) {
 	cvtColor(img, converted, COLOR_BGR2HSV);
 
 	int algorithm = 0;
-	int region_size = 25;
+	int region_size = 15;
 	int ruler = 45;
-	int min_element_size = 50;
+	int min_element_size = 20;
 	int num_iterations = 8;
 
 	cout << "New computation!" << endl;
@@ -279,6 +279,34 @@ int compute_and_save_spx(string img_path, string save_path) {
 	write_short_array(save_path, spx_data, nb_px);
 
 	return 0;
+}
+
+int get_spx_means(Mat & img, Mat & labels, int spx_nb, vector<int> & sizes_in, vector<float> & c0_mean_out, vector<float> & c1_mean_out, vector<float> & c2_mean_out) {
+	//Stupid init
+	for (int i = 0; i < spx_nb; i++) {
+		float mean = 0;
+		c0_mean_out.push_back(mean);
+		c1_mean_out.push_back(mean);
+		c2_mean_out.push_back(mean);
+	}
+
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			int id = labels.at<short>(i, j);
+			if (id < 0 || id > spx_nb) return -1;
+			else {
+				c0_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[0];
+				c1_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[1];
+				c2_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[2];
+			}
+		}
+	}
+	
+	for (int i = 0; i < spx_nb; i++) {
+		c0_mean_out.at(i) /= sizes_in.at(i);
+		c1_mean_out.at(i) /= sizes_in.at(i);
+		c2_mean_out.at(i) /= sizes_in.at(i);
+	}
 }
 
 int main()
@@ -346,41 +374,65 @@ int main()
 	//Do clustering, for instance K-means (could evventually use the gap statistic) or GMM/EM
 
 	//img is loaded, lets work with that
-	cv::Mat small_img = cv::Mat(img, cv::Rect(0, 0, 20, 200)).clone();
 
 	Mat img_hsl;
-	cvtColor(small_img, img_hsl, COLOR_BGR2HLS);
-	Mat img_hsl_float;
-	img_hsl.convertTo(img_hsl_float, CV_32F);
-	Mat hslChannels[3];
-	split(img_hsl_float, hslChannels);
+	cvtColor(img, img_hsl, COLOR_BGR2HLS);
+	
+	vector<float> c0_mean_out;
+	vector<float> c1_mean_out;
+	vector<float> c2_mean_out;
+
+	get_spx_means(img, labels, spx_nb, spx_sizes_out, c0_mean_out, c1_mean_out, c2_mean_out);
+
+	Mat c0_mat = Mat(c0_mean_out.size(), 1, CV_32FC1);
+	memcpy(c0_mat.data, c0_mean_out.data(), c0_mean_out.size() * sizeof(float));
+	Mat c1_mat = Mat(c1_mean_out.size(), 1, CV_32FC1);
+	memcpy(c1_mat.data, c1_mean_out.data(), c1_mean_out.size() * sizeof(float));
+	Mat c2_mat = Mat(c2_mean_out.size(), 1, CV_32FC1);
+	memcpy(c2_mat.data, c2_mean_out.data(), c2_mean_out.size() * sizeof(float));
+
 	Mat samples;
-	vconcat(hslChannels[0].reshape(1, 1), hslChannels[1].reshape(1, 1), samples);
-	samples = samples.t();
+	hconcat(c0_mat, c2_mat, samples);
+	
 	cout << "nb rows " << samples.rows << endl;
 	cout << "nb cols " << samples.cols << endl;
-	//k-means
 
+	//k-means
+	Mat best_labels;
+	Mat centers;
+	kmeans(samples, 10, best_labels, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers);
+	//best_labels is the classification 
+
+	vector<int> spx_labels;
+	spx_labels.assign((int*)best_labels.datastart, (int*)best_labels.dataend);
+
+	Mat img_viz2 = img.clone();
+	for (int c = 0; c < 10; c++) {
+		for (int p = 0; p < spx_labels.size(); p++) {
+			int id = spx_labels.at(p);
+			if (c == id) {
+				for (int ii = 0; ii < contours_out.at(p).size(); ii++) {
+					int x = contours_out.at(p).at(ii).x;
+					int y = contours_out.at(p).at(ii).y;
+					Vec3b color; color[0] = 20*c; color[1] = 10*c*c %255; color[2] = 5*c;
+					img_viz2.at<Vec3b>(y, x) = color;
+				}
+			}
+		}
+	}
+
+
+	//best_labels.at<int>(1, 10);
+
+	//GMM
+	/*
+	//20000 points still acceptable time
 	Ptr<ml::EM> em = ml::EM::create();
 	bool status = em->isTrained();
 	status = em->trainEM(samples);
 	cout << "cluster number " << em->getClustersNumber() << endl;
 	status = em->isTrained();
-
-	//Ptr<SVM> svm = SVM::create();
-	//EMclassifier->trainEM(samples);
-
-	//Ptr<ml::TrainData> stuff = ml::TrainData::create();
-
-	//ml::EM classifier(5);
-
-	//ml::EM classifier;
-	//Ptr<ml::EM> ml::EM::create(const Params& params = Params())
-
-
-
-
-
+	*/
 
 	//AKAZE CODE
 	AKAZEOptions options;
