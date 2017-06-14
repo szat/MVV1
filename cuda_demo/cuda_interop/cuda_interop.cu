@@ -23,6 +23,7 @@
 #include <cuda_gl_interop.h>
 #include <vector_types.h>
 #include "binary_read.h"
+#include "video_kernel.h"
 
 using namespace std;
 
@@ -78,24 +79,6 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 			}
 		}
 	}
-}
-
-
-__global__
-void reset_image(uchar3* input, int w, int h) {
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = (row * w + col);
-
-	// should not need to do this check if everything is good, must be an extra pixel
-	if (i >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
-
-	uchar3 blank = uchar3();
-	blank.x = 0;
-	blank.y = 0;
-	blank.z = 0;
-	input[i] = blank;
 }
 
 __global__
@@ -453,8 +436,10 @@ int main(int argc, char **argv)
 		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, true);
 
 		// deblur
-		reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
-		reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
+		my_cuda_func(gridSize, blockSize, d_out_1, width, height);
+		my_cuda_func(gridSize, blockSize, d_out_2, width, height);
+		//reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
+		//reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
 
 		cudaFree(d_affine_data);
 
