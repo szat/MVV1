@@ -11,7 +11,6 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/ml.hpp>
-#include <opencv2/ml/ml.hpp>
 
 #include <stdio.h>
 #include <iostream>
@@ -32,7 +31,11 @@ using namespace cv;
 using namespace cv::ximgproc;
 using namespace ml;
 
-Mat visualize_labels_int(Mat labels) {
+RNG rng(12345);
+
+typedef vector<Point> Contour;
+
+Mat visualize_labels_int(Mat & labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
 
 	int width = labels.size().width;
@@ -46,7 +49,7 @@ Mat visualize_labels_int(Mat labels) {
 	return label_viz;
 }
 
-Mat visualize_labels_short(Mat labels) {
+Mat visualize_labels_short(Mat & labels) {
 	Mat label_viz(labels.size(), CV_8UC3);
 
 	int width = labels.size().width;
@@ -60,9 +63,25 @@ Mat visualize_labels_short(Mat labels) {
 	return label_viz;
 }
 
-typedef vector<Point> Contour;
+Mat visualize_cluster(int cluster_id, Mat & image, vector<Contour> & contours, int spx_nb, vector<int> & spx_cluster_labels) {
+	Mat viz = image.clone();
+	Vec3b color;
+	color[0] = 255;
+	color[1] = 0;
+	color[2] = 255;
+	for (int i = 0; i < spx_nb; i++) {
+		if (cluster_id == spx_cluster_labels.at(i)) {
+			for (int j = 0; j < contours.at(i).size(); j++) {
+				int row = contours.at(i).at(j).y;
+				int col = contours.at(i).at(j).x;
+				viz.at<Vec3b>(row, col) = color;
+			}
+		}
+	}
+	return viz;
+}
 
-void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vector<Point> & centers_out, vector<Contour> & contours_out) {
+int get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vector<Point> & centers_out, vector<Contour> & contours_out) {
 	//Stupid init
 
 	for (int i = 0; i < spx_nb_in; i++) {
@@ -214,20 +233,49 @@ void get_spx_data(Mat & labels_in, int spx_nb_in, vector<int> & sizes_out, vecto
 	}
 	*/
 
-	//Finding Contours
-	for (int i = 1; i < labels_in.rows - 1; i++) {
-		for (int j = 1; j < labels_in.cols - 1; j++) {
-			int id = labels_in.at<short>(i, j);
-			if (labels_in.at<short>(i - 1, j - 1) != id || labels_in.at<short>(i - 1, j) != id || labels_in.at<short>(i - 1, j + 1) != id ||
-				labels_in.at<short>(i, j - 1) != id || labels_in.at<short>(i, j + 1) != id ||
-				labels_in.at<short>(i + 1, j - 1) != id || labels_in.at<short>(i + 1, j) != id || labels_in.at<short>(i + 1, j + 1) != id)
-			{
-				Point contour_point;
-				contour_point.x += j;
-				contour_point.y += i;
-				contours_out.at(labels_in.at<short>(i, j)).push_back(contour_point);
+//Finding Contours
+for (int i = 1; i < labels_in.rows - 1; i++) {
+	for (int j = 1; j < labels_in.cols - 1; j++) {
+		int id = labels_in.at<short>(i, j);
+		if (labels_in.at<short>(i - 1, j - 1) != id || labels_in.at<short>(i - 1, j) != id || labels_in.at<short>(i - 1, j + 1) != id ||
+			labels_in.at<short>(i, j - 1) != id || labels_in.at<short>(i, j + 1) != id ||
+			labels_in.at<short>(i + 1, j - 1) != id || labels_in.at<short>(i + 1, j) != id || labels_in.at<short>(i + 1, j + 1) != id)
+		{
+			Point contour_point;
+			contour_point.x += j;
+			contour_point.y += i;
+			contours_out.at(labels_in.at<short>(i, j)).push_back(contour_point);
+		}
+	}
+}
+return 0;
+}
+
+int get_spx_means(Mat & img, Mat & labels, int spx_nb, vector<int> & sizes_in, vector<float> & c0_mean_out, vector<float> & c1_mean_out, vector<float> & c2_mean_out) {
+	//Stupid init
+	for (int i = 0; i < spx_nb; i++) {
+		float mean = 0;
+		c0_mean_out.push_back(mean);
+		c1_mean_out.push_back(mean);
+		c2_mean_out.push_back(mean);
+	}
+
+	for (int i = 0; i < labels.rows; i++) {
+		for (int j = 0; j < labels.cols; j++) {
+			int id = labels.at<short>(i, j);
+			if (id < 0 || id > spx_nb) return -1;
+			else {
+				c0_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[0];
+				c1_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[1];
+				c2_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[2];
 			}
 		}
+	}
+
+	for (int i = 0; i < spx_nb; i++) {
+		c0_mean_out.at(i) /= sizes_in.at(i);
+		c1_mean_out.at(i) /= sizes_in.at(i);
+		c2_mean_out.at(i) /= sizes_in.at(i);
 	}
 }
 
@@ -281,34 +329,6 @@ int compute_and_save_spx(string img_path, string save_path) {
 	return 0;
 }
 
-int get_spx_means(Mat & img, Mat & labels, int spx_nb, vector<int> & sizes_in, vector<float> & c0_mean_out, vector<float> & c1_mean_out, vector<float> & c2_mean_out) {
-	//Stupid init
-	for (int i = 0; i < spx_nb; i++) {
-		float mean = 0;
-		c0_mean_out.push_back(mean);
-		c1_mean_out.push_back(mean);
-		c2_mean_out.push_back(mean);
-	}
-
-	for (int i = 0; i < labels.rows; i++) {
-		for (int j = 0; j < labels.cols; j++) {
-			int id = labels.at<short>(i, j);
-			if (id < 0 || id > spx_nb) return -1;
-			else {
-				c0_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[0];
-				c1_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[1];
-				c2_mean_out.at(id) += (float)img.at<Vec3b>(i, j)[2];
-			}
-		}
-	}
-	
-	for (int i = 0; i < spx_nb; i++) {
-		c0_mean_out.at(i) /= sizes_in.at(i);
-		c1_mean_out.at(i) /= sizes_in.at(i);
-		c2_mean_out.at(i) /= sizes_in.at(i);
-	}
-}
-
 int main()
 {
 	//Getting the label mask from segmentation
@@ -341,7 +361,6 @@ int main()
 	vector<Contour> contours_out;
 	vector<Point> centers_out;
 	vector<int> spx_sizes_out;
-
 	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
 
 	//To draw all the spx boundaries
@@ -421,7 +440,8 @@ int main()
 		}
 	}
 
-
+	Mat vix = visualize_cluster(7, img, contours_out, spx_nb, spx_labels);
+	
 	//best_labels.at<int>(1, 10);
 
 	//GMM
