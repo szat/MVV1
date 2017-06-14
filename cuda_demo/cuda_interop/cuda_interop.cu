@@ -1,3 +1,8 @@
+// The following line starts the program without a console window.
+// Comment this out when you want to debug the application.
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
+
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
@@ -333,6 +338,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
+	glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
