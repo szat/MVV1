@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,7 +9,6 @@
 #include <ctime>
 
 #include <windows.h>
-
 
 // OpenGL Graphics includes
 #include <helper_gl.h>
@@ -333,7 +332,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("MVV Player v1.00");
-	glutFullScreen();
+	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes

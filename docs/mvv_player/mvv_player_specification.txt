@@ -1,0 +1,30 @@
+One issue with using OpenGL directly for our graphical application is that there are 
+no presets that we can make use of.
+
+Basic idea: The application will be as simple as possible, so that we can focus on
+having something that performs well and looks good.
+
+3 application contexts:
+-----------------------
+
+-loader_context.cpp
+-menu_context.cpp
+-video_context.cpp
+
+
+
+
+
+
+
+
+Technical/code considerations:
+------------------------------
+-persistant 
+
+
+
+Design considerations:
+----------------------
+
+-3 

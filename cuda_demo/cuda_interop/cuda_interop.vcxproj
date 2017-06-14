@@ -75,7 +75,7 @@
     <LibraryPath>$(SolutionDir)..\libs\glew-2.0.0\lib\Release\x64;$(SolutionDir)..\libs\freeglut\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\libs\glew-2.0.0\include;$(SolutionDir)..\libs\freeglut\include;$(SolutionDir)..\libs\cuda\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\libs\glew-2.0.0\include;$(SolutionDir)..\libs\freeglut\include;$(SolutionDir)..\libs\cuda\include;$(ProjectDir)context;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\libs\glew-2.0.0\lib\Release\x64;$(SolutionDir)..\libs\freeglut\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -158,6 +158,16 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="cuda_interop.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="context\video_context.h" />
+    <ClInclude Include="context\loader_context.h" />
+    <ClInclude Include="context\menu_context.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="context\video_context.cpp" />
+    <ClCompile Include="context\loader_context.cpp" />
+    <ClCompile Include="context\menu_context.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
