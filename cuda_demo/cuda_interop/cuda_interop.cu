@@ -38,104 +38,6 @@ __device__ int counter;
 __device__ volatile int param = 50;
 
 
-__global__
-void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
-{
-	if (tau > 1 || tau < 0) return;
-
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int raster_index = (row * w + col);
-	//int color_index = raster_index * 3;
-
-
-	short affine_index = d_raster1[raster_index];
-	short offset = (affine_index - 1) * 12;
-	if (reverse) {
-		offset += 6;
-	}
-	if (affine_index != 0) {
-		// triangle indexes start at 1
-		float diff = 1 / (float)subDiv;
-		for (int i = 0; i < subDiv; i++) {
-			for (int j = 0; j < subDiv; j++) {
-				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
-				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
-				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) { 
-					return;
-				}
-				int new_i = new_r * w + new_c;
-				d_output[new_i] = d_input[raster_index];
-			}
-		}
-	}
-}
-
-__global__
-void convert_uchar3_to_uchar4(uchar3 *input, uchar4 *output, int w, int h) {
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int index = (row * w + col);
-
-	if (index >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
-
-	uchar4 new_uchar4 = uchar4();
-	new_uchar4.x = input[index].x;
-	new_uchar4.y = input[index].y;
-	new_uchar4.z = input[index].z;
-	output[index] = new_uchar4;
-}
-
-__global__
-void convert_uchar4_to_uchar3(uchar4 *input, uchar3 *output, int w, int h) {
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int index = (row * w + col);
-
-	if (index >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
-
-	uchar3 new_uchar3 = uchar3();
-	new_uchar3.x = input[index].x;
-	new_uchar3.y = input[index].y;
-	new_uchar3.z = input[index].z;
-	output[index] = new_uchar3;
-}
-
-__global__
-void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w, int h, float tau) {
-	//tau is from a to b
-	int col = blockIdx.x*blockDim.x + threadIdx.x;
-	int row = blockIdx.y*blockDim.y + threadIdx.y;
-	int raster_index = (row * w + col);
-
-	// should not need to do this check if everything is good, must be an extra pixel
-	if (raster_index >= w * h) return;
-	if ((row >= h) || (col >= w)) return;
-
-	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
-		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_2[raster_index].x;
-		new_uchar4.y = d_input_2[raster_index].y;
-		new_uchar4.z = d_input_2[raster_index].z;
-		d_output[raster_index] = new_uchar4;
-	}
-	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
-		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_1[raster_index].x;
-		new_uchar4.y = d_input_1[raster_index].y;
-		new_uchar4.z = d_input_1[raster_index].z;
-		d_output[raster_index] = new_uchar4;
-	}
-	else {
-		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
-		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
-		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
-	}
-}
-
-
 static void key_func(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
@@ -337,13 +239,8 @@ int main(int argc, char **argv)
 
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
-		float reverse_tau = 1.0f - tau;
-		int reversal_offset = 0;
-
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
-		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
-
+	
+		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
 		flip_image(gridSize, blockSize, d_render_final, width, height);
 		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
 		reset_canvas(gridSize, blockSize, d_out_1, width, height);
