@@ -135,53 +135,6 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 	}
 }
 
-__global__
-void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius, bool vertical) {
-	// map from threadIdx/BlockIdx to pixel position
-	int c = blockIdx.x*blockDim.x + threadIdx.x;
-	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int index = r * w + c;
-	if ((r >= h) || (c >= w)) return;
-
-	float gaussian_r = 0;
-	float gaussian_g = 0;
-	float gaussian_b = 0;
-
-	int min = -1 * blur_radius;
-	int max = blur_radius;
-
-	int box_width = 2 * blur_radius + 1;
-	int new_index = 0;
-
-	for (int i = min; i <= max; i++) {
-		// switch depending on the direction of the gaussian blur
-		if (vertical) {
-			new_index = index + i * w;
-		}
-		else {
-			new_index = index + i;
-		}
-
-		int coeff_index = i + blur_radius;
-		float coeff = d_blur_coeff[coeff_index];
-
-		gaussian_r = gaussian_r + coeff * d_render_final[new_index].x;
-		gaussian_g = gaussian_g + coeff * d_render_final[new_index].y;
-		gaussian_b = gaussian_b + coeff * d_render_final[new_index].z;
-
-		// this will cause light backgrounds to darken
-		// TODO: Fix this bug
-	}
-
-	// sync threads
-	__syncthreads();
-
-	uchar4 result = uchar4();
-	result.x = gaussian_r;
-	result.y = gaussian_g;
-	result.z = gaussian_b;
-	d_render_final[index] = result;
-}
 
 static void key_func(unsigned char key, int x, int y) {
 	switch (key) {
@@ -390,21 +343,11 @@ int main(int argc, char **argv)
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
 		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
-		//flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
+
 		flip_image(gridSize, blockSize, d_render_final, width, height);
-		
-		// horizontal and then vertical
-		// gaussian filters are separable into two 1D blur effects
-		// boolean flag indicates if the blur is vertical
-
-		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, false);
-		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, true);
-
-		// deblur
+		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
 		reset_canvas(gridSize, blockSize, d_out_1, width, height);
 		reset_canvas(gridSize, blockSize, d_out_2, width, height);
-		//reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
-		//reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
 
 		cudaFree(d_affine_data);
 
