@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 
 // includes, system
@@ -39,7 +39,7 @@ __device__ volatile int param = 50;
 
 
 __global__
-void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d_error_tracker, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
+void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w, int h, float * d_affineData, int subDiv, float tau, bool reverse)
 {
 	if (tau > 1 || tau < 0) return;
 
@@ -48,15 +48,6 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 	int raster_index = (row * w + col);
 	//int color_index = raster_index * 3;
 
-	// should not need to do this check if everything is good, must be an extra pixel
-	if (raster_index >= w * h) { 
-		d_error_tracker[0]++;
-		return;
-	}
-	if ((row >= h) || (col >= w)) {
-		d_error_tracker[1]++;
-		return;
-	}
 
 	short affine_index = d_raster1[raster_index];
 	short offset = (affine_index - 1) * 12;
@@ -71,7 +62,6 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int *d
 				int new_c = (int)(((1 - tau) + tau*d_affineData[offset]) * (float)(col - 0.5 + (diff * i)) + (tau * d_affineData[offset + 1]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 2]));
 				int new_r = (int)((tau * d_affineData[offset + 3]) * (float)(col - 0.5 + (diff * i)) + ((1 - tau) + tau * d_affineData[offset + 4]) * (float)(row - 0.5 + (diff * j)) + (tau * d_affineData[offset + 5]));
 				if ((new_r >= h) || (new_c >= w) || (new_r < 0) || (new_c < 0)) { 
-					d_error_tracker[2]++;
 					return;
 				}
 				int new_i = new_r * w + new_c;
@@ -193,24 +183,6 @@ void gaussian_blur(uchar4 *d_render_final, int w, int h, float *d_blur_coeff, in
 	d_render_final[index] = result;
 }
 
-
-__global__ void flip_y(uchar4 *ptr, int w, int h) {
-	// map from threadIdx/BlockIdx to pixel position
-	int c = blockIdx.x*blockDim.x + threadIdx.x;
-	int r = blockIdx.y*blockDim.y + threadIdx.y;
-	int i = r * w + c;
-	if ((r >= h) || (c >= w)) return;
-
-	// only flip top
-	if (r < h / 2) {
-		int diff = h - r;
-		int i_flip = diff * w + c;
-		uchar4 temp = ptr[i_flip];
-		ptr[i_flip] = ptr[i];
-		ptr[i] = temp;
-	}
-}
-
 static void key_func(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
@@ -274,7 +246,6 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 
 int main(int argc, char **argv)
 {
-	FreeConsole();
 	cout << "Program startup" << endl;
 	if (RELEASE_MODE) {
 		cout << "NDim is in release mode" << endl;
@@ -321,7 +292,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
-	glutFullScreen();
+	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
@@ -364,14 +335,6 @@ int main(int argc, char **argv)
 
 	uchar3 * d_out_2;
 	cudaMalloc((void**)&d_out_2, memsize_uchar3);
-
-	int * h_error_tracker = new int[3];
-	h_error_tracker[0] = 0;
-	h_error_tracker[1] = 0;
-	h_error_tracker[2] = 0;
-	int * d_error_tracker;
-	cudaMalloc((void**)&d_error_tracker, 3 * sizeof(int));
-	cudaMemcpy(d_error_tracker, h_error_tracker, 3 * sizeof(int), cudaMemcpyHostToDevice);
 
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
@@ -424,10 +387,12 @@ int main(int argc, char **argv)
 		float reverse_tau = 1.0f - tau;
 		int reversal_offset = 0;
 
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, d_error_tracker, width, height, d_affine_data, 4, tau, false);
-		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, d_error_tracker, width, height, d_affine_data, 4, reverse_tau, true);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_1, d_in_1, d_raster1, width, height, d_affine_data, 4, tau, false);
+		kernel2D_subpix << <gridSize, blockSize >> >(d_out_2, d_in_2, d_raster2, width, height, d_affine_data, 4, reverse_tau, true);
 		kernel2D_add << <gridSize, blockSize >> > (d_render_final, d_out_1, d_out_2, width, height, tau);
-		flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
+		//flip_y << < gridSize, blockSize >> >(d_render_final, width, height);
+		flip_image(gridSize, blockSize, d_render_final, width, height);
+		
 		// horizontal and then vertical
 		// gaussian filters are separable into two 1D blur effects
 		// boolean flag indicates if the blur is vertical
@@ -436,8 +401,8 @@ int main(int argc, char **argv)
 		gaussian_blur<< < gridSize, blockSize >> > (d_render_final, width, height, d_blur_coeff, blur_radius, true);
 
 		// deblur
-		my_cuda_func(gridSize, blockSize, d_out_1, width, height);
-		my_cuda_func(gridSize, blockSize, d_out_2, width, height);
+		reset_canvas(gridSize, blockSize, d_out_1, width, height);
+		reset_canvas(gridSize, blockSize, d_out_2, width, height);
 		//reset_image << <gridSize, blockSize >> > (d_out_1, width, height);
 		//reset_image << <gridSize, blockSize >> > (d_out_2, width, height);
 
@@ -462,10 +427,6 @@ int main(int argc, char **argv)
 		free(h_raster2);
 		free(h_affine_data);
 
-		cudaMemcpy(h_error_tracker, d_error_tracker, 3 * sizeof(int), cudaMemcpyDeviceToHost);
-		cout << "Raster index OOB: " << h_error_tracker[0] << endl;
-		cout << "Pre-processing pixel OOB: " << h_error_tracker[1] << endl;
-		cout << "Post-processing pixel OOB: " << h_error_tracker[2] << endl;
 		auto t2 = std::chrono::high_resolution_clock::now();
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 	}
