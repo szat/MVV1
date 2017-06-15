@@ -168,10 +168,10 @@ int display_video(int argc, char **argv)
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 	size_t  size;
 
-	dim3 blockSize(32, 32);
+	dim3 block_size(32, 32);
 	int bx = (width + 32 - 1) / 32;
 	int by = (height + 32 - 1) / 32;
-	dim3 gridSize = dim3(bx, by);
+	dim3 grid_size = dim3(bx, by);
 
 	int morphing_param = 0;
 
@@ -238,12 +238,12 @@ int display_video(int argc, char **argv)
 
 		float tau = (float)(morphing_param % 200) * 0.005f;
 
-	
-		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
-		flip_image(gridSize, blockSize, d_render_final, width, height);
-		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
-		reset_canvas(gridSize, blockSize, d_out_1, width, height);
-		reset_canvas(gridSize, blockSize, d_out_2, width, height);
+		// I really don't like this inconsistency here between the block and grid sizes.
+		interpolate_frame(grid_size, block_size, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
+		flip_image(grid_size, block_size, d_render_final, width, height);
+		gaussian_2D_blur(grid_size, block_size, d_render_final, width, height, d_blur_coeff, blur_radius);
+		reset_canvas(grid_size, block_size, d_out_1, width, height);
+		reset_canvas(grid_size, block_size, d_out_2, width, height);
 
 		cudaFree(d_affine_data);
 
@@ -288,6 +288,7 @@ int display_video(int argc, char **argv)
 int main(int argc, char **argv) {
 	// Initiate GLUT/OpenGL THEN show the loader
 	// Cuda device setup
+	/*
 	cudaDeviceProp  prop;
 	int dev;
 
@@ -335,7 +336,11 @@ int main(int argc, char **argv) {
 	int by = (height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
-	// 
+	// should load up a procomputed image, then in the for loop, explode it
+	// for now we'll just load up a solid blue color and then make it turn red
+
+	initialize_loader<<<blockSize, gridSize>>>
+
 
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
@@ -359,7 +364,7 @@ int main(int argc, char **argv) {
 	// set up GLUT and kick off main loop
 	glutMainLoop();
 
+	*/
 
-
-	//display_video(argc, argv);
+	display_video(argc, argv);
 }

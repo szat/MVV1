@@ -194,12 +194,12 @@ void interpolate_frame(dim3 grid_size, dim3 block_size, uchar3* d_out_1, uchar3*
 	kernel2D_add << <grid_size, block_size >> > (d_render_final, d_out_1, d_out_2, w, h, tau);
 }
 
-void reset_canvas(dim3 block_size, dim3 grid_size, uchar3* input, int w, int h) {
-	reset_image<< <block_size, grid_size>> >(input, w, h);
+void reset_canvas(dim3 grid_size, dim3 block_size, uchar3* input, int w, int h) {
+	reset_image<< <grid_size, block_size>> >(input, w, h);
 	cudaDeviceSynchronize();
 }
 
-void gaussian_2D_blur(dim3 block_size, dim3 grid_size, uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius) {
+void gaussian_2D_blur(dim3 grid_size, dim3 block_size, uchar4 *d_render_final, int w, int h, float *d_blur_coeff, int blur_radius) {
 	// 2d gaussian blur can be decoupled into X and Y
 	// horizontal blur first
 	gaussian_blur << < grid_size, block_size >> > (d_render_final, w, h, d_blur_coeff, blur_radius, false);
@@ -207,6 +207,6 @@ void gaussian_2D_blur(dim3 block_size, dim3 grid_size, uchar4 *d_render_final, i
 	gaussian_blur << < grid_size, block_size >> > (d_render_final, w, h, d_blur_coeff, blur_radius, true);
 }
 
-void flip_image(dim3 block_size, dim3 grid_size, uchar4 *ptr, int w, int h) {
-	flip_y << <block_size, grid_size >> > (ptr, w, h);
+void flip_image(dim3 grid_size, dim3 block_size, uchar4 *ptr, int w, int h) {
+	flip_y << <grid_size, block_size >> > (ptr, w, h);
 }
