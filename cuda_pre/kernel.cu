@@ -331,61 +331,147 @@ int compute_and_save_spx(string img_path, string save_path) {
 
 int main()
 {
-	//Getting the label mask from segmentation
-	string img_path = "..\\data_store\\images\\c1_img_000177.png";
-	string save_path = "..\\data_store\\spx\\c1_img_000177_spx.bin";
-
 	//TOGGLE THIS, no catch code yet
 	//compute_and_save_spx(img_path, save_path);
 
-	Mat img;
-	int width = img.size().width;
-	int height = img.size().height;
-	int nb_px = width & height;
-
-	img = imread(img_path);
-	if (img.empty())
+	//Getting the label mask from segmentation
+	string img_path_1 = "..\\data_store\\images\\c1_img_000177.png";
+	string save_path_1 = "..\\data_store\\spx\\c1_img_000177_spx.bin";
+	Mat img_1;
+	int width_1 = img_1.size().width;
+	int height_1 = img_1.size().height;
+	int nb_px_1 = width_1 & height_1;
+	img_1 = imread(img_path_1);
+	if (img_1.empty())
 	{
-		cout << "Could not open image..." << img_path << "\n";
+		cout << "Could not open image..." << img_path_1 << "\n";
 		return -1;
 	}
+	short * spx_data_1 = read_short_array(save_path_1, nb_px_1);
+	int spx_nb_1 = spx_data_1[0] + 1;
+	Mat labels_1 = Mat(size(img_1), CV_16U, spx_data_1);
 
-	short * spx_data = read_short_array(save_path, nb_px);
-	int spx_nb = spx_data[0] + 1;
 
-	Mat labels = Mat(size(img), CV_16U, spx_data);
-	Mat labels_viz = visualize_labels_short(labels);
+	string img_path_2 = "..\\data_store\\images\\c2_img_000177.png";
+	string save_path_2 = "..\\data_store\\spx\\c2_img_000177_spx.bin";
+	Mat img_2;
+	int width_2 = img_2.size().width;
+	int height_2 = img_2.size().height;
+	int nb_px_2 = width_2 & height_2;
+	img_2 = imread(img_path_2);
+	if (img_2.empty())
+	{
+		cout << "Could not open image..." << img_path_2 << "\n";
+		return -1;
+	}
+	short * spx_data_2 = read_short_array(save_path_2, nb_px_2);
+	int spx_nb_2 = spx_data_2[0] + 1;
+	Mat labels_2 = Mat(size(img_2), CV_16U, spx_data_2);
 
-	cout << "biggest index " << spx_nb << endl;
+	cout << "biggest index spx_nb_1 " << spx_nb_1 << endl;
+	cout << "biggest index spx_nb_2 " << spx_nb_2 << endl;
+
+	vector<Contour> contours_out_1;
+	vector<Point> centers_out_1;
+	vector<int> spx_sizes_out_1;
+	get_spx_data(labels_1, spx_nb_1, spx_sizes_out_1, centers_out_1, contours_out_1);
+	Mat img_hsl_1;
+	cvtColor(img_1, img_hsl_1, COLOR_BGR2HLS);
+	vector<float> c0_mean_out_1;
+	vector<float> c1_mean_out_1;
+	vector<float> c2_mean_out_1;
+	get_spx_means(img_1, labels_1, spx_nb_1, spx_sizes_out_1, c0_mean_out_1, c1_mean_out_1, c2_mean_out_1);
+	Mat c0_mat_1 = Mat(c0_mean_out_1.size(), 1, CV_32FC1);
+	memcpy(c0_mat_1.data, c0_mean_out_1.data(), c0_mean_out_1.size() * sizeof(float));
+	Mat c1_mat_1 = Mat(c1_mean_out_1.size(), 1, CV_32FC1);
+	memcpy(c1_mat_1.data, c1_mean_out_1.data(), c1_mean_out_1.size() * sizeof(float));
+	Mat c2_mat_1 = Mat(c2_mean_out_1.size(), 1, CV_32FC1);
+	memcpy(c2_mat_1.data, c2_mean_out_1.data(), c2_mean_out_1.size() * sizeof(float));
+	Mat samples_1;
+	hconcat(c0_mat_1, c2_mat_1, samples_1);
+
+	cout << "nb rows samples_1 " << samples_1.rows << endl;
+	cout << "nb cols samples_1 " << samples_1.cols << endl;
+
+	vector<Contour> contours_out_2;
+	vector<Point> centers_out_2;
+	vector<int> spx_sizes_out_2;
+	get_spx_data(labels_2, spx_nb_2, spx_sizes_out_2, centers_out_2, contours_out_2);
+	Mat img_hsl_2;
+	cvtColor(img_2, img_hsl_2, COLOR_BGR2HLS);
+	vector<float> c0_mean_out_2;
+	vector<float> c1_mean_out_2;
+	vector<float> c2_mean_out_2;
+	get_spx_means(img_2, labels_2, spx_nb_2, spx_sizes_out_2, c0_mean_out_2, c1_mean_out_2, c2_mean_out_2);
+	Mat c0_mat_2 = Mat(c0_mean_out_2.size(), 1, CV_32FC1);
+	memcpy(c0_mat_2.data, c0_mean_out_2.data(), c0_mean_out_2.size() * sizeof(float));
+	Mat c1_mat_2 = Mat(c1_mean_out_2.size(), 1, CV_32FC1);
+	memcpy(c1_mat_2.data, c1_mean_out_2.data(), c1_mean_out_2.size() * sizeof(float));
+	Mat c2_mat_2 = Mat(c2_mean_out_2.size(), 1, CV_32FC1);
+	memcpy(c2_mat_2.data, c2_mean_out_2.data(), c2_mean_out_2.size() * sizeof(float));
+	Mat samples_2;
+	hconcat(c0_mat_2, c2_mat_2, samples_2);
+
+	cout << "nb rows samples_2 " << samples_2.rows << endl;
+	cout << "nb cols samples_2 " << samples_2.cols << endl;
+
+	//Makes samples_1 and samples_2 into one
+	Mat samples_total;
+	vconcat(samples_1, samples_2, samples_total);
+
+	cout << "nb rows samples_total " << samples_total.rows << endl;
+	cout << "nb cols samples_total " << samples_total.cols << endl;
+
+	//k-means
+	Mat cluster_labels_total;
+	Mat centers_total;
+	kmeans(samples_total, 10, cluster_labels_total, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers_total);
+	
+	vector<int> spx_labels_1;
+	for (int i = 0; i < spx_nb_1; i++) {
+		spx_labels_1.push_back(cluster_labels_total.at<int>(i, 0));
+	}
+	vector<int> spx_labels_2;
+	for (int i = spx_nb_1; i < spx_nb_1 + spx_nb_2; i++) {
+		spx_labels_2.push_back(cluster_labels_total.at<int>(i, 0));
+	}
+
+	
+	namedWindow("C1", WINDOW_NORMAL);
+	namedWindow("C2", WINDOW_NORMAL);
+
+	cv::resizeWindow("C1", 1536/2, 864);
+	cv::resizeWindow("C2", 1536/2, 864);
+
+	Mat viz_1 = img_1.clone();
+	Mat viz_2 = img_2.clone();
+	for (int i = 0; i < centers_total.rows; i++) {
+		viz_1 = visualize_cluster(i, img_1, contours_out_1, spx_nb_1, spx_labels_1);
+		viz_2 = visualize_cluster(i, img_2, contours_out_2, spx_nb_2, spx_labels_2);
+		imshow("C1", viz_1);
+		imshow("C2", viz_2);
+		cout << "We are displaying cluster tag " << i << "." << endl;
+		waitKey(0);
+	}
+
+	//best_labels is the classification
+
+	//k-means
+	/*
+	Mat best_labels;
+	Mat centers;
+	kmeans(samples_1, 10, best_labels, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers);
+	//best_labels is the classification 
+
+	vector<int> spx_labels;
+	spx_labels.assign((int*)best_labels.datastart, (int*)best_labels.dataend);
+
 
 	vector<Contour> contours_out;
 	vector<Point> centers_out;
 	vector<int> spx_sizes_out;
-	get_spx_data(labels, spx_nb, spx_sizes_out, centers_out, contours_out);
+	get_spx_data(labels_2, spx_nb_2, spx_sizes_out_2, centers_out_2, contours_out_2);
 
-	//To draw all the spx boundaries
-	Mat img_viz = img.clone();
-	for (int i = 0; i < contours_out.size(); i++) {
-		for (int ii = 0; ii < contours_out.at(i).size(); ii++) {
-			int x = contours_out.at(i).at(ii).x;
-			int y = contours_out.at(i).at(ii).y;
-			Vec3b color; color[0] = 0; color[1] = 0; color[2] = 0;
-			img_viz.at<Vec3b>(y, x) = color;
-		}
-	}
-
-	//To visualize a single spx
-	int spx_id = 800;
-	circle(img_viz, centers_out.at(spx_id), 2, Scalar(0, 0, 255), 1, 0);
-	for (int ii = 0; ii < contours_out.at(spx_id).size(); ii++) {
-		int x = contours_out.at(spx_id).at(ii).x;
-		int y = contours_out.at(spx_id).at(ii).y;
-		Vec3b color;
-		color[0] = 0;
-		color[1] = 0;
-		color[2] = 255;
-		img_viz.at<Vec3b>(y, x) = color;
-	}
 
 	//Clustering code, we will attempt to group superpixels that belong to each other color wise
 	//First convert the color space to Lab for instance, so that the luminosity can be ignored. 
@@ -395,13 +481,13 @@ int main()
 	//img is loaded, lets work with that
 
 	Mat img_hsl;
-	cvtColor(img, img_hsl, COLOR_BGR2HLS);
+	cvtColor(img_1, img_hsl, COLOR_BGR2HLS);
 	
 	vector<float> c0_mean_out;
 	vector<float> c1_mean_out;
 	vector<float> c2_mean_out;
 
-	get_spx_means(img, labels, spx_nb, spx_sizes_out, c0_mean_out, c1_mean_out, c2_mean_out);
+	get_spx_means(img_1, labels_1, spx_nb_1, spx_sizes_out_1, c0_mean_out, c1_mean_out, c2_mean_out);
 
 	Mat c0_mat = Mat(c0_mean_out.size(), 1, CV_32FC1);
 	memcpy(c0_mat.data, c0_mean_out.data(), c0_mean_out.size() * sizeof(float));
@@ -425,7 +511,7 @@ int main()
 	vector<int> spx_labels;
 	spx_labels.assign((int*)best_labels.datastart, (int*)best_labels.dataend);
 
-	Mat img_viz2 = img.clone();
+	Mat img_viz2 = img_1.clone();
 	for (int c = 0; c < 10; c++) {
 		for (int p = 0; p < spx_labels.size(); p++) {
 			int id = spx_labels.at(p);
@@ -440,9 +526,10 @@ int main()
 		}
 	}
 
-	Mat vix = visualize_cluster(7, img, contours_out, spx_nb, spx_labels);
+	Mat vix = visualize_cluster(7, img_1, contours_out, spx_nb_1, spx_labels);
 	
 	//best_labels.at<int>(1, 10);
+	*/
 
 	//GMM
 	/*
@@ -454,6 +541,7 @@ int main()
 	status = em->isTrained();
 	*/
 
+	/*
 	//AKAZE CODE
 	AKAZEOptions options;
 	cv::Mat img1, img1_32, img2, img2_32, img1_rgb, img2_rgb, img_com, img_r;
@@ -533,6 +621,6 @@ int main()
 	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
 	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
 	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
-
+	*/
 	return 0;
 }
