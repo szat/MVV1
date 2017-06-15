@@ -43,6 +43,38 @@ __device__ int counter;
 __device__ volatile int param = 50;
 
 
+__global__
+void initialize_loader(uchar4 *d_screen, int w, int h) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	if ((r >= h) || (c >= w)) return;
+
+	uchar4 new_pixel = uchar4();
+	new_pixel.w = 0;
+	new_pixel.x = 125;
+	new_pixel.y = 0;
+	new_pixel.z = 0;
+	d_screen[i] = new_pixel;
+}
+
+__global__
+void explode_logo(uchar4 *d_screen, int w, int h, int k) {
+	// map from threadIdx/BlockIdx to pixel position
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int r = blockIdx.y*blockDim.y + threadIdx.y;
+	int i = r * w + c;
+	if ((r >= h) || (c >= w)) return;
+
+	uchar4 new_pixel = uchar4();
+	new_pixel.w = 0;
+	new_pixel.x = 125;
+	new_pixel.y = 0;
+	new_pixel.z = k % 255;
+	d_screen[i] = new_pixel;
+}
+
 static void key_func(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
@@ -288,24 +320,47 @@ int display_video(int argc, char **argv)
 int main(int argc, char **argv) {
 	// Initiate GLUT/OpenGL THEN show the loader
 	// Cuda device setup
-	/*
+
+	cout << "Starting MVV Player..." << endl;
+	// should be preloaded from a video config file
+	int width = 667;
+	int height = 1000;
+	int memsize_uchar3 = width * height * sizeof(uchar3);
+	int memsize_uchar4 = width * height * sizeof(uchar4);
+
+	// Gaussian blur coefficients and calculation
+	int blur_radius = 5;
+	// smaller numbere means more blur
+	float blur_param = 1.25f;
+	int num_coeff = (2 * blur_radius + 1);
+	float *h_blur_coeff = calculate_blur_coefficients(blur_radius, blur_param);
+
+	float *d_blur_coeff;
+	cudaMalloc((void**)&d_blur_coeff, num_coeff * sizeof(float));
+	cudaMemcpy(d_blur_coeff, h_blur_coeff, num_coeff * sizeof(float), cudaMemcpyHostToDevice);
+
 	cudaDeviceProp  prop;
 	int dev;
-
-	int memsize_screen_uchar4 = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uchar4);
 
 	memset(&prop, 0, sizeof(cudaDeviceProp));
 	prop.major = 1;
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
+
+	// tell CUDA which dev we will be using for graphic interop
+	// from the programming guide:  Interoperability with OpenGL
+	//     requires that the CUDA device be specified by
+	//     cudaGLSetGLDevice() before any other runtime calls.
+
+
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
 	// calls, else we get a seg fault
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-	glutCreateWindow(APPLICATION_NAME);
+	glutInitWindowSize(width, height);
+	glutCreateWindow("bitmap");
 	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
@@ -317,37 +372,31 @@ int main(int argc, char **argv) {
 	// of the bitmap these calls exist starting in OpenGL 1.5
 	glGenBuffers(1, &bufferObj);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize_screen_uchar4, NULL, GL_DYNAMIC_DRAW_ARB);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize_uchar4, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 
-	uchar4* d_screen;
-	cudaMalloc((void**)&d_screen, memsize_screen_uchar4);
+	uchar4* d_render_final;
+	cudaMalloc((void**)&d_render_final, memsize_uchar4);
 
 	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
 	size_t  size;
 
-	int width = SCREEN_WIDTH;
-	int height = SCREEN_HEIGHT;
-
-	dim3 blockSize(32, 32);
+	dim3 block_size(32, 32);
 	int bx = (width + 32 - 1) / 32;
 	int by = (height + 32 - 1) / 32;
-	dim3 gridSize = dim3(bx, by);
+	dim3 grid_size = dim3(bx, by);
 
-	// should load up a procomputed image, then in the for loop, explode it
-	// for now we'll just load up a solid blue color and then make it turn red
-
-	initialize_loader<<<blockSize, gridSize>>>
-
-
+	initialize_loader << <grid_size, block_size >> > (d_render_final, width, height);
+	int k = 0;
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
 
+		explode_logo << <grid_size, block_size >> > (d_render_final, width, height, k);
 
 		cudaGraphicsMapResources(1, &resource, NULL);
-		cudaGraphicsResourceGetMappedPointer((void**)&d_screen, &size, resource);
+		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 		cudaGraphicsUnmapResources(1, &resource, NULL);
 
 		//Does not seem "necessary"
@@ -356,15 +405,14 @@ int main(int argc, char **argv) {
 		//only gluMainLoopEvent() seems necessary
 		glutPostRedisplay();
 		glutMainLoopEvent();
-
+		k++;
 		auto t2 = std::chrono::high_resolution_clock::now();
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 	}
 
+	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
 	glutMainLoop();
 
-	*/
-
-	display_video(argc, argv);
+	//display_video(argc, argv);
 }
