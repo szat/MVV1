@@ -351,7 +351,6 @@ int main()
 	int spx_nb_1 = spx_data_1[0] + 1;
 	Mat labels_1 = Mat(size(img_1), CV_16U, spx_data_1);
 
-
 	string img_path_2 = "..\\data_store\\images\\c2_img_000177.png";
 	string save_path_2 = "..\\data_store\\spx\\c2_img_000177_spx.bin";
 	Mat img_2;
@@ -427,6 +426,7 @@ int main()
 	Mat centers_total;
 	kmeans(samples_total, 10, cluster_labels_total, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers_total);
 	
+	
 	vector<int> spx_labels_1;
 	for (int i = 0; i < spx_nb_1; i++) {
 		spx_labels_1.push_back(cluster_labels_total.at<int>(i, 0));
@@ -436,7 +436,14 @@ int main()
 		spx_labels_2.push_back(cluster_labels_total.at<int>(i, 0));
 	}
 
-	
+	//Would be useful to send back cluster_labels_total into cluster_labels of sizes corresponding to the initial image
+	cout << "spx_nb_1 " << spx_nb_1 << endl;
+	cout << "spx_nb_2 " << spx_nb_2 << endl;
+
+	//Mat spx_labels_1_mat = cluster_labels_total(Rect(0, 0, 1, spx_nb_1));
+	//Mat spx_labels_2_mat = cluster_labels_total(Rect(0, spx_nb_1, 1, spx_nb_2));
+
+	/*
 	namedWindow("C1", WINDOW_NORMAL);
 	namedWindow("C2", WINDOW_NORMAL);
 
@@ -453,6 +460,118 @@ int main()
 		cout << "We are displaying cluster tag " << i << "." << endl;
 		waitKey(0);
 	}
+	*/
+
+	//For a certain id or group of id construct the mask for img_1 and img_2
+
+	int id = 0;
+
+	Mat roi_1 = Mat(img_1.size(), CV_8UC1);
+	roi_1.setTo(0);
+	for (int i = 0; i < labels_1.rows; i++) {
+		for (int j = 0; j < labels_1.cols; j++) {
+			int spx_id = labels_1.at<short>(i, j);
+			int cluster_id = spx_labels_1.at(spx_id);
+			if (cluster_id == id) {
+				roi_1.at<uchar>(i, j) = 1;
+			}
+		}
+	}
+
+	Mat roi_2 = Mat(img_2.size(), CV_8UC1);
+	roi_2.setTo(0);
+	for (int i = 0; i < labels_2.rows; i++) {
+		for (int j = 0; j < labels_2.cols; j++) {
+			int spx_id = labels_2.at<short>(i, j);
+			int cluster_id = spx_labels_2.at(spx_id);
+			if (cluster_id == id) {
+				roi_2.at<uchar>(i, j) = 1;
+			}
+		}
+	}
+
+	/*
+	//AKAZE CODE
+	AKAZEOptions options;
+	cv::Mat img1, img1_32, img2, img2_32, img1_rgb, img2_rgb, img_com, img_r;
+	string img_path1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_1.jpg";
+	string img_path2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_2.jpg";
+	float ratio = 0.0, rfactor = .60;
+	int nkpts1 = 0, nkpts2 = 0, nmatches = 0, ninliers = 0, noutliers = 0;
+
+	vector<cv::KeyPoint> kpts1, kpts2;
+	vector<vector<cv::DMatch> > dmatches;
+	cv::Mat desc1, desc2;
+	cv::Mat HG;
+
+	// Variables for measuring computation times
+	double t1 = 0.0, t2 = 0.0;
+	double takaze = 0.0, tmatch = 0.0;
+
+	// Parse the input command line options
+	//if (parse_input_options(options,img_path1,img_path2,homography_path,argc,argv))
+	//  return -1;
+
+	// Read image 1 and if necessary convert to grayscale.
+	img1 = cv::imread(img_path1, 0);
+	if (img1.data == NULL) {
+	cerr << "Error loading image 1: " << img_path1 << endl;
+	return -1;
+	}
+
+	// Read image 2 and if necessary convert to grayscale.
+	img2 = cv::imread(img_path2, 0);
+	if (img2.data == NULL) {
+	cerr << "Error loading image 2: " << img_path2 << endl;
+	return -1;
+	}
+
+	// Read ground truth homography file
+	bool use_ransac = true;
+	//if (read_homography(homography_path, HG) == false)
+	//  use_ransac = true;
+
+	// Convert the images to float
+	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
+	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+
+	// Color images for results visualization
+	img1_rgb = cv::Mat(cv::Size(img1.cols, img1.rows), CV_8UC3);
+	img2_rgb = cv::Mat(cv::Size(img2.cols, img1.rows), CV_8UC3);
+	img_com = cv::Mat(cv::Size(img1.cols * 2, img1.rows), CV_8UC3);
+	img_r = cv::Mat(cv::Size(img_com.cols*rfactor, img_com.rows*rfactor), CV_8UC3);
+
+	// Create the first AKAZE object
+	options.img_width = img1.cols;
+	options.img_height = img1.rows;
+	libAKAZECU::AKAZE evolution1(options);
+
+	// Create the second HKAZE object
+	options.img_width = img2.cols;
+	options.img_height = img2.rows;
+	libAKAZECU::AKAZE evolution2(options);
+
+	t1 = cv::getTickCount();
+
+	cudaProfilerStart();
+
+	evolution1.Create_Nonlinear_Scale_Space(img1_32);
+	evolution1.Feature_Detection(kpts1);
+	evolution1.Compute_Descriptors(kpts1, desc1);
+
+	evolution2.Create_Nonlinear_Scale_Space(img2_32);
+	evolution2.Feature_Detection(kpts2);
+	evolution2.Compute_Descriptors(kpts2, desc2);
+
+	t2 = cv::getTickCount();
+	takaze = 1000.0*(t2 - t1) / cv::getTickFrequency();
+
+	// Show matching statistics
+	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
+	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
+	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
+	*/
+
 
 	//best_labels is the classification
 
