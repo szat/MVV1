@@ -490,248 +490,95 @@ int main()
 		}
 	}
 
-	/*
 	//AKAZE CODE
 	AKAZEOptions options;
-	cv::Mat img1, img1_32, img2, img2_32, img1_rgb, img2_rgb, img_com, img_r;
-	string img_path1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_1.jpg";
-	string img_path2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_2.jpg";
-	float ratio = 0.0, rfactor = .60;
-	int nkpts1 = 0, nkpts2 = 0, nmatches = 0, ninliers = 0, noutliers = 0;
 
 	vector<cv::KeyPoint> kpts1, kpts2;
 	vector<vector<cv::DMatch> > dmatches;
 	cv::Mat desc1, desc2;
-	cv::Mat HG;
 
 	// Variables for measuring computation times
 	double t1 = 0.0, t2 = 0.0;
 	double takaze = 0.0, tmatch = 0.0;
 
-	// Parse the input command line options
-	//if (parse_input_options(options,img_path1,img_path2,homography_path,argc,argv))
-	//  return -1;
+	float ratio = 0.0, rfactor = .60;
+	int nkpts1 = 0, nkpts2 = 0, nmatches = 0, ninliers = 0, noutliers = 0;
 
-	// Read image 1 and if necessary convert to grayscale.
-	img1 = cv::imread(img_path1, 0);
-	if (img1.data == NULL) {
-	cerr << "Error loading image 1: " << img_path1 << endl;
-	return -1;
-	}
+	Mat img_1_grey;
+	Mat img_2_grey;
 
-	// Read image 2 and if necessary convert to grayscale.
-	img2 = cv::imread(img_path2, 0);
-	if (img2.data == NULL) {
-	cerr << "Error loading image 2: " << img_path2 << endl;
-	return -1;
-	}
+	cv::cvtColor(img_1, img_1_grey, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(img_2, img_2_grey, cv::COLOR_BGR2GRAY);
 
-	// Read ground truth homography file
-	bool use_ransac = true;
-	//if (read_homography(homography_path, HG) == false)
-	//  use_ransac = true;
+	Mat img_1_32;
+	Mat img_2_32;
+	img_1_grey.convertTo(img_1_32, CV_32F, 1.0 / 255.0, 0);
+	img_2_grey.convertTo(img_2_32, CV_32F, 1.0 / 255.0, 0);
 
-	// Convert the images to float
-	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
-	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+	Mat img1_rgb;
+	Mat img2_rgb;
+	Mat img_com;
+	Mat img_r;
 
 	// Color images for results visualization
-	img1_rgb = cv::Mat(cv::Size(img1.cols, img1.rows), CV_8UC3);
-	img2_rgb = cv::Mat(cv::Size(img2.cols, img1.rows), CV_8UC3);
-	img_com = cv::Mat(cv::Size(img1.cols * 2, img1.rows), CV_8UC3);
+	img1_rgb = cv::Mat(cv::Size(img_1.cols, img_1.rows), CV_8UC3);
+	img2_rgb = cv::Mat(cv::Size(img_2.cols, img_2.rows), CV_8UC3);
+	img_com = cv::Mat(cv::Size(img_1.cols * 2, img_1.rows), CV_8UC3);
 	img_r = cv::Mat(cv::Size(img_com.cols*rfactor, img_com.rows*rfactor), CV_8UC3);
 
 	// Create the first AKAZE object
-	options.img_width = img1.cols;
-	options.img_height = img1.rows;
+	options.img_width = img_1.cols;
+	options.img_height = img_1.rows;
 	libAKAZECU::AKAZE evolution1(options);
 
-	// Create the second HKAZE object
-	options.img_width = img2.cols;
-	options.img_height = img2.rows;
+	// Create the second AKAZE object
+	options.img_width = img_2.cols;
+	options.img_height = img_2.rows;
 	libAKAZECU::AKAZE evolution2(options);
+
+
+	vector<cv::KeyPoint> kpts1_roi, kpts2_roi;
 
 	t1 = cv::getTickCount();
 
 	cudaProfilerStart();
-
-	evolution1.Create_Nonlinear_Scale_Space(img1_32);
+	
+	Mat desc1_temp;
+	
+	evolution1.Create_Nonlinear_Scale_Space(img_1_32);
 	evolution1.Feature_Detection(kpts1);
-	evolution1.Compute_Descriptors(kpts1, desc1);
-
-	evolution2.Create_Nonlinear_Scale_Space(img2_32);
-	evolution2.Feature_Detection(kpts2);
-	evolution2.Compute_Descriptors(kpts2, desc2);
-
-	t2 = cv::getTickCount();
-	takaze = 1000.0*(t2 - t1) / cv::getTickFrequency();
-
-	// Show matching statistics
-	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
-	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
-	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
-	*/
-
-
-	//best_labels is the classification
-
-	//k-means
-	/*
-	Mat best_labels;
-	Mat centers;
-	kmeans(samples_1, 10, best_labels, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers);
-	//best_labels is the classification 
-
-	vector<int> spx_labels;
-	spx_labels.assign((int*)best_labels.datastart, (int*)best_labels.dataend);
-
-
-	vector<Contour> contours_out;
-	vector<Point> centers_out;
-	vector<int> spx_sizes_out;
-	get_spx_data(labels_2, spx_nb_2, spx_sizes_out_2, centers_out_2, contours_out_2);
-
-
-	//Clustering code, we will attempt to group superpixels that belong to each other color wise
-	//First convert the color space to Lab for instance, so that the luminosity can be ignored. 
-	//Second blur the image
-	//Do clustering, for instance K-means (could evventually use the gap statistic) or GMM/EM
-
-	//img is loaded, lets work with that
-
-	Mat img_hsl;
-	cvtColor(img_1, img_hsl, COLOR_BGR2HLS);
-	
-	vector<float> c0_mean_out;
-	vector<float> c1_mean_out;
-	vector<float> c2_mean_out;
-
-	get_spx_means(img_1, labels_1, spx_nb_1, spx_sizes_out_1, c0_mean_out, c1_mean_out, c2_mean_out);
-
-	Mat c0_mat = Mat(c0_mean_out.size(), 1, CV_32FC1);
-	memcpy(c0_mat.data, c0_mean_out.data(), c0_mean_out.size() * sizeof(float));
-	Mat c1_mat = Mat(c1_mean_out.size(), 1, CV_32FC1);
-	memcpy(c1_mat.data, c1_mean_out.data(), c1_mean_out.size() * sizeof(float));
-	Mat c2_mat = Mat(c2_mean_out.size(), 1, CV_32FC1);
-	memcpy(c2_mat.data, c2_mean_out.data(), c2_mean_out.size() * sizeof(float));
-
-	Mat samples;
-	hconcat(c0_mat, c2_mat, samples);
-	
-	cout << "nb rows " << samples.rows << endl;
-	cout << "nb cols " << samples.cols << endl;
-
-	//k-means
-	Mat best_labels;
-	Mat centers;
-	kmeans(samples, 10, best_labels, TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 50, 0.0001), 10, KMEANS_PP_CENTERS, centers);
-	//best_labels is the classification 
-
-	vector<int> spx_labels;
-	spx_labels.assign((int*)best_labels.datastart, (int*)best_labels.dataend);
-
-	Mat img_viz2 = img_1.clone();
-	for (int c = 0; c < 10; c++) {
-		for (int p = 0; p < spx_labels.size(); p++) {
-			int id = spx_labels.at(p);
-			if (c == id) {
-				for (int ii = 0; ii < contours_out.at(p).size(); ii++) {
-					int x = contours_out.at(p).at(ii).x;
-					int y = contours_out.at(p).at(ii).y;
-					Vec3b color; color[0] = 20*c; color[1] = 10*c*c %255; color[2] = 5*c;
-					img_viz2.at<Vec3b>(y, x) = color;
-				}
-			}
+	evolution1.Compute_Descriptors(kpts1, desc1_temp);
+	vector<int> indices1;
+	for (int i = 0; i < kpts1.size(); i++) { //ROI filtering
+		int x = (int)kpts1.at(i).pt.x; //col
+		int y = (int)kpts1.at(i).pt.y; //row
+		if (roi_1.at<char>(y, x) == 1) {
+			kpts1_roi.push_back(kpts1.at(i));
+			indices1.push_back(i);
 		}
 	}
-
-	Mat vix = visualize_cluster(7, img_1, contours_out, spx_nb_1, spx_labels);
+	Mat desc1_roi = Mat(kpts1_roi.size(), 0, CV_8UC1);
+	for (int i = 0; i < kpts1_roi.size(); i++) {
+		desc1_roi.push_back(desc1_temp.row(indices1.at(i)));
+	}
 	
-	//best_labels.at<int>(1, 10);
-	*/
-
-	//GMM
-	/*
-	//20000 points still acceptable time
-	Ptr<ml::EM> em = ml::EM::create();
-	bool status = em->isTrained();
-	status = em->trainEM(samples);
-	cout << "cluster number " << em->getClustersNumber() << endl;
-	status = em->isTrained();
-	*/
-
-	/*
-	//AKAZE CODE
-	AKAZEOptions options;
-	cv::Mat img1, img1_32, img2, img2_32, img1_rgb, img2_rgb, img_com, img_r;
-	string img_path1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_1.jpg";
-	string img_path2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/images/david_2.jpg";
-	float ratio = 0.0, rfactor = .60;
-	int nkpts1 = 0, nkpts2 = 0, nmatches = 0, ninliers = 0, noutliers = 0;
-
-	vector<cv::KeyPoint> kpts1, kpts2;
-	vector<vector<cv::DMatch> > dmatches;
-	cv::Mat desc1, desc2;
-	cv::Mat HG;
-
-	// Variables for measuring computation times
-	double t1 = 0.0, t2 = 0.0;
-	double takaze = 0.0, tmatch = 0.0;
-
-	// Parse the input command line options
-	//if (parse_input_options(options,img_path1,img_path2,homography_path,argc,argv))
-	//  return -1;
-
-	// Read image 1 and if necessary convert to grayscale.
-	img1 = cv::imread(img_path1, 0);
-	if (img1.data == NULL) {
-		cerr << "Error loading image 1: " << img_path1 << endl;
-		return -1;
-	}
-
-	// Read image 2 and if necessary convert to grayscale.
-	img2 = cv::imread(img_path2, 0);
-	if (img2.data == NULL) {
-		cerr << "Error loading image 2: " << img_path2 << endl;
-		return -1;
-	}
-
-	// Read ground truth homography file
-	bool use_ransac = true;
-	//if (read_homography(homography_path, HG) == false)
-	//  use_ransac = true;
-
-	// Convert the images to float
-	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
-	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
-
-	// Color images for results visualization
-	img1_rgb = cv::Mat(cv::Size(img1.cols, img1.rows), CV_8UC3);
-	img2_rgb = cv::Mat(cv::Size(img2.cols, img1.rows), CV_8UC3);
-	img_com = cv::Mat(cv::Size(img1.cols * 2, img1.rows), CV_8UC3);
-	img_r = cv::Mat(cv::Size(img_com.cols*rfactor, img_com.rows*rfactor), CV_8UC3);
-
-	// Create the first AKAZE object
-	options.img_width = img1.cols;
-	options.img_height = img1.rows;
-	libAKAZECU::AKAZE evolution1(options);
-
-	// Create the second HKAZE object
-	options.img_width = img2.cols;
-	options.img_height = img2.rows;
-	libAKAZECU::AKAZE evolution2(options);
-
-	t1 = cv::getTickCount();
-
-	cudaProfilerStart();
-
-	evolution1.Create_Nonlinear_Scale_Space(img1_32);
-	evolution1.Feature_Detection(kpts1);
-	evolution1.Compute_Descriptors(kpts1, desc1);
-
-	evolution2.Create_Nonlinear_Scale_Space(img2_32);
+	Mat desc2_temp;
+	evolution2.Create_Nonlinear_Scale_Space(img_2_32); //ROI filtering
 	evolution2.Feature_Detection(kpts2);
-	evolution2.Compute_Descriptors(kpts2, desc2);
+	evolution2.Compute_Descriptors(kpts2, desc2_temp);
+	vector<int> indices2;
+	for (int i = 0; i < kpts2.size(); i++) {
+		int x = (int)kpts2.at(i).pt.x; //col
+		int y = (int)kpts2.at(i).pt.y; //row
+		if (roi_2.at<char>(y, x) == 1) {
+			kpts2_roi.push_back(kpts2.at(i));
+			indices2.push_back(i);
+		}
+	}	
+	Mat desc2_roi = Mat(kpts2_roi.size(), 0, CV_8UC1);
+	for (int i = 0; i < kpts2_roi.size(); i++) {
+		desc2_roi.push_back(desc2_temp.row(indices2.at(i)));
+	}
 
 	t2 = cv::getTickCount();
 	takaze = 1000.0*(t2 - t1) / cv::getTickFrequency();
@@ -740,6 +587,6 @@ int main()
 	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
 	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
 	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
-	*/
+
 	return 0;
 }
