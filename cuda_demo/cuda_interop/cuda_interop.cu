@@ -99,7 +99,7 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	return coefficients;
 }
 
-int main(int argc, char **argv)
+int render_video(int argc, char **argv)
 {
 	cout << "Program startup" << endl;
 	if (RELEASE_MODE) {
@@ -280,5 +280,9 @@ int main(int argc, char **argv)
 	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
 	glutMainLoop();
+
+}
+
+int main() {
 
 }
