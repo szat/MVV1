@@ -28,7 +28,12 @@
 using namespace std;
 
 #define REFRESH_DELAY     2 //ms
-#define RELEASE_MODE true
+#define APPLICATION_NAME "MVV Player v1.00"
+// To support multiple screen resolutions, this should eventually be a
+// configuration setting, rather than a hard-coded constant.
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
+
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
@@ -99,15 +104,9 @@ float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	return coefficients;
 }
 
-int main(int argc, char **argv)
+int display_video(int argc, char **argv)
 {
-	cout << "Program startup" << endl;
-	if (RELEASE_MODE) {
-		cout << "NDim is in release mode" << endl;
-	}
-	else {
-		cout << "NDim is in debug mode" << endl;
-	}
+	cout << "Starting MVV Player..." << endl;
 	// should be preloaded from a video config file
 	int width = 667;
 	int height = 1000;
@@ -281,4 +280,86 @@ int main(int argc, char **argv)
 	// set up GLUT and kick off main loop
 	glutMainLoop();
 
+}
+
+
+
+
+int main(int argc, char **argv) {
+	// Initiate GLUT/OpenGL THEN show the loader
+	// Cuda device setup
+	cudaDeviceProp  prop;
+	int dev;
+
+	int memsize_screen_uchar4 = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uchar4);
+
+	memset(&prop, 0, sizeof(cudaDeviceProp));
+	prop.major = 1;
+	prop.minor = 0;
+	cudaChooseDevice(&dev, &prop);
+	cudaGLSetGLDevice(dev);
+
+	// these GLUT calls need to be made before the other OpenGL
+	// calls, else we get a seg fault
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	glutCreateWindow(APPLICATION_NAME);
+	//glutFullScreen();
+	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
+
+	//not in tutorial, otherwise crashes
+	if (GLEW_OK != glewInit()) { return 1; }
+	while (GL_NO_ERROR != glGetError());
+
+	// the first three are standard OpenGL, the 4th is the CUDA reg 
+	// of the bitmap these calls exist starting in OpenGL 1.5
+	glGenBuffers(1, &bufferObj);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize_screen_uchar4, NULL, GL_DYNAMIC_DRAW_ARB);
+
+	glutKeyboardFunc(key_func);
+	glutDisplayFunc(draw_func);
+
+	uchar4* d_screen;
+	cudaMalloc((void**)&d_screen, memsize_screen_uchar4);
+
+	cudaGraphicsGLRegisterBuffer(&resource, bufferObj, cudaGraphicsMapFlagsNone);
+	size_t  size;
+
+	int width = SCREEN_WIDTH;
+	int height = SCREEN_HEIGHT;
+
+	dim3 blockSize(32, 32);
+	int bx = (width + 32 - 1) / 32;
+	int by = (height + 32 - 1) / 32;
+	dim3 gridSize = dim3(bx, by);
+
+	// 
+
+	for (;;) {
+		auto t1 = std::chrono::high_resolution_clock::now();
+
+
+		cudaGraphicsMapResources(1, &resource, NULL);
+		cudaGraphicsResourceGetMappedPointer((void**)&d_screen, &size, resource);
+		cudaGraphicsUnmapResources(1, &resource, NULL);
+
+		//Does not seem "necessary"
+		cudaDeviceSynchronize();
+
+		//only gluMainLoopEvent() seems necessary
+		glutPostRedisplay();
+		glutMainLoopEvent();
+
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+	}
+
+	// set up GLUT and kick off main loop
+	glutMainLoop();
+
+
+
+	//display_video(argc, argv);
 }
