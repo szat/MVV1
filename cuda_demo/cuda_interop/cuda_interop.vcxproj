@@ -158,6 +158,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="cuda_interop.cu" />
+    <CudaCompile Include="video_kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="video_kernel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
