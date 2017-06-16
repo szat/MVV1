@@ -501,7 +501,7 @@ int main()
 	double t1 = 0.0, t2 = 0.0;
 	double takaze = 0.0, tmatch = 0.0;
 
-	float ratio = 0.0, rfactor = .60;
+	float ratio = 0.8, rfactor = .60;
 	int nkpts1 = 0, nkpts2 = 0, nmatches = 0, ninliers = 0, noutliers = 0;
 
 	Mat img_1_grey;
@@ -536,7 +536,6 @@ int main()
 	options.img_height = img_2.rows;
 	libAKAZECU::AKAZE evolution2(options);
 
-
 	vector<cv::KeyPoint> kpts1_roi, kpts2_roi;
 
 	t1 = cv::getTickCount();
@@ -557,7 +556,7 @@ int main()
 			indices1.push_back(i);
 		}
 	}
-	Mat desc1_roi = Mat(kpts1_roi.size(), 0, CV_8UC1);
+	Mat desc1_roi;// = Mat(kpts1_roi.size(), 0, CV_8UC1);
 	for (int i = 0; i < kpts1_roi.size(); i++) {
 		desc1_roi.push_back(desc1_temp.row(indices1.at(i)));
 	}
@@ -575,7 +574,7 @@ int main()
 			indices2.push_back(i);
 		}
 	}	
-	Mat desc2_roi = Mat(kpts2_roi.size(), 0, CV_8UC1);
+	Mat desc2_roi;// = Mat(kpts2_roi.size(), 0, CV_8UC1);
 	for (int i = 0; i < kpts2_roi.size(); i++) {
 		desc2_roi.push_back(desc2_temp.row(indices2.at(i)));
 	}
@@ -584,9 +583,49 @@ int main()
 	takaze = 1000.0*(t2 - t1) / cv::getTickFrequency();
 
 	// Show matching statistics
-	cout << "Number of Keypoints Image 1: " << nkpts1 << endl;
-	cout << "Number of Keypoints Image 2: " << nkpts2 << endl;
+	cout << "Number of Keypoints Image 1: " << kpts1_roi.size() << endl;
+	cout << "Number of Keypoints Image 2: " << kpts2_roi.size() << endl;
 	cout << "A-KAZE Features Extraction Time (ms): " << takaze << endl;
+
+	vector<KeyPoint> kpts1_out;
+	vector<KeyPoint> kpts2_out;
+
+	vector<vector<DMatch>> matchesLoweRatio;
+	cv::Ptr<cv::DescriptorMatcher> matcher_l2 = cv::DescriptorMatcher::create("BruteForce");
+	cv::Ptr<cv::DescriptorMatcher> matcher_l1 = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+	matcher_l1->knnMatch(desc1_roi, desc2_roi, matchesLoweRatio, 2); //<- 2 means that two keypoints are matches
+	//matcher_l2->knnMatch(desc1_roi, desc2_roi, matchesLoweRatio, 2);
+	//matcher.knnMatch(desc1_roi, desc2_roi, matchesLoweRatio, 0.8);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < 0.9 * dist2) {
+			kpts1_out.push_back(kpts1_roi[first.queryIdx]);
+			kpts2_out.push_back(kpts2_roi[first.trainIdx]);
+		}
+	}
+
+	Mat viz_1 = img_1.clone();
+	Mat viz_2 = img_2.clone();
+	
+	viz_1 = visualize_cluster(0, img_1, contours_out_1, spx_nb_1, spx_labels_1);
+	viz_2 = visualize_cluster(0, img_2, contours_out_2, spx_nb_2, spx_labels_2);
+
+	namedWindow("Matches");
+	Mat img1to2;
+	vector<DMatch> matchesIndexTrivial;
+	for (int i = 0; i < kpts1_out.size(); i++) matchesIndexTrivial.push_back(DMatch(i, i, 0));
+
+	drawMatches(viz_1, kpts1_out, viz_2, kpts2_out, matchesIndexTrivial, img1to2);
+	Mat img_viz;
+	resize(img1to2, img_viz, Size(1624, 612));
+	
+	imshow("Matches", img_viz);
+
+	waitKey(0);
 
 	return 0;
 }
