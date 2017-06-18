@@ -26,32 +26,14 @@ using namespace libAKAZECU;
 
 int main() {
 	Mat img1;
-	string img1_path = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\cuda_demo\\data_store\\disk1.jpg";
+	string img1_path = "..\\data_store\\images\\c1_img_000177.png";
 	img1 = imread(img1_path);
 	if (img1.empty()) return -1;
 
 	Mat img2;
-	string img2_path = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\cuda_demo\\data_store\\disk2.jpg";
+	string img2_path = "..\\data_store\\images\\c2_img_000177.png";
 	img2 = imread(img2_path);
 	if (img2.empty()) return -1;
-
-	//TO DO: test all the different optical flow methods on disk1 / disk2
-	
-	Mat next1;
-	cvtColor(img1, next1, COLOR_BGR2GRAY);
-	Mat next2;
-	cvtColor(img2, next2, COLOR_BGR2GRAY);
-	Mat flow;
-
-	//Ptr<DenseOpticalFlow> createOptFlow_Farneback();
-	//calcOpticalFlowFarneback(next1, next2, flow, 0.4, 3, 12, 5, 8, 1.2, OPTFLOW_FARNEBACK_GAUSSIAN);
-	//calcOpticalFlowPyrLK(next1, next2, flow, 0.4, 3, 12, 5, 8, 1.2, OPTFLOW_FARNEBACK_GAUSSIAN);
-
-	calcOpticalFlowFarneback(next1, next2, flow, 0.4, 3, 12, 5, 8, 1.2, OPTFLOW_FARNEBACK_GAUSSIAN);
-
-
-
-
 
 	//So this works well
 	AKAZEOptions options;
