@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std;
 using namespace cv;
@@ -48,7 +50,10 @@ void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width,
 	intensity_values.push_back(intensity);
 }
 
-int get_flash_maxima(string video_path) {
+int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
+	// camera 1, flash test 185
+	// camera 2, flash test 410
+
 	VideoCapture capture(video_path); // open the default camera
 	if (!capture.isOpened()) { // check if we succeeded
 		cout << "Error opening video" << endl;
@@ -60,29 +65,47 @@ int get_flash_maxima(string video_path) {
 
 	vector<float> intensity = vector<float>();
 	Mat frame;
-	for (;;)
+	int i = 0;
+	// flash will happen at beginning of video
+	while(i < stop_frame)
 	{
 		if (!capture.read(frame)) {
 			cout << "Error reading frame" << endl;
 			break;
 		}
+		// debug code only
+		if (camera_id == 1 && i > 185 - 5) {
+			int test = 0;
+		}
+		if (camera_id == 2 && i > 410 - 5) {
+			int test = 0;
+		}
 		get_frame_intensity(frame, intensity, width, height);
+		i++;
 	}
 
 	int flash_frame = calculate_intensity_maxima(intensity);
 	return flash_frame;
 }
 
-pair<int,int> get_flash_timing(string video_directory, string video_path_1, string video_path_2) {
+pair<int,int> get_flash_timing(string video_directory, string video_path_1, string video_path_2, int stop_frame) {
+	auto t1 = Clock::now();
+
 	pair<int, int> maxima_timing = pair<int, int>(0, 0);
 
 	string full_path_1 = video_directory + video_path_1;
 	string full_path_2 = video_directory + video_path_2;
 
-	int flash_maxima_1 = get_flash_maxima(full_path_1);
-	int flash_maxima_2 = get_flash_maxima(full_path_2);
+	// third parameter is camera_id
+	int flash_maxima_1 = get_flash_maxima(full_path_1, stop_frame, 1);
+	int flash_maxima_2 = get_flash_maxima(full_path_2, stop_frame, 2);
 
 	maxima_timing = pair<int, int>(flash_maxima_1, flash_maxima_2);
+	auto t2 = Clock::now();
+	std::cout << "Video preprocessing completed in: "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " ms" << std::endl;
+
 	return maxima_timing;
 }
 

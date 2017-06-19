@@ -326,18 +326,16 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 
 void video_preprocessing() {
 	string input_dir = "../../data_store/flash/";
-	string output_dir = "../../data_store/trimmed/";
-	string input_video_1 = "flash_1.mp4";
-	string input_video_2 = "flash_2.mp4";
-	string output_video_1 = "trimmed_1.avi";
-	string output_video_2 = "trimmed_2.avi";
+	string input_video_1 = "flash_test_1.mp4";
+	string input_video_2 = "flash_test_2.mp4";
+	int stop_frame = 2500;
 
-	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2);
+	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
 	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
 	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 
 	// construct two new videos from the synchronization, and save those.
-	save_trimmed_videos(flash_result, input_dir, output_dir, input_video_1, input_video_2, output_video_1, output_video_2);
+	//save_trimmed_videos(flash_result, input_dir, output_dir, input_video_1, input_video_2, output_video_1, output_video_2);
 
 }
 
@@ -345,7 +343,7 @@ int danny_test() {
 	// MAIN CALCULATIONS
 	
 	// master function for constructing and saving a frame
-	
+	/*
 	string src_path_1 = "../../data_store/images/david_1.jpg";
 	string tar_path_1 = "../../data_store/binary/david_1.bin";
 	string src_path_2 = "../../data_store/images/david_2.jpg";
@@ -356,7 +354,7 @@ int danny_test() {
 	//string img1_path = "david_1.jpg";
 	//string img2_path = "david_2.jpg";
 	save_frame_master(src_path_1, src_path_2);
-	
+	*/
 
 	// BACKGROUND MERGING
 	/*
@@ -366,7 +364,7 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	//video_preprocessing();
+	video_preprocessing();
 
 	return 0;
 }
