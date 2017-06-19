@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuda_preprocessing", "cuda_preprocessing.vcxproj", "{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuda_preprocessing", "cuda_preprocessing.vcxproj", "{C864DADD-69A3-4A76-9349-2621DF750A3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Debug|x64.ActiveCfg = Debug|x64
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Debug|x64.Build.0 = Debug|x64
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Debug|x86.ActiveCfg = Debug|Win32
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Debug|x86.Build.0 = Debug|Win32
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Release|x64.ActiveCfg = Release|x64
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Release|x64.Build.0 = Release|x64
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Release|x86.ActiveCfg = Release|Win32
-		{1C5A6A5E-7151-45E7-ADC9-741A531DFB4B}.Release|x86.Build.0 = Release|Win32
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Debug|x64.ActiveCfg = Debug|x64
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Debug|x64.Build.0 = Debug|x64
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Debug|x86.ActiveCfg = Debug|Win32
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Debug|x86.Build.0 = Debug|Win32
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Release|x64.ActiveCfg = Release|x64
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Release|x64.Build.0 = Release|x64
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Release|x86.ActiveCfg = Release|Win32
+		{C864DADD-69A3-4A76-9349-2621DF750A3E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

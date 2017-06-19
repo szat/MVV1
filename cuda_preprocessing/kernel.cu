@@ -2,133 +2,93 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include <string>
 #include <stdio.h>
 #include <iostream>
-#include <string>
-#include <queue>
 
-#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
-#include <opencv2/ximgproc.hpp>
-#include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
-#include <opencv2/ml.hpp>
 
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
+#include <opencv2/video.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/optflow.hpp>
 
-__global__ void addKernel(int *c, const int *a, const int *b)
-{
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
-}
+//#include <opencv2/features2d/features2d.hpp>
+#include <AKAZE.h>
+#include <AKAZEConfig.h>
+//#include <cuda_profiler_api.h>
+#include <opencv2/calib3d.hpp> //AKAZE seems not to work without this
 
-int main()
-{
-    const int arraySize = 5;
-    const int a[arraySize] = { 1, 2, 3, 4, 5 };
-    const int b[arraySize] = { 10, 20, 30, 40, 50 };
-    int c[arraySize] = { 0 };
+using namespace std;
+using namespace cv;
+using namespace libAKAZECU;
 
-    // Add vectors in parallel.
-    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addWithCuda failed!");
-        return 1;
-    }
+int main() {
+	Mat img1;
+	string img1_path = "..\\data_store\\images\\c1_img_000177.png";
+	img1 = imread(img1_path);
+	if (img1.empty()) return -1;
 
-    printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
-        c[0], c[1], c[2], c[3], c[4]);
+	Mat img2;
+	string img2_path = "..\\data_store\\images\\c2_img_000177.png";
+	img2 = imread(img2_path);
+	if (img2.empty()) return -1;
 
-    // cudaDeviceReset must be called before exiting in order for profiling and
-    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaStatus = cudaDeviceReset();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
-    }
+	string path1;
+	VideoCapture cap1(path1);
 
-    return 0;
-}
+	string path2;
+	VideoCapture cap2(path2);
 
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
-{
-    int *dev_a = 0;
-    int *dev_b = 0;
-    int *dev_c = 0;
-    cudaError_t cudaStatus;
+	int frame_nb1 = cap1.get(CAP_PROP_FRAME_COUNT);
+	int frame_nb1 = cap2.get(CAP_PROP_FRAME_COUNT);
 
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
+	int start_1;
+	int start_2;
+	cap1.set(CV_CAP_PROP_POS_FRAMES, start_1);
+	cap2.set(CV_CAP_PROP_POS_FRAMES, start_2);
 
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	Mat next1;
+	Mat next2;
 
-    cudaStatus = cudaMalloc((void**)&dev_a, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	cap1.read(next1);
+	cap2.read(next2);
 
-    cudaStatus = cudaMalloc((void**)&dev_b, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	//So this works well
+	AKAZEOptions options;
 
-    // Copy input vectors from host memory to GPU buffers.
-    cudaStatus = cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	// Convert the image to float to extract features
+	Mat img1_32;
+	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
+	Mat img2_32;
+	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
 
-    cudaStatus = cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	// Don't forget to specify image dimensions in AKAZE's options
+	options.img_width = img1.cols;
+	options.img_height = img1.rows;
 
-    // Launch a kernel on the GPU with one thread for each element.
-    addKernel<<<1, size>>>(dev_c, dev_a, dev_b);
+	// Extract features
+	libAKAZECU::AKAZE evolution(options);
+	vector<KeyPoint> kpts1;
+	vector<KeyPoint> kpts2;
+	vector<vector<cv::DMatch> > dmatches;
+	Mat desc1;
+	Mat desc2;
 
-    // Check for any errors launching the kernel
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
-    
-    // cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
-    cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto Error;
-    }
+	evolution.Create_Nonlinear_Scale_Space(img1_32);
+	evolution.Feature_Detection(kpts1);
+	evolution.Compute_Descriptors(kpts1, desc1);
 
-    // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	evolution.Create_Nonlinear_Scale_Space(img2_32);
+	evolution.Feature_Detection(kpts2);
+	evolution.Compute_Descriptors(kpts2, desc2);
 
-Error:
-    cudaFree(dev_c);
-    cudaFree(dev_a);
-    cudaFree(dev_b);
-    
-    return cudaStatus;
+	Matcher cuda_matcher;
+
+	cuda_matcher.bfmatch(desc1, desc2, dmatches);
+	cuda_matcher.bfmatch(desc2, desc1, dmatches);
+
+	return 0;
 }
