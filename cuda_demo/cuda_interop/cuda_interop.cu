@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 
 // includes, system
@@ -54,8 +54,8 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	int width = 667;
-	int height = 1000;
+	int width = 845;
+	int height = 1195;
 
 	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
@@ -109,8 +109,8 @@ int main(int argc, char **argv)
 		cout << "NDim is in debug mode" << endl;
 	}
 	// should be preloaded from a video config file
-	int width = 667;
-	int height = 1000;
+	int width = 845;
+	int height = 1195;
 	int memsize_uchar3 = width * height * sizeof(uchar3);
 	int memsize_uchar4 = width * height * sizeof(uchar4);
 
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
-	glutFullScreen();
+	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
@@ -193,8 +193,8 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
-		string img_path_1 = "../../data_store/binary/david_1.bin";
-		string img_path_2 = "../../data_store/binary/david_2.bin";
+		string img_path_1 = "../../data_store/binary/frame1.bin";
+		string img_path_2 = "../../data_store/binary/frame2.bin";
 		string raster1_path = "../../data_store/raster/rasterA.bin";
 		string raster2_path = "../../data_store/raster/rasterB.bin";
 		string affine_path = "../../data_store/affine/affine_1.bin";
