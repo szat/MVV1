@@ -13,7 +13,6 @@
 
 #include <opencv2/video.hpp>
 #include <opencv2/videoio.hpp>
-#include <opencv2/optflow.hpp>
 
 //#include <opencv2/features2d/features2d.hpp>
 #include <AKAZE.h>
@@ -31,18 +30,22 @@ void print_dmatches(vector<vector<DMatch>> dmatches) {
 }
 
 int main() {
+	int starter_offset = 10;
 	// camera 1, flash test 185
 	// camera 2, flash test 410
-	string path_1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/flash/flash_test_1.MP4";
-	string path_2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/flash/flash_test_2.MP4";
+	string path_1 = "flash_test_1.MP4";
+	string path_2 = "flash_test_2.MP4";
 
-	int start_1 = 185;
-	int start_2 = 410;
+	int start_1 = 185 + starter_offset;
+	int start_2 = 410 + starter_offset;
 
 	VideoCapture cap_1(path_1);
 	VideoCapture cap_2(path_2);
 
-	if (!cap_1.isOpened() || !cap_2.isOpened()) {
+	if (!cap_1.isOpened()) {
+		cout << "Hey there" << endl;
+	}
+	if (!cap_2.isOpened()) {
 		cout << "Hey there" << endl;
 	}
 
@@ -67,9 +70,15 @@ int main() {
 		Mat img2_32;
 		next_2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
 
+		Size size(1000, 600);//the dst image size,e.g.100x100
+		Mat img1_32_resized;//dst image
+		Mat img2_32_resized;//src image
+		resize(img1_32, img1_32_resized, size);//resize image
+		resize(img2_32, img2_32_resized, size);//resize image
+
 		// Don't forget to specify image dimensions in AKAZE's options
-		options.img_width = next_1.cols;
-		options.img_height = next_1.rows;
+		options.img_width = img1_32_resized.cols;
+		options.img_height = img2_32_resized.rows;
 
 		// Extract features
 		libAKAZECU::AKAZE evolution(options);
