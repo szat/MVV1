@@ -25,70 +25,82 @@ using namespace std;
 using namespace cv;
 using namespace libAKAZECU;
 
+void print_dmatches(vector<vector<DMatch>> dmatches) {
+	cout << dmatches.size() << endl;
+	cout << dmatches[0].size() << endl;
+}
+
 int main() {
-	Mat img1;
-	string img1_path = "..\\data_store\\images\\c1_img_000177.png";
-	img1 = imread(img1_path);
-	if (img1.empty()) return -1;
+	// camera 1, flash test 185
+	// camera 2, flash test 410
+	string path_1 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/flash/flash_test_1.MP4";
+	string path_2 = "C:/Users/Adrian/Documents/GitHub/mvv/data_store/flash/flash_test_2.MP4";
 
-	Mat img2;
-	string img2_path = "..\\data_store\\images\\c2_img_000177.png";
-	img2 = imread(img2_path);
-	if (img2.empty()) return -1;
+	int start_1 = 185;
+	int start_2 = 410;
 
-	string path1;
-	VideoCapture cap1(path1);
+	VideoCapture cap_1(path_1);
+	VideoCapture cap_2(path_2);
 
-	string path2;
-	VideoCapture cap2(path2);
+	if (!cap_1.isOpened() || !cap_2.isOpened()) {
+		cout << "Hey there" << endl;
+	}
 
-	int frame_nb1 = cap1.get(CAP_PROP_FRAME_COUNT);
-	int frame_nb1 = cap2.get(CAP_PROP_FRAME_COUNT);
+	int num_frames_1 = cap_1.get(CAP_PROP_FRAME_COUNT);
+	int num_frames_2 = cap_2.get(CAP_PROP_FRAME_COUNT);
 
-	int start_1;
-	int start_2;
-	cap1.set(CV_CAP_PROP_POS_FRAMES, start_1);
-	cap2.set(CV_CAP_PROP_POS_FRAMES, start_2);
+	cap_1.set(CV_CAP_PROP_POS_FRAMES, start_1);
+	cap_2.set(CV_CAP_PROP_POS_FRAMES, start_2);
 
-	Mat next1;
-	Mat next2;
-
-	cap1.read(next1);
-	cap2.read(next2);
+	Mat next_1;
+	Mat next_2;
 
 	//So this works well
 	AKAZEOptions options;
 
-	// Convert the image to float to extract features
-	Mat img1_32;
-	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
-	Mat img2_32;
-	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+	for (int i = 0; i < 1; i++) {
+		cap_1.read(next_1);
+		cap_2.read(next_2);
+		// Convert the image to float to extract features
+		Mat img1_32;
+		next_1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
+		Mat img2_32;
+		next_2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
 
-	// Don't forget to specify image dimensions in AKAZE's options
-	options.img_width = img1.cols;
-	options.img_height = img1.rows;
+		// Don't forget to specify image dimensions in AKAZE's options
+		options.img_width = next_1.cols;
+		options.img_height = next_1.rows;
 
-	// Extract features
-	libAKAZECU::AKAZE evolution(options);
-	vector<KeyPoint> kpts1;
-	vector<KeyPoint> kpts2;
-	vector<vector<cv::DMatch> > dmatches;
-	Mat desc1;
-	Mat desc2;
+		// Extract features
+		libAKAZECU::AKAZE evolution(options);
+		vector<KeyPoint> kpts1;
+		vector<KeyPoint> kpts2;
+		vector<vector<cv::DMatch> > dmatches;
+		Mat desc1;
+		Mat desc2;
 
-	evolution.Create_Nonlinear_Scale_Space(img1_32);
-	evolution.Feature_Detection(kpts1);
-	evolution.Compute_Descriptors(kpts1, desc1);
+		evolution.Create_Nonlinear_Scale_Space(img1_32);
+		evolution.Feature_Detection(kpts1);
+		evolution.Compute_Descriptors(kpts1, desc1);
 
-	evolution.Create_Nonlinear_Scale_Space(img2_32);
-	evolution.Feature_Detection(kpts2);
-	evolution.Compute_Descriptors(kpts2, desc2);
+		evolution.Create_Nonlinear_Scale_Space(img2_32);
+		evolution.Feature_Detection(kpts2);
+		evolution.Compute_Descriptors(kpts2, desc2);
 
-	Matcher cuda_matcher;
+		Matcher cuda_matcher;
 
-	cuda_matcher.bfmatch(desc1, desc2, dmatches);
-	cuda_matcher.bfmatch(desc2, desc1, dmatches);
+		cuda_matcher.bfmatch(desc1, desc2, dmatches);
+		cuda_matcher.bfmatch(desc2, desc1, dmatches);
+
+
+		print_dmatches(dmatches);
+	}
+
+
+
+
+
+
 
 	return 0;
 }

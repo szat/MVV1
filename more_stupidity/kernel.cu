@@ -24,6 +24,21 @@ using namespace std;
 using namespace cv;
 using namespace libAKAZECU;
 
+struct PT {
+	short row;
+	short col;
+};
+
+class SPX {
+	vector<PT> contour;
+	vector<PT> inside;	
+	int id;
+}
+
+class SSPX {
+	
+};
+
 int main() {
 	Mat img1;
 	string img1_path = "..\\data_store\\images\\c1_img_000177.png";
