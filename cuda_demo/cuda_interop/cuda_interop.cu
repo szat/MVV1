@@ -54,8 +54,8 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	int width = 667;
-	int height = 1000;
+	int width = 1280;
+	int height = 720;
 
 	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
@@ -109,8 +109,9 @@ int main(int argc, char **argv)
 		cout << "NDim is in debug mode" << endl;
 	}
 	// should be preloaded from a video config file
-	int width = 667;
-	int height = 1000;
+
+	int width = 1280;
+	int height = 720;
 	int memsize_uchar3 = width * height * sizeof(uchar3);
 	int memsize_uchar4 = width * height * sizeof(uchar4);
 
@@ -193,11 +194,11 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
-		string img_path_1 = "../../data_store/binary/david_1.bin";
-		string img_path_2 = "../../data_store/binary/david_2.bin";
-		string raster1_path = "../../data_store/raster/rasterA.bin";
-		string raster2_path = "../../data_store/raster/rasterB.bin";
-		string affine_path = "../../data_store/affine/affine_1.bin";
+		string img_path_1 = "../../data_store/binary/imgA_000001.bin";
+		string img_path_2 = "../../data_store/binary/imgA_000001.bin";
+		string raster1_path = "../../data_store/raster/raster_A_000001.bin";
+		string raster2_path = "../../data_store/raster/raster_B_000001.bin";
+		string affine_path = "../../data_store/affine/affine_000001.bin";
 
 		// BINARY IMAGE READ
 		int length_1 = 0;
