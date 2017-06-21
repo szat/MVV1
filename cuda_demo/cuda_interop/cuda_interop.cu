@@ -33,13 +33,14 @@ using namespace std;
 #define WIDTH 667
 #define HEIGHT 1000
 
+float camera_pos = 0.0;
+
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
 
 cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
-
 
 static void key_func(unsigned char key, int x, int y) {
 	switch (key) {
@@ -50,6 +51,17 @@ static void key_func(unsigned char key, int x, int y) {
 		glDeleteBuffers(1, &bufferObj);
 		exit(0);
 	}
+}
+
+static void arrow_func(int key, int x, int y)
+{
+	if (key == 102) { //left arrow
+		if(camera_pos + 0.005f < 1)  camera_pos = camera_pos + 0.005f;
+	} 
+	else if (key == 100) { //right arrow
+		if (camera_pos - 0.005f > 0) camera_pos = camera_pos - 0.005f;
+	}
+	printf("camera_pos %f\n", camera_pos);
 }
 
 static void draw_func(void) {
@@ -159,6 +171,7 @@ int main(int argc, char **argv)
 	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memsize_uchar4, NULL, GL_DYNAMIC_DRAW_ARB);
 
 	glutKeyboardFunc(key_func);
+	glutSpecialFunc(arrow_func);
 	glutDisplayFunc(draw_func);
 
 	uchar4* d_render_final;
@@ -224,7 +237,7 @@ int main(int argc, char **argv)
 		}
 
 		//--Sending the data to the GPU memory
-		cout << "declaring device data-structures..." << endl;
+		//cout << "declaring device data-structures..." << endl;
 
 		float * d_affine_data;
 		cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
@@ -234,11 +247,8 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_raster2, h_raster2, WIDTH * HEIGHT * sizeof(short), cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
-
-		float tau = (float)(morphing_param % 200) * 0.005f;
-
 	
-		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, WIDTH, HEIGHT, d_affine_data, 4, tau);
+		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, WIDTH, HEIGHT, d_affine_data, 4, camera_pos);
 		flip_image(gridSize, blockSize, d_render_final, WIDTH, HEIGHT);
 		gaussian_2D_blur(gridSize, blockSize, d_render_final, WIDTH, HEIGHT, d_blur_coeff, blur_radius);
 		reset_canvas(gridSize, blockSize, d_out_1, WIDTH, HEIGHT);
@@ -266,7 +276,8 @@ int main(int argc, char **argv)
 		free(h_affine_data);
 
 		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+		//std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+		//std::cout << "Morphing param is " << morphing_param << endl;
 	}
 
 	cudaFree(d_in_1);

@@ -1,5 +1,8 @@
 user_debug.txt
 
+# Preprocessing Files
+*.bin
+
 # Compiled Object files
 *.slo
 *.lo
