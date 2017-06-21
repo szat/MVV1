@@ -151,8 +151,8 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 	cvtColor(img1, imgA, CV_BGR2GRAY);
 	cvtColor(img2, imgB, CV_BGR2GRAY);
 
-	Size desired_size = imgB.size();
-	resize(imgA, imgA, desired_size);
+	// here we are assuming the images are the same size
+	//resize(imgA, imgA, desired_size);
 
 	vector<vector<KeyPoint>> point_matches = match_points_mat(imgA, imgB);
 
@@ -425,7 +425,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	Size desired_size = Size(width, height);
 
 	save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
-	save_img_binary(next_1, next_2, desired_size);
+	save_img_binary(next_1, next_2, desired_size, imgA, imgB);
 	/*
 	for (int i = 0; i < 1; i++) {
 		cap_1.read(next_1);
