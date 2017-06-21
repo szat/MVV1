@@ -5,6 +5,11 @@
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/video.hpp>
+#include <opencv2/videoio.hpp>
+
 #include <vector>
 #include <ctime>
 #include <stdlib.h>
@@ -326,8 +331,8 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 
 void video_preprocessing() {
 	string input_dir = "../../data_store/flash/";
-	string input_video_1 = "flash_test_1.mp4";
-	string input_video_2 = "flash_test_2.mp4";
+	string input_video_1 = "danny_left.mp4";
+	string input_video_2 = "danny_right.mp4";
 	int stop_frame = 2500;
 
 	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
@@ -339,7 +344,74 @@ void video_preprocessing() {
 
 }
 
+int video_loop(string video_path_1, string video_path_2, int start_1, int start_2){
+	int starter_offset = 10;
+	// camera 1, flash test 185
+	// camera 2, flash test 410
+	string path_1 = "../data_store/flash/flash_test_1.MP4";
+	string path_2 = "../data_store/flash/flash_test_2.MP4";
+
+	start_1 = start_1 + starter_offset;
+	start_2 = start_2 + starter_offset;
+
+	VideoCapture cap_1(video_path_1);
+	VideoCapture cap_2(video_path_2);
+
+	if (!cap_1.isOpened()) {
+		cout << "Video 1 failed to load." << endl;
+		return -1;
+	}
+	if (!cap_2.isOpened()) {
+		cout << "Hey t" << endl;
+	}
+
+	int num_frames_1 = cap_1.get(CAP_PROP_FRAME_COUNT);
+	int num_frames_2 = cap_2.get(CAP_PROP_FRAME_COUNT);
+
+	cap_1.set(CV_CAP_PROP_POS_FRAMES, start_1);
+	cap_2.set(CV_CAP_PROP_POS_FRAMES, start_2);
+
+	Mat next_1;
+	Mat next_2;
+
+	//So this works well
+	AKAZEOptions options;
+
+	for (int i = 0; i < 1; i++) {
+		cap_1.read(next_1);
+		cap_2.read(next_2);
+
+		next_1 = imread("..\\data_store\\images\\david_1.jpg");
+		next_2 = imread("..\\data_store\\images\\david_2.jpg");
+
+		/*
+		// Convert the image to float to extract features
+		Mat img1_32;
+		next_1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
+		Mat img2_32;
+		next_2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+
+		Size size(1000, 600);//the dst image size,e.g.100x100
+		Mat img1_32_resized;//dst image
+		Mat img2_32_resized;//src image
+							//resize(img1_32, img1_32_resized, size);//resize image
+							//resize(img2_32, img2_32_resized, size);//resize image
+
+							// Don't forget to specify image dimensions in AKAZE's options
+		options.img_width = img1_32.cols;
+		options.img_height = img2_32.rows;
+		*/
+
+	}
+	return -1;
+}
+
+
+
 int danny_test() {
+	// danny left camera, flash test 217
+	// danny right camera, flash test 265
+
 	// MAIN CALCULATIONS
 	
 	// master function for constructing and saving a frame
@@ -364,7 +436,7 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	video_preprocessing();
+	//video_preprocessing();
 
 	return 0;
 }

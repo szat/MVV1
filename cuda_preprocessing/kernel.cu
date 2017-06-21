@@ -33,8 +33,8 @@ int main() {
 	int starter_offset = 10;
 	// camera 1, flash test 185
 	// camera 2, flash test 410
-	string path_1 = "flash_test_1.MP4";
-	string path_2 = "flash_test_2.MP4";
+	string path_1 = "../data_store/flash/flash_test_1.MP4";
+	string path_2 = "../data_store/flash/flash_test_2.MP4";
 
 	int start_1 = 185 + starter_offset;
 	int start_2 = 410 + starter_offset;
@@ -64,6 +64,10 @@ int main() {
 	for (int i = 0; i < 1; i++) {
 		cap_1.read(next_1);
 		cap_2.read(next_2);
+
+		next_1 = imread("..\\data_store\\images\\david_1.jpg");
+		next_2 = imread("..\\data_store\\images\\david_2.jpg");
+
 		// Convert the image to float to extract features
 		Mat img1_32;
 		next_1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
@@ -73,12 +77,12 @@ int main() {
 		Size size(1000, 600);//the dst image size,e.g.100x100
 		Mat img1_32_resized;//dst image
 		Mat img2_32_resized;//src image
-		resize(img1_32, img1_32_resized, size);//resize image
-		resize(img2_32, img2_32_resized, size);//resize image
+		//resize(img1_32, img1_32_resized, size);//resize image
+		//resize(img2_32, img2_32_resized, size);//resize image
 
 		// Don't forget to specify image dimensions in AKAZE's options
-		options.img_width = img1_32_resized.cols;
-		options.img_height = img2_32_resized.rows;
+		options.img_width = img1_32.cols;
+		options.img_height = img2_32.rows;
 
 		// Extract features
 		libAKAZECU::AKAZE evolution(options);
@@ -88,11 +92,11 @@ int main() {
 		Mat desc1;
 		Mat desc2;
 
-		evolution.Create_Nonlinear_Scale_Space(img1_32);
+		evolution.Create_Nonlinear_Scale_Space(img1_32_resized);
 		evolution.Feature_Detection(kpts1);
 		evolution.Compute_Descriptors(kpts1, desc1);
 
-		evolution.Create_Nonlinear_Scale_Space(img2_32);
+		evolution.Create_Nonlinear_Scale_Space(img2_32_resized);
 		evolution.Feature_Detection(kpts2);
 		evolution.Compute_Descriptors(kpts2, desc2);
 

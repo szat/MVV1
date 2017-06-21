@@ -51,8 +51,8 @@ void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width,
 }
 
 int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
-	// camera 1, flash test 185
-	// camera 2, flash test 410
+	// danny left camera, flash test 217
+	// danny right camera, flash test 265
 
 	VideoCapture capture(video_path); // open the default camera
 	if (!capture.isOpened()) { // check if we succeeded
@@ -73,13 +73,7 @@ int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
 			cout << "Error reading frame" << endl;
 			break;
 		}
-		// debug code only
-		if (camera_id == 1 && i > 185 - 5) {
-			int test = 0;
-		}
-		if (camera_id == 2 && i > 410 - 5) {
-			int test = 0;
-		}
+
 		get_frame_intensity(frame, intensity, width, height);
 		i++;
 	}
