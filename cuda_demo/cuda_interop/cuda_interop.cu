@@ -43,9 +43,12 @@ __device__ int counter;
 __device__ volatile int param = 50;
 
 static void key_func(unsigned char key, int x, int y) {
-	switch (key) {
-	case 27:
-		// clean up OpenGL and CUDA
+	if (key == 32) {
+
+		std::cout << "space key pressed" << endl;
+
+	}
+	else if (key == 27) {
 		cudaGraphicsUnregisterResource(resource);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 		glDeleteBuffers(1, &bufferObj);
