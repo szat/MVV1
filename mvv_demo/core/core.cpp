@@ -351,8 +351,8 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 
 void video_preprocessing() {
 	string input_dir = "../../data_store/flash/";
-	string input_video_1 = "danny_left.mp4";
-	string input_video_2 = "danny_right.mp4";
+	string input_video_1 = "judo_left.mp4";
+	string input_video_2 = "judo_right.mp4";
 	int stop_frame = 2500;
 
 	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
@@ -368,8 +368,8 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	int starter_offset = 10;
 	// danny left camera, flash test 217
 	// danny right camera, flash test 265
-	string path_1 = "../data_store/flash/flash_test_1.MP4";
-	string path_2 = "../data_store/flash/flash_test_2.MP4";
+	// max left cmaera: 501
+	// max right camera: 484
 
 	start_1 = start_1 + starter_offset;
 	start_2 = start_2 + starter_offset;
@@ -421,7 +421,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	cap_2.read(next_2);
 
 	// do the point matching at max resolution, then rescale
-	Size original_size = Size(2688, 1512);
+	Size original_size = Size(1920, 1080);
 	Size desired_size = Size(width, height);
 
 	save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
@@ -491,7 +491,11 @@ int danny_test() {
 	// danny left camera, flash test 217
 	// danny right camera, flash test 265
 	// desired size 1280 x 720
-	video_loop("../../data_store/flash/danny_left.mp4", "../../data_store/flash/danny_right.mp4", 217, 265, 1280, 720);
+	// max left cmaera: 501
+	// max right camera: 484
+	// 887
+	// 1413
+	video_loop("../../data_store/flash/judo_left.mp4", "../../data_store/flash/judo_right.mp4", 500, 500, 1280, 720);
 	return 0;
 }
 
