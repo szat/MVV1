@@ -108,7 +108,7 @@ void save_img_binary(cv::Mat next_1, cv::Mat next_2, cv::Size desired_size, std:
 	//cv::Mat img_1 = imread(src_path_1, cv::ImreadModes::IMREAD_COLOR);
 	//cv::Mat img_2 = imread(src_path_2, cv::ImreadModes::IMREAD_COLOR);
 	cv::resize(next_1, next_1, desired_size);
-	cv::resize(next_1, next_1, desired_size);
+	cv::resize(next_2, next_2, desired_size);
 
 	save_img(imgA_path, next_1);
 	save_img(imgB_path, next_2);
