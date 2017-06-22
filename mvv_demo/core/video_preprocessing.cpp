@@ -9,6 +9,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <stdlib.h>   
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std;
@@ -80,6 +81,74 @@ int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
 
 	int flash_frame = calculate_intensity_maxima(intensity);
 	return flash_frame;
+}
+
+vector<float> get_intensity_profile(string video_path, int stop_frame, int camera_id) {
+	// danny left camera, flash test 217
+	// danny right camera, flash test 265
+
+	VideoCapture capture(video_path); // open the default camera
+	if (!capture.isOpened()) { // check if we succeeded
+		cout << "Error opening video" << endl;
+	}
+
+	int width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	vector<float> intensity = vector<float>();
+	Mat frame;
+	int i = 0;
+	// flash will happen at beginning of video
+	while (i < stop_frame)
+	{
+		if (!capture.read(frame)) {
+			cout << "Error reading frame" << endl;
+			break;
+		}
+
+		get_frame_intensity(frame, intensity, width, height);
+		i++;
+	}
+
+	return intensity;
+}
+
+int determine_offset(vector<float> intensity_1, vector<float> intensity_2, int stop_frame) {
+
+	int range_min = -750;
+	int range_max = 750;
+	int correct_i = 0;
+	float min_diff = 10000000000000.0f;
+	for (int i = range_min; i < range_max; i++) {
+		float total_diff = 0;
+		for (int j = 1500; j < 2000; j++) {
+			float diff = intensity_2[j] - intensity_1[j + i];
+			total_diff += diff;
+		}
+		if (total_diff < min_diff) {
+			min_diff = total_diff;
+			correct_i = i;
+		}
+	}
+	cout << "Correct i: " << correct_i << endl;
+	return correct_i;
+}
+
+int synchronize_videos(string video_directory, string video_path_1, string video_path_2, int stop_frame) {
+	auto t1 = Clock::now();
+
+	pair<int, int> maxima_timing = pair<int, int>(0, 0);
+
+	string full_path_1 = video_directory + video_path_1;
+	string full_path_2 = video_directory + video_path_2;
+
+	// third parameter is camera_id
+	vector<float> intensity_1 = get_intensity_profile(full_path_1, stop_frame, 1);
+	vector<float> intensity_2 = get_intensity_profile(full_path_2, stop_frame, 2);
+
+	int offset = determine_offset(intensity_1, intensity_2, stop_frame);
+	
+	return offset;
 }
 
 pair<int,int> get_flash_timing(string video_directory, string video_path_1, string video_path_2, int stop_frame) {

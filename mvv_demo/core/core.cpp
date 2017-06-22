@@ -353,11 +353,12 @@ void video_preprocessing() {
 	string input_dir = "../../data_store/flash/";
 	string input_video_1 = "judo_left.mp4";
 	string input_video_2 = "judo_right.mp4";
-	int stop_frame = 2500;
+	int stop_frame = 5000;
 
-	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
-	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
-	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
+	//pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
+	int timing_synchro = synchronize_videos(input_dir, input_video_1, input_video_2, stop_frame);
+	//cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
+	//cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 
 	// construct two new videos from the synchronization, and save those.
 	//save_trimmed_videos(flash_result, input_dir, output_dir, input_video_1, input_video_2, output_video_1, output_video_2);
@@ -487,7 +488,7 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	//video_preprocessing();
+	video_preprocessing();
 	// danny left camera, flash test 217
 	// danny right camera, flash test 265
 	// desired size 1280 x 720
@@ -495,7 +496,7 @@ int danny_test() {
 	// max right camera: 484
 	// 887
 	// 1413
-	video_loop("../../data_store/flash/judo_left.mp4", "../../data_store/flash/judo_right.mp4", 500, 500, 1280, 720);
+	//video_loop("../../data_store/flash/judo_left.mp4", "../../data_store/flash/judo_right.mp4", 500, 500, 1280, 720);
 	return 0;
 }
 
