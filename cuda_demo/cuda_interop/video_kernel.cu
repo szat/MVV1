@@ -190,7 +190,7 @@ void interpolate_frame(dim3 grid_size, dim3 block_size, uchar3* d_out_1, uchar3*
 
 	float reverse_tau = 1.0f - tau;
 	kernel2D_subpix << <grid_size, block_size >> >(d_out_1, d_in_1, d_raster_1, w, h, d_affine_data, subdiv, tau, false);
-	kernel2D_subpix << <grid_size, block_size >> >(d_out_2, d_in_2, d_raster_2, w, h, d_affine_data, subdiv, reverse_tau, true);
+	//kernel2D_subpix << <grid_size, block_size >> >(d_out_2, d_in_2, d_raster_2, w, h, d_affine_data, subdiv, reverse_tau, true);
 	kernel2D_add << <grid_size, block_size >> > (d_render_final, d_out_1, d_out_2, w, h, tau);
 }
 

@@ -349,14 +349,14 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 	cout << "done";
 }
 
-void video_preprocessing() {
-	string input_dir = "../../data_store/flash/";
-	string input_video_1 = "judo_left.mp4";
-	string input_video_2 = "judo_right.mp4";
+void video_preprocessing(string path_1, string path_2) {
+	//string input_dir = "../../data_store/flash/";
+	//string input_video_1 = "judo_left.mp4";
+	//string input_video_2 = "judo_right.mp4";
 	int stop_frame = 5000;
 
 	//pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
-	int timing_synchro = synchronize_videos(input_dir, input_video_1, input_video_2, stop_frame);
+	pair<int,int> timing_synchro = synchronize_videos(path_1, path_2, stop_frame);
 	//cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
 	//cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 
@@ -488,15 +488,18 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	video_preprocessing();
-	// danny left camera, flash test 217
-	// danny right camera, flash test 265
+	string video_path_1 = "../../data_store/flash/judo_left.mp4";
+	string video_path_2 = "../../data_store/flash/judo_right.mp4";
+
+	//video_preprocessing(video_path_1, video_path_2);
 	// desired size 1280 x 720
-	// max left cmaera: 501
-	// max right camera: 484
-	// 887
-	// 1413
-	//video_loop("../../data_store/flash/judo_left.mp4", "../../data_store/flash/judo_right.mp4", 500, 500, 1280, 720);
+
+	int start_offset = 500;
+	float delay = 6.2657f;
+	int framerate = 95;
+	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+
+	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1280, 720);
 	return 0;
 }
 

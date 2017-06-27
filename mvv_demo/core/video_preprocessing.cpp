@@ -113,40 +113,46 @@ vector<float> get_intensity_profile(string video_path, int stop_frame, int camer
 	return intensity;
 }
 
-int determine_offset(vector<float> intensity_1, vector<float> intensity_2, int stop_frame) {
+pair<int,int> determine_offset(vector<float> intensity_1, vector<float> intensity_2, int stop_frame) {
+	// when do the intensity profiles sync up?
 
-	int range_min = -750;
-	int range_max = 750;
-	int correct_i = 0;
-	float min_diff = 10000000000000.0f;
-	for (int i = range_min; i < range_max; i++) {
+	int max_offset = 1000;
+	int range = 3000;
+
+	int max_diff = 0;
+	int max_i = 0;
+
+	for (int i = 0; i < max_offset; i++) {
 		float total_diff = 0;
-		for (int j = 1500; j < 2000; j++) {
-			float diff = intensity_2[j] - intensity_1[j + i];
+		for (int j = 0; j < range; j++) {
+			float diff = abs(intensity_2[j + i] - intensity_1[j]);
 			total_diff += diff;
 		}
-		if (total_diff < min_diff) {
-			min_diff = total_diff;
-			correct_i = i;
+
+		if (total_diff > max_diff) {
+			max_diff = total_diff;
+			max_i = i;
 		}
+
+
 	}
-	cout << "Correct i: " << correct_i << endl;
-	return correct_i;
+	
+
+	pair<int, int> stuff = pair<int, int>();
+
+	return stuff;
 }
 
-int synchronize_videos(string video_directory, string video_path_1, string video_path_2, int stop_frame) {
+pair<int,int> synchronize_videos(string video_path_1, string video_path_2, int stop_frame) {
 	auto t1 = Clock::now();
 
 	pair<int, int> maxima_timing = pair<int, int>(0, 0);
 
-	string full_path_1 = video_directory + video_path_1;
-	string full_path_2 = video_directory + video_path_2;
-
 	// third parameter is camera_id
-	vector<float> intensity_1 = get_intensity_profile(full_path_1, stop_frame, 1);
-	vector<float> intensity_2 = get_intensity_profile(full_path_2, stop_frame, 2);
+	vector<float> intensity_1 = get_intensity_profile(video_path_1, stop_frame, 1);
+	vector<float> intensity_2 = get_intensity_profile(video_path_2, stop_frame, 2);
 
-	int offset = determine_offset(intensity_1, intensity_2, stop_frame);
+	pair<int,int> offset = determine_offset(intensity_1, intensity_2, stop_frame);
 	
 	return offset;
 }
@@ -204,4 +210,15 @@ void save_trimmed_videos(pair<int,int> flash_result, string input_dir, string ou
 		out_capture_1.write(img);
 	}
 
+}
+
+pair<int, int> audio_sync(int initial_offset, float delay, int framerate) {
+	//6.2657
+	//95
+	pair<int, int> sync = pair<int, int>(initial_offset, initial_offset);
+	float offset2 = delay * (float)framerate;
+	int offset2_int = (int)offset2;
+	sync.first = initial_offset;
+	sync.second = initial_offset + offset2_int;
+	return sync;
 }
