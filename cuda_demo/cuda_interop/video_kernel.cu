@@ -70,6 +70,8 @@ output[index] = new_uchar3;
 
 __global__
 void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w, int h, float tau) {
+	// I am also sorting out the color channel issues in this function.
+
 	//tau is from a to b
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
@@ -81,22 +83,22 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 
 	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
 		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_2[raster_index].x;
+		new_uchar4.x = d_input_2[raster_index].z;
 		new_uchar4.y = d_input_2[raster_index].y;
-		new_uchar4.z = d_input_2[raster_index].z;
+		new_uchar4.z = d_input_2[raster_index].x;
 		d_output[raster_index] = new_uchar4;
 	}
 	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
 		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_1[raster_index].x;
+		new_uchar4.x = d_input_1[raster_index].z;
 		new_uchar4.y = d_input_1[raster_index].y;
-		new_uchar4.z = d_input_1[raster_index].z;
+		new_uchar4.z = d_input_1[raster_index].x;
 		d_output[raster_index] = new_uchar4;
 	}
 	else {
-		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
+		d_output[raster_index].x = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
 		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
-		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
+		d_output[raster_index].z = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
 	}
 }
 
