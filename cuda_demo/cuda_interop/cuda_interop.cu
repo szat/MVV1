@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 
 // includes, system
@@ -54,8 +54,8 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	int width = 1280;
-	int height = 720;
+	int width = 1920;
+	int height = 1080;
 
 	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
@@ -110,13 +110,13 @@ int main(int argc, char **argv)
 	}
 	// should be preloaded from a video config file
 
-	int width = 1280;
-	int height = 720;
+	int width = 1920;
+	int height = 1080;
 	int memsize_uchar3 = width * height * sizeof(uchar3);
 	int memsize_uchar4 = width * height * sizeof(uchar4);
 
 	// Gaussian blur coefficients and calculation
-	int blur_radius = 5;
+	int blur_radius = 3;
 	// smaller numbere means more blur
 	float blur_param = 1.25f;
 	int num_coeff = (2 * blur_radius + 1);
@@ -238,12 +238,12 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		float tau = (float)(morphing_param % 200) * 0.005f;
+		float tau = (float)(morphing_param % 50) * 0.02f;
 
 	
 		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
 		flip_image(gridSize, blockSize, d_render_final, width, height);
-		//gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
+		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
 		reset_canvas(gridSize, blockSize, d_out_1, width, height);
 		reset_canvas(gridSize, blockSize, d_out_2, width, height);
 

@@ -162,6 +162,7 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 	vector<Point2f> imgB_points = convert_key_points(imgB_keypoints);
 
 	// Rescaling points
+	/*
 	float x_scaling = (float)desired_size.width / (float)original_size.width;
 	float y_scaling = (float)desired_size.height / (float)original_size.height;
 
@@ -180,8 +181,8 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 		imgA_points_rescaled.push_back(pointA);
 		imgB_points_rescaled.push_back(pointB);
 	}
-
-	MatchedGeometry geometry = create_matched_geometry(imgA_points_rescaled, imgB_points_rescaled, desired_size);
+	*/
+	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, desired_size);
 	return geometry;
 }
 
@@ -240,10 +241,6 @@ void save_frame_master(Mat &img1, Mat &img2, Size original_size, Size desired_si
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
 	write_float_array(affine, affine_params, trianglesA.size() * 12);
-
-	cout << "Finished.";
-
-	cin.get();
 }
 
 void trial_binary_render(uchar *image, int length, int width, int height) {
@@ -365,6 +362,18 @@ void video_preprocessing(string path_1, string path_2) {
 
 }
 
+string pad_frame_number(int frame_number) {
+	// zero-padding frame number
+	stringstream stream;
+	stream << frame_number;
+	string padded;
+	stream >> padded;
+	int str_length = padded.length();
+	for (int i = 0; i < 6 - str_length; i++)
+		padded = "0" + padded;
+	return padded;
+}
+
 int video_loop(string video_path_1, string video_path_2, int start_1, int start_2, int width, int height){
 	int starter_offset = 10;
 	// danny left camera, flash test 217
@@ -399,62 +408,45 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	int frames_remaining_2 = num_frames_2 - start_2 - 1;
 	int frames_remaining = min(frames_remaining_1, frames_remaining_2);
 
-	// 1 frame at a time for now
+	// Big for loop which:
+	// Prints console of what the progress is:
 
-	string affine_dir = "../../data_store/affine/";
-	string filename_affine = "affine_000001.bin";
+	int cutoff_frame = 2;
 
-	string raster_dir = "../../data_store/raster/";
-	string filename_raster_A = "raster_A_000001.bin";
-	string filename_raster_B = "raster_B_000001.bin";
+	for (int i = 1; i <= cutoff_frame; i++) {
+		string padded_number = pad_frame_number(i);
+		cout << "Processing frame " << i << " of " << cutoff_frame << endl;
+		
+		string affine_dir = "../../data_store/affine/";
+		string filename_affine = "affine_" + padded_number + ".bin";
 
-	string image_dir = "../../data_store/binary/";
-	string filename_img_A = "imgA_000001.bin";
-	string filename_img_B = "imgB_000001.bin";
+		string raster_dir = "../../data_store/raster/";
+		string filename_raster_A = "raster_A_" + padded_number + ".bin";
+		string filename_raster_B = "raster_B_" + padded_number + ".bin";
 
-	string affine = affine_dir + filename_affine;
-	string rasterA = raster_dir + filename_raster_A;
-	string rasterB = raster_dir + filename_raster_B;
-	string imgA = image_dir + filename_img_A;
-	string imgB = image_dir + filename_img_B;
+		string image_dir = "../../data_store/binary/";
+		string filename_img_A = "imgA_" + padded_number + ".bin";
+		string filename_img_B = "imgB_" + padded_number + ".bin";
 
-	cap_1.read(next_1);
-	cap_2.read(next_2);
+		string affine = affine_dir + filename_affine;
+		string rasterA = raster_dir + filename_raster_A;
+		string rasterB = raster_dir + filename_raster_B;
+		string imgA = image_dir + filename_img_A;
+		string imgB = image_dir + filename_img_B;
 
-	// do the point matching at max resolution, then rescale
-	Size original_size = Size(1920, 1080);
-	Size desired_size = Size(width, height);
-
-	save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
-	save_img_binary(next_1, next_2, desired_size, imgA, imgB);
-	/*
-	for (int i = 0; i < 1; i++) {
 		cap_1.read(next_1);
 		cap_2.read(next_2);
 
-		string test;
-		test << setfill('0') << setw(5) << 25;
+		// do the point matching at max resolution, then rescale
+		Size original_size = Size(1920, 1080);
+		Size desired_size = Size(width, height);
 
-		
-		// Convert the image to float to extract features
-		Mat img1_32;
-		next_1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
-		Mat img2_32;
-		next_2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
-
-		Size size(1000, 600);//the dst image size,e.g.100x100
-		Mat img1_32_resized;//dst image
-		Mat img2_32_resized;//src image
-							//resize(img1_32, img1_32_resized, size);//resize image
-							//resize(img2_32, img2_32_resized, size);//resize image
-
-							// Don't forget to specify image dimensions in AKAZE's options
-		options.img_width = img1_32.cols;
-		options.img_height = img2_32.rows;
-		
-
+		save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
+		save_img_binary(next_1, next_2, desired_size, imgA, imgB);
 	}
-	*/
+
+
+
 	return -1;
 }
 
@@ -499,7 +491,7 @@ int danny_test() {
 	int framerate = 95;
 	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
 
-	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1280, 720);
+	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1920, 1080);
 	return 0;
 }
 
