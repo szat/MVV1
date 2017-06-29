@@ -162,6 +162,7 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 	vector<Point2f> imgB_points = convert_key_points(imgB_keypoints);
 
 	// Rescaling points
+	/*
 	float x_scaling = (float)desired_size.width / (float)original_size.width;
 	float y_scaling = (float)desired_size.height / (float)original_size.height;
 
@@ -180,8 +181,8 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 		imgA_points_rescaled.push_back(pointA);
 		imgB_points_rescaled.push_back(pointB);
 	}
-
-	MatchedGeometry geometry = create_matched_geometry(imgA_points_rescaled, imgB_points_rescaled, desired_size);
+	*/
+	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, desired_size);
 	return geometry;
 }
 
@@ -240,10 +241,6 @@ void save_frame_master(Mat &img1, Mat &img2, Size original_size, Size desired_si
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
 	write_float_array(affine, affine_params, trianglesA.size() * 12);
-
-	cout << "Finished.";
-
-	cin.get();
 }
 
 void trial_binary_render(uchar *image, int length, int width, int height) {
@@ -349,27 +346,45 @@ void merge_and_save(string src_path_1, string src_path_2, string dst_path) {
 	cout << "done";
 }
 
-void video_preprocessing() {
-	string input_dir = "../../data_store/flash/";
-	string input_video_1 = "danny_left.mp4";
-	string input_video_2 = "danny_right.mp4";
-	int stop_frame = 2500;
+void video_preprocessing(string path_1, string path_2) {
+	//string input_dir = "../../data_store/flash/";
+	//string input_video_1 = "judo_left.mp4";
+	//string input_video_2 = "judo_right.mp4";
+	int stop_frame = 5000;
 
-	pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
-	cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
-	cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
+	//pair<int, int> flash_result = get_flash_timing(input_dir, input_video_1, input_video_2, stop_frame);
+	pair<int,int> timing_synchro = synchronize_videos(path_1, path_2, stop_frame);
+	//cout << "Video 1 flash frame maxima: " << flash_result.first << endl;
+	//cout << "Video 2 flash frame maxima: " << flash_result.second << endl;
 
 	// construct two new videos from the synchronization, and save those.
 	//save_trimmed_videos(flash_result, input_dir, output_dir, input_video_1, input_video_2, output_video_1, output_video_2);
 
 }
 
+string pad_frame_number(int frame_number) {
+	// zero-padding frame number
+	stringstream stream;
+	stream << frame_number;
+	string padded;
+	stream >> padded;
+	int str_length = padded.length();
+	for (int i = 0; i < 6 - str_length; i++)
+		padded = "0" + padded;
+	return padded;
+}
+
 int video_loop(string video_path_1, string video_path_2, int start_1, int start_2, int width, int height){
+
+	// do the point matching at max resolution, then rescale
+	Size original_size = Size(1920, 1080);
+	Size desired_size = Size(width, height);
+
 	int starter_offset = 10;
 	// danny left camera, flash test 217
 	// danny right camera, flash test 265
-	string path_1 = "../data_store/flash/flash_test_1.MP4";
-	string path_2 = "../data_store/flash/flash_test_2.MP4";
+	// max left cmaera: 501
+	// max right camera: 484
 
 	start_1 = start_1 + starter_offset;
 	start_2 = start_2 + starter_offset;
@@ -398,62 +413,59 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	int frames_remaining_2 = num_frames_2 - start_2 - 1;
 	int frames_remaining = min(frames_remaining_1, frames_remaining_2);
 
-	// 1 frame at a time for now
+	// Big for loop which:
+	// Prints console of what the progress is:
 
-	string affine_dir = "../../data_store/affine/";
-	string filename_affine = "affine_000001.bin";
+	int jump_size = 20;
+	int num_jumps = 1;
+	int cutoff_frame = jump_size * num_jumps;
 
-	string raster_dir = "../../data_store/raster/";
-	string filename_raster_A = "raster_A_000001.bin";
-	string filename_raster_B = "raster_B_000001.bin";
+	for (int i = 0; i <= cutoff_frame; i += jump_size) {
+		string padded_number = pad_frame_number(i);
+		cout << "Processing frame " << i << " of " << cutoff_frame << endl;
+		
+		string affine_dir = "../../data_store/affine/";
+		string filename_affine = "affine_" + padded_number + ".bin";
 
-	string image_dir = "../../data_store/binary/";
-	string filename_img_A = "imgA_000001.bin";
-	string filename_img_B = "imgB_000001.bin";
+		string raster_dir = "../../data_store/raster/";
+		string filename_raster_A = "raster_A_" + padded_number + ".bin";
+		string filename_raster_B = "raster_B_" + padded_number + ".bin";
 
-	string affine = affine_dir + filename_affine;
-	string rasterA = raster_dir + filename_raster_A;
-	string rasterB = raster_dir + filename_raster_B;
-	string imgA = image_dir + filename_img_A;
-	string imgB = image_dir + filename_img_B;
+		string image_dir = "../../data_store/binary/";
+		string filename_img_A = "imgA_" + padded_number + ".bin";
+		string filename_img_B = "imgB_" + padded_number + ".bin";
 
-	cap_1.read(next_1);
-	cap_2.read(next_2);
+		string affine = affine_dir + filename_affine;
+		string rasterA = raster_dir + filename_raster_A;
+		string rasterB = raster_dir + filename_raster_B;
+		string imgA;
+		string imgB;
 
-	// do the point matching at max resolution, then rescale
-	Size original_size = Size(2688, 1512);
-	Size desired_size = Size(width, height);
-
-	save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
-	save_img_binary(next_1, next_2, desired_size, imgA, imgB);
-	/*
-	for (int i = 0; i < 1; i++) {
 		cap_1.read(next_1);
 		cap_2.read(next_2);
 
-		string test;
-		test << setfill('0') << setw(5) << 25;
+		save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
 
-		
-		// Convert the image to float to extract features
-		Mat img1_32;
-		next_1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
-		Mat img2_32;
-		next_2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+		cout << "Saving image for frame " << i << endl;
+		padded_number = pad_frame_number(i);
+		filename_img_A = "imgA_" + padded_number + ".bin";
+		filename_img_B = "imgB_" + padded_number + ".bin";
+		imgA = image_dir + filename_img_A;
+		imgB = image_dir + filename_img_B;
+		save_img_binary(next_1, next_2, desired_size, imgA, imgB);
 
-		Size size(1000, 600);//the dst image size,e.g.100x100
-		Mat img1_32_resized;//dst image
-		Mat img2_32_resized;//src image
-							//resize(img1_32, img1_32_resized, size);//resize image
-							//resize(img2_32, img2_32_resized, size);//resize image
-
-							// Don't forget to specify image dimensions in AKAZE's options
-		options.img_width = img1_32.cols;
-		options.img_height = img2_32.rows;
-		
-
+		for (int j = 1; j < 20; j++) {
+			cout << "Saving image for frame " << (i + j) << endl;
+			cap_1.read(next_1);
+			cap_2.read(next_2);
+			padded_number = pad_frame_number(i + j);
+			filename_img_A = "imgA_" + padded_number + ".bin";
+			filename_img_B = "imgB_" + padded_number + ".bin";
+			imgA = image_dir + filename_img_A;
+			imgB = image_dir + filename_img_B;
+			save_img_binary(next_1, next_2, desired_size, imgA, imgB);
+		}
 	}
-	*/
 	return -1;
 }
 
@@ -487,11 +499,18 @@ int danny_test() {
 	merge_and_save(src_path_1, src_path_2, dst_path);
 	*/
 	
-	//video_preprocessing();
-	// danny left camera, flash test 217
-	// danny right camera, flash test 265
+	string video_path_1 = "../../data_store/flash/judo_left.mp4";
+	string video_path_2 = "../../data_store/flash/judo_right.mp4";
+
+	//video_preprocessing(video_path_1, video_path_2);
 	// desired size 1280 x 720
-	video_loop("../../data_store/flash/danny_left.mp4", "../../data_store/flash/danny_right.mp4", 217, 265, 1280, 720);
+
+	int start_offset = 500;
+	float delay = 6.2657f;
+	int framerate = 95;
+	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+
+	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1920, 1080);
 	return 0;
 }
 

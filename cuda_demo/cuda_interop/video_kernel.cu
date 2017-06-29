@@ -27,7 +27,12 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w,
 					return;
 				}
 				int new_i = new_r * w + new_c;
-				d_output[new_i] = d_input[raster_index];
+				// new if condition for preserving painted frames
+				uchar3 pixel_result = d_input[raster_index];
+				//if (pixel_result.x != 0 && pixel_result.y != 0 && pixel_result.z != 0){
+				d_output[new_i] = pixel_result;
+				//}
+
 			}
 		}
 	}
@@ -70,6 +75,8 @@ output[index] = new_uchar3;
 
 __global__
 void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w, int h, float tau) {
+	// I am also sorting out the color channel issues in this function.
+
 	//tau is from a to b
 	int col = blockIdx.x*blockDim.x + threadIdx.x;
 	int row = blockIdx.y*blockDim.y + threadIdx.y;
@@ -81,22 +88,22 @@ void kernel2D_add(uchar4* d_output, uchar3* d_input_1, uchar3* d_input_2, int w,
 
 	if (d_input_1[raster_index].x == 0 && d_input_1[raster_index].y == 0 && d_input_1[raster_index].z == 0) {
 		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_2[raster_index].x;
+		new_uchar4.x = d_input_2[raster_index].z;
 		new_uchar4.y = d_input_2[raster_index].y;
-		new_uchar4.z = d_input_2[raster_index].z;
+		new_uchar4.z = d_input_2[raster_index].x;
 		d_output[raster_index] = new_uchar4;
 	}
 	else if (d_input_2[raster_index].x == 0 && d_input_2[raster_index].y == 0 && d_input_2[raster_index].z == 0) {
 		uchar4 new_uchar4 = uchar4();
-		new_uchar4.x = d_input_1[raster_index].x;
+		new_uchar4.x = d_input_1[raster_index].z;
 		new_uchar4.y = d_input_1[raster_index].y;
-		new_uchar4.z = d_input_1[raster_index].z;
+		new_uchar4.z = d_input_1[raster_index].x;
 		d_output[raster_index] = new_uchar4;
 	}
 	else {
-		d_output[raster_index].x = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
+		d_output[raster_index].x = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
 		d_output[raster_index].y = tau*d_input_1[raster_index].y + (1 - tau)*d_input_2[raster_index].y;
-		d_output[raster_index].z = tau*d_input_1[raster_index].z + (1 - tau)*d_input_2[raster_index].z;
+		d_output[raster_index].z = tau*d_input_1[raster_index].x + (1 - tau)*d_input_2[raster_index].x;
 	}
 }
 
@@ -190,7 +197,7 @@ void interpolate_frame(dim3 grid_size, dim3 block_size, uchar3* d_out_1, uchar3*
 
 	float reverse_tau = 1.0f - tau;
 	kernel2D_subpix << <grid_size, block_size >> >(d_out_1, d_in_1, d_raster_1, w, h, d_affine_data, subdiv, tau, false);
-	kernel2D_subpix << <grid_size, block_size >> >(d_out_2, d_in_2, d_raster_2, w, h, d_affine_data, subdiv, reverse_tau, true);
+	//kernel2D_subpix << <grid_size, block_size >> >(d_out_2, d_in_2, d_raster_2, w, h, d_affine_data, subdiv, reverse_tau, true);
 	kernel2D_add << <grid_size, block_size >> > (d_render_final, d_out_1, d_out_2, w, h, tau);
 }
 

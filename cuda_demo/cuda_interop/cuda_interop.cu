@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 
 // includes, system
@@ -54,8 +54,8 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	int width = 1280;
-	int height = 720;
+	int width = 1920;
+	int height = 1080;
 
 	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glutSwapBuffers();
@@ -69,6 +69,19 @@ void timerEvent(int value)
 		glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 	}
 }
+
+string pad_frame_number(int frame_number) {
+	// zero-padding frame number
+	stringstream stream;
+	stream << frame_number;
+	string padded;
+	stream >> padded;
+	int str_length = padded.length();
+	for (int i = 0; i < 6 - str_length; i++)
+		padded = "0" + padded;
+	return padded;
+}
+
 
 float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	/*
@@ -110,13 +123,13 @@ int main(int argc, char **argv)
 	}
 	// should be preloaded from a video config file
 
-	int width = 1280;
-	int height = 720;
+	int width = 1920;
+	int height = 1080;
 	int memsize_uchar3 = width * height * sizeof(uchar3);
 	int memsize_uchar4 = width * height * sizeof(uchar4);
 
 	// Gaussian blur coefficients and calculation
-	int blur_radius = 5;
+	int blur_radius = 3;
 	// smaller numbere means more blur
 	float blur_param = 1.25f;
 	int num_coeff = (2 * blur_radius + 1);
@@ -148,7 +161,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
-	glutFullScreen();
+	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
@@ -192,13 +205,25 @@ int main(int argc, char **argv)
 	uchar3 * d_out_2;
 	cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
+	int frame_count = 0;
+	int frame_intervals = 20;
+	int max_frames = 2220;
+
+
 	for (;;) {
+		int frame_number = frame_count % max_frames;
+		int rounded_frame_number = frame_number - frame_number % frame_intervals;
+		string padded_frame_number = pad_frame_number(frame_count);
+		string padded_rounded_frame_number = pad_frame_number(rounded_frame_number);
+
+		cout << "frame number" << frame_number << endl;
 		auto t1 = std::chrono::high_resolution_clock::now();
-		string img_path_1 = "../../data_store/binary/imgA_000001.bin";
-		string img_path_2 = "../../data_store/binary/imgA_000001.bin";
-		string raster1_path = "../../data_store/raster/raster_A_000001.bin";
-		string raster2_path = "../../data_store/raster/raster_B_000001.bin";
-		string affine_path = "../../data_store/affine/affine_000001.bin";
+
+		string img_path_1 = "../../data_store/binary/imgA_" + padded_frame_number + ".bin";
+		string img_path_2 = "../../data_store/binary/imgB_" + padded_frame_number + ".bin";
+		string raster1_path = "../../data_store/raster/raster_A_" + padded_rounded_frame_number + ".bin";
+		string raster2_path = "../../data_store/raster/raster_B_" + padded_rounded_frame_number + ".bin";
+		string affine_path = "../../data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
 
 		// BINARY IMAGE READ
 		int length_1 = 0;
@@ -238,8 +263,7 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		float tau = (float)(morphing_param % 200) * 0.005f;
-
+		float tau = (float)(morphing_param % 50) * 0.02f;
 	
 		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
 		flip_image(gridSize, blockSize, d_render_final, width, height);
@@ -270,6 +294,7 @@ int main(int argc, char **argv)
 
 		auto t2 = std::chrono::high_resolution_clock::now();
 		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+		frame_count++;
 	}
 
 	cudaFree(d_in_1);

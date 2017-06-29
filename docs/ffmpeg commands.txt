@@ -1,0 +1,3 @@
+ffmpeg -i video.mp4 -vn -acodec copy audio.mp4
+
+strips video file and leaves audio
