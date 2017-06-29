@@ -24,31 +24,52 @@ using namespace std;
 using namespace cv;
 using namespace libAKAZECU;
 
+const float MIN_H_ERROR = 5.00f;            ///< Maximum error in pixels to accept an inlier
+const float DRATIO = 0.80f;
+
 int main() {
-	VideoCapture cap_1("..\\data_store\\judo\\VIRB0002.MP4");
+	VideoCapture cap_1("..\\data_store\\judo\\judo_left.MP4");
 	if (!cap_1.isOpened()) {
 		cout << "Video 1 failed to load." << endl;
 		return -1;
 	}
 
-	Mat next_1;
-	cap_1.read(next_1);
-	Mat next_2;
-	cap_1.read(next_2);
+	VideoCapture cap_2("..\\data_store\\judo\\judo_right.MP4");
+	if (!cap_2.isOpened()) {
+		cout << "Video 1 failed to load." << endl;
+		return -1;
+	}
+
+	int num_frames_1 = cap_1.get(CAP_PROP_FRAME_COUNT);
+	int num_frames_2 = cap_2.get(CAP_PROP_FRAME_COUNT);
+
+	int start = 500;
+	int offset = 595;
+	cap_1.set(CV_CAP_PROP_POS_FRAMES, start+offset);
+	cap_2.set(CV_CAP_PROP_POS_FRAMES, start);
 
 	Mat img1;
-	img1 = next_1.clone();
+	cap_1.read(img1);
+	img1 = img1.clone();
 	Mat img2;
-	img2 = next_2.clone();
+	cap_2.read(img2);
+	img2 = img2.clone();
+
+	imwrite("..\\data_store\\images\\judo_left.png", img1);
+	imwrite("..\\data_store\\images\\judo_right.png", img2);
 
 	//So this works well
 	AKAZEOptions options;
 
 	// Convert the image to float to extract features
+	Mat img1_gray;
+	cvtColor(img1, img1_gray, CV_BGR2GRAY);
+	Mat img2_gray;
+	cvtColor(img2, img2_gray, CV_BGR2GRAY);
 	Mat img1_32;
-	img1.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
+	img1_gray.convertTo(img1_32, CV_32F, 1.0 / 255.0, 0);
 	Mat img2_32;
-	img2.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
+	img2_gray.convertTo(img2_32, CV_32F, 1.0 / 255.0, 0);
 
 	// Don't forget to specify image dimensions in AKAZE's options
 	options.img_width = img1.cols;
@@ -74,6 +95,19 @@ int main() {
 
 	cuda_matcher.bfmatch(desc1, desc2, dmatches);
 	cuda_matcher.bfmatch(desc2, desc1, dmatches);
+
+	vector<cv::Point2f> matches, inliers;
+
+	matches2points_nndr(kpts2, kpts1, dmatches, matches, DRATIO);
+	compute_inliers_ransac(matches, inliers, MIN_H_ERROR, false);
+
+	Mat img_com = cv::Mat(cv::Size(img1.cols * 2, img1.rows), CV_8UC3);
+	draw_keypoints(img1, kpts1);
+	draw_keypoints(img2, kpts2);
+	draw_inliers(img1, img2, img_com, inliers);
+	cv::namedWindow("Inliers", cv::WINDOW_NORMAL);
+	cv::imshow("Inliers", img_com);
+	cv::waitKey(0);
 
 	return 0;
 }
