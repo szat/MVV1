@@ -478,7 +478,7 @@ int danny_test() {
 	// MAIN CALCULATIONS
 	
 	// master function for constructing and saving a frame
-	
+	/*
 	string src_path_1 = "../../data_store/images/frame1.png";
 	string tar_path_1 = "../../data_store/binary/frame1.bin";
 	string src_path_2 = "../../data_store/images/frame2.png";
@@ -489,7 +489,7 @@ int danny_test() {
 	//string img1_path = "david_1.jpg";
 	//string img2_path = "david_2.jpg";
 	save_frame_master(src_path_1, src_path_2);
-	
+	*/
 
 	// BACKGROUND MERGING
 	/*
