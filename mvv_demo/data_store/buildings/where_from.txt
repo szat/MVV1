@@ -1,1 +1,0 @@
-http://cvlabwww.epfl.ch/data/multiview/denseMVS.html
