@@ -411,7 +411,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	// Big for loop which:
 	// Prints console of what the progress is:
 
-	int cutoff_frame = 2;
+	int cutoff_frame = 300;
 
 	for (int i = 1; i <= cutoff_frame; i++) {
 		string padded_number = pad_frame_number(i);

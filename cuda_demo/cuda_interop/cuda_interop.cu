@@ -70,6 +70,19 @@ void timerEvent(int value)
 	}
 }
 
+string pad_frame_number(int frame_number) {
+	// zero-padding frame number
+	stringstream stream;
+	stream << frame_number;
+	string padded;
+	stream >> padded;
+	int str_length = padded.length();
+	for (int i = 0; i < 6 - str_length; i++)
+		padded = "0" + padded;
+	return padded;
+}
+
+
 float * calculate_blur_coefficients(int blur_radius, float blur_param) {
 	/*
 	time for some normalization
@@ -148,7 +161,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("bitmap");
-	glutFullScreen();
+	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
@@ -192,10 +205,16 @@ int main(int argc, char **argv)
 	uchar3 * d_out_2;
 	cudaMalloc((void**)&d_out_2, memsize_uchar3);
 
+	int frame_count = 0;
+
 	for (;;) {
+		int frame_number = frame_count % 20 + 1;
+		string padded_number = pad_frame_number(frame_number);
+		frame_count++;
+		cout << "frame number" << padded_number << endl;
 		auto t1 = std::chrono::high_resolution_clock::now();
-		string img_path_1 = "../../data_store/binary/imgA_000001.bin";
-		string img_path_2 = "../../data_store/binary/imgB_000001.bin";
+		string img_path_1 = "../../data_store/binary/imgA_" + padded_number + ".bin";
+		string img_path_2 = "../../data_store/binary/imgB_" + padded_number + ".bin";
 		string raster1_path = "../../data_store/raster/raster_A_000001.bin";
 		string raster2_path = "../../data_store/raster/raster_B_000001.bin";
 		string affine_path = "../../data_store/affine/affine_000001.bin";
@@ -238,8 +257,7 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		float tau = (float)(morphing_param % 50) * 0.02f;
-
+		float tau = (float)(morphing_param % 20) * 0.05f;
 	
 		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
 		flip_image(gridSize, blockSize, d_render_final, width, height);
