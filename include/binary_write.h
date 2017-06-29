@@ -104,12 +104,12 @@ void save_img(std::string tar_path, cv::Mat &img) {
 
 // this next function will be to encode the images in a binary format
 // this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
-void save_img_binary(std::string src_path_1, std::string tar_path_1, std::string src_path_2, std::string tar_path_2) {
-	cv::Mat img_1 = imread(src_path_1, cv::ImreadModes::IMREAD_COLOR);
-	cv::Mat img_2 = imread(src_path_2, cv::ImreadModes::IMREAD_COLOR);
-	cv::Size desiredSize = img_2.size();
-	cv::resize(img_1, img_1, desiredSize);
+void save_img_binary(cv::Mat next_1, cv::Mat next_2, cv::Size desired_size, std::string imgA_path, std::string imgB_path) {
+	//cv::Mat img_1 = imread(src_path_1, cv::ImreadModes::IMREAD_COLOR);
+	//cv::Mat img_2 = imread(src_path_2, cv::ImreadModes::IMREAD_COLOR);
+	//cv::resize(next_1, next_1, desired_size);
+	//cv::resize(next_2, next_2, desired_size);
 
-	save_img(tar_path_1, img_1);
-	save_img(tar_path_2, img_2);
+	save_img(imgA_path, next_1);
+	save_img(imgB_path, next_2);
 }

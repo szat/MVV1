@@ -65,3 +65,10 @@ user_debug.txt
 # Video files
 *.mp4
 *.avi
+
+# Compressed archives
+*.zip
+*.7z
+
+# Other
+*.bin

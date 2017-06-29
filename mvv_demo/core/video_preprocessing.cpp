@@ -9,6 +9,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <stdlib.h>   
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std;
@@ -51,8 +52,8 @@ void get_frame_intensity(Mat &frame, vector<float> &intensity_values, int width,
 }
 
 int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
-	// camera 1, flash test 185
-	// camera 2, flash test 410
+	// danny left camera, flash test 217
+	// danny right camera, flash test 265
 
 	VideoCapture capture(video_path); // open the default camera
 	if (!capture.isOpened()) { // check if we succeeded
@@ -73,19 +74,87 @@ int get_flash_maxima(string video_path, int stop_frame, int camera_id) {
 			cout << "Error reading frame" << endl;
 			break;
 		}
-		// debug code only
-		if (camera_id == 1 && i > 185 - 5) {
-			int test = 0;
-		}
-		if (camera_id == 2 && i > 410 - 5) {
-			int test = 0;
-		}
+
 		get_frame_intensity(frame, intensity, width, height);
 		i++;
 	}
 
 	int flash_frame = calculate_intensity_maxima(intensity);
 	return flash_frame;
+}
+
+vector<float> get_intensity_profile(string video_path, int stop_frame, int camera_id) {
+	// danny left camera, flash test 217
+	// danny right camera, flash test 265
+
+	VideoCapture capture(video_path); // open the default camera
+	if (!capture.isOpened()) { // check if we succeeded
+		cout << "Error opening video" << endl;
+	}
+
+	int width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	vector<float> intensity = vector<float>();
+	Mat frame;
+	int i = 0;
+	// flash will happen at beginning of video
+	while (i < stop_frame)
+	{
+		if (!capture.read(frame)) {
+			cout << "Error reading frame" << endl;
+			break;
+		}
+
+		get_frame_intensity(frame, intensity, width, height);
+		i++;
+	}
+
+	return intensity;
+}
+
+pair<int,int> determine_offset(vector<float> intensity_1, vector<float> intensity_2, int stop_frame) {
+	// when do the intensity profiles sync up?
+
+	int max_offset = 1000;
+	int range = 3000;
+
+	int max_diff = 0;
+	int max_i = 0;
+
+	for (int i = 0; i < max_offset; i++) {
+		float total_diff = 0;
+		for (int j = 0; j < range; j++) {
+			float diff = abs(intensity_2[j + i] - intensity_1[j]);
+			total_diff += diff;
+		}
+
+		if (total_diff > max_diff) {
+			max_diff = total_diff;
+			max_i = i;
+		}
+
+
+	}
+	
+
+	pair<int, int> stuff = pair<int, int>();
+
+	return stuff;
+}
+
+pair<int,int> synchronize_videos(string video_path_1, string video_path_2, int stop_frame) {
+	auto t1 = Clock::now();
+
+	pair<int, int> maxima_timing = pair<int, int>(0, 0);
+
+	// third parameter is camera_id
+	vector<float> intensity_1 = get_intensity_profile(video_path_1, stop_frame, 1);
+	vector<float> intensity_2 = get_intensity_profile(video_path_2, stop_frame, 2);
+
+	pair<int,int> offset = determine_offset(intensity_1, intensity_2, stop_frame);
+	
+	return offset;
 }
 
 pair<int,int> get_flash_timing(string video_directory, string video_path_1, string video_path_2, int stop_frame) {
@@ -141,4 +210,15 @@ void save_trimmed_videos(pair<int,int> flash_result, string input_dir, string ou
 		out_capture_1.write(img);
 	}
 
+}
+
+pair<int, int> audio_sync(int initial_offset, float delay, int framerate) {
+	//6.2657
+	//95
+	pair<int, int> sync = pair<int, int>(initial_offset, initial_offset);
+	float offset2 = delay * (float)framerate;
+	int offset2_int = (int)offset2;
+	sync.first = initial_offset;
+	sync.second = initial_offset + offset2_int;
+	return sync;
 }
