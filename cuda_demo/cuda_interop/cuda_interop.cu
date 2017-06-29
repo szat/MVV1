@@ -194,11 +194,11 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		auto t1 = std::chrono::high_resolution_clock::now();
-		string img_path_1 = "../../data_store/binary/imgA_000001.bin";
-		string img_path_2 = "../../data_store/binary/imgB_000001.bin";
-		string raster1_path = "../../data_store/raster/raster_A_000001.bin";
-		string raster2_path = "../../data_store/raster/raster_B_000001.bin";
-		string affine_path = "../../data_store/affine/affine_000001.bin";
+		string img_path_1 = "../../data_store/binary/imgA_000000.bin";
+		string img_path_2 = "../../data_store/binary/imgB_000000.bin";
+		string raster1_path = "../../data_store/raster/raster_A_000000.bin";
+		string raster2_path = "../../data_store/raster/raster_B_000000.bin";
+		string affine_path = "../../data_store/affine/affine_000000.bin";
 
 		// BINARY IMAGE READ
 		int length_1 = 0;

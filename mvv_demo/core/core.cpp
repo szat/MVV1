@@ -375,6 +375,11 @@ string pad_frame_number(int frame_number) {
 }
 
 int video_loop(string video_path_1, string video_path_2, int start_1, int start_2, int width, int height){
+
+	// do the point matching at max resolution, then rescale
+	Size original_size = Size(1920, 1080);
+	Size desired_size = Size(width, height);
+
 	int starter_offset = 10;
 	// danny left camera, flash test 217
 	// danny right camera, flash test 265
@@ -411,9 +416,12 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	// Big for loop which:
 	// Prints console of what the progress is:
 
-	int cutoff_frame = 2;
 
-	for (int i = 1; i <= cutoff_frame; i++) {
+	int jump_size = 20;
+	int num_jumps = 400;
+	int cutoff_frame = jump_size * num_jumps;
+
+	for (int i = 0; i <= cutoff_frame; i += jump_size) {
 		string padded_number = pad_frame_number(i);
 		cout << "Processing frame " << i << " of " << cutoff_frame << endl;
 		
@@ -431,22 +439,34 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 		string affine = affine_dir + filename_affine;
 		string rasterA = raster_dir + filename_raster_A;
 		string rasterB = raster_dir + filename_raster_B;
-		string imgA = image_dir + filename_img_A;
-		string imgB = image_dir + filename_img_B;
+		string imgA;
+		string imgB;
 
 		cap_1.read(next_1);
 		cap_2.read(next_2);
 
-		// do the point matching at max resolution, then rescale
-		Size original_size = Size(1920, 1080);
-		Size desired_size = Size(width, height);
-
 		save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
+
+		cout << "Saving image for frame " << i << endl;
+		padded_number = pad_frame_number(i);
+		filename_img_A = "imgA_" + padded_number + ".bin";
+		filename_img_B = "imgB_" + padded_number + ".bin";
+		imgA = image_dir + filename_img_A;
+		imgB = image_dir + filename_img_B;
 		save_img_binary(next_1, next_2, desired_size, imgA, imgB);
+
+		for (int j = 1; j < 20; j++) {
+			cout << "Saving image for frame " << (i + j) << endl;
+			cap_1.read(next_1);
+			cap_2.read(next_2);
+			padded_number = pad_frame_number(i + j);
+			filename_img_A = "imgA_" + padded_number + ".bin";
+			filename_img_B = "imgB_" + padded_number + ".bin";
+			imgA = image_dir + filename_img_A;
+			imgB = image_dir + filename_img_B;
+			save_img_binary(next_1, next_2, desired_size, imgA, imgB);
+		}
 	}
-
-
-
 	return -1;
 }
 
