@@ -27,7 +27,12 @@ void kernel2D_subpix(uchar3* d_output, uchar3* d_input, short* d_raster1, int w,
 					return;
 				}
 				int new_i = new_r * w + new_c;
-				d_output[new_i] = d_input[raster_index];
+				// new if condition for preserving painted frames
+				uchar3 pixel_result = d_input[raster_index];
+				//if (pixel_result.x != 0 && pixel_result.y != 0 && pixel_result.z != 0){
+				d_output[new_i] = pixel_result;
+				//}
+
 			}
 		}
 	}

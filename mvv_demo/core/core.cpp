@@ -416,7 +416,6 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	// Big for loop which:
 	// Prints console of what the progress is:
 
-
 	int jump_size = 20;
 	int num_jumps = 400;
 	int cutoff_frame = jump_size * num_jumps;
