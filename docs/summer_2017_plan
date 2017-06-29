@@ -1,9 +1,11 @@
+July 21st - August 31st
+=======================
 Here are the remaining tasks, divided into three categories:
 
 PRE-PROCESSING:
 1) GPU Akaze preprocessing integration
-2) Manual coreners/edges addition
-3) If (2) gives insufficient results, ball neighborhood combination for multiple points
+2) Manual corners/edges addition
+3) If (2) gives insufficient results, ball neighborhood combination for multiple points (optional)
 
 POST-PROCESSING:
 1) Install SSD on Adrian's computer
