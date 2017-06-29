@@ -24,17 +24,22 @@ using namespace std;
 using namespace cv;
 using namespace libAKAZECU;
 
-
 int main() {
-	Mat img1;
-	string img1_path = "..\\data_store\\images\\c1.png";
-	img1 = imread(img1_path);
-	if (img1.empty()) return -1;
+	VideoCapture cap_1("..\\data_store\\judo\\VIRB0002.MP4");
+	if (!cap_1.isOpened()) {
+		cout << "Video 1 failed to load." << endl;
+		return -1;
+	}
 
+	Mat next_1;
+	cap_1.read(next_1);
+	Mat next_2;
+	cap_1.read(next_2);
+
+	Mat img1;
+	img1 = next_1.clone();
 	Mat img2;
-	string img2_path = "..\\data_store\\images\\c2.png";
-	img2 = imread(img2_path);
-	if (img2.empty()) return -1;
+	img2 = next_2.clone();
 
 	//So this works well
 	AKAZEOptions options;
