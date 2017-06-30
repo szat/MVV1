@@ -417,7 +417,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	// Prints console of what the progress is:
 
 	int jump_size = 20;
-	int num_jumps = 1;
+	int num_jumps = 400;
 	int cutoff_frame = jump_size * num_jumps;
 
 	for (int i = 0; i <= cutoff_frame; i += jump_size) {
@@ -444,7 +444,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 		cap_1.read(next_1);
 		cap_2.read(next_2);
 
-		save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
+		//save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
 
 		cout << "Saving image for frame " << i << endl;
 		padded_number = pad_frame_number(i);

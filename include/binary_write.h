@@ -20,6 +20,9 @@ void write_uchar_array(std::string full_path, char * input, int length, int widt
 	ofile.write(length_array, 12);
 	ofile.write(input, length);
 	ofile.close();
+	free(input);
+	free(length_array);
+	free(int_array);
 }
 
 void write_short_array(std::string full_path, short * input, int length) {
@@ -32,6 +35,10 @@ void write_short_array(std::string full_path, short * input, int length) {
 	ofile.write(length_array, 4);
 	memcpy(char_input, input, length * 2);
 	ofile.write(char_input, length * 2);
+	ofile.close();
+	free(input);
+	free(length_array);
+	free(int_array);
 }
 
 void write_float_array(std::string full_path, float * input, int length) {
@@ -44,6 +51,10 @@ void write_float_array(std::string full_path, float * input, int length) {
 	ofile.write(length_array, 4);
 	memcpy(char_input, input, length * 4);
 	ofile.write(char_input, length * 4);
+	ofile.close();
+	free(input);
+	free(length_array);
+	free(int_array);
 }
 
 void save_raster(std::string full_path, short ** raster, int width, int height) {
@@ -99,12 +110,13 @@ void save_img(std::string tar_path, cv::Mat &img) {
 	char *char_result = new char[len];
 	memcpy(char_result, pixels, len);
 	write_uchar_array(tar_path, char_result, len, width, height);
+	free(pixels);
 }
 
 
 // this next function will be to encode the images in a binary format
 // this will use openCV because we don't care about speed in the encoding (only the decoding, during the interpolation step).
-void save_img_binary(cv::Mat next_1, cv::Mat next_2, cv::Size desired_size, std::string imgA_path, std::string imgB_path) {
+void save_img_binary(cv::Mat &next_1, cv::Mat &next_2, cv::Size desired_size, std::string imgA_path, std::string imgB_path) {
 	//cv::Mat img_1 = imread(src_path_1, cv::ImreadModes::IMREAD_COLOR);
 	//cv::Mat img_2 = imread(src_path_2, cv::ImreadModes::IMREAD_COLOR);
 	//cv::resize(next_1, next_1, desired_size);
