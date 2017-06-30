@@ -249,6 +249,9 @@ int main(int argc, char **argv)
 		float *h_affine_data = read_float_array(affine_path, num_floats);
 		int num_triangles = num_floats / 12;
 
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::cout << "Reading: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+
 		if (height_1 != height_2 || width_1 != width_2) {
 			cout << "Incompatible image sizes. Program will now crash.\n";
 			exit(-1);
@@ -295,8 +298,8 @@ int main(int argc, char **argv)
 		free(h_raster2);
 		free(h_affine_data);
 
-		auto t2 = std::chrono::high_resolution_clock::now();
-		std::cout << "Total: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
+		auto t3 = std::chrono::high_resolution_clock::now();
+		std::cout << "Processing: " << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count() << "ms" << endl;
 		frame_count++;
 	}
 
