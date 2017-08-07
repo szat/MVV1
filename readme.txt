@@ -1,0 +1,1 @@
+2017-08-07: mvv_v1.06 stable build
