@@ -1,7 +1,0 @@
-		char * result = new char[length_1];
-		ifile.read(result, length_1);
-		uchar4 * result_uchar4 = reinterpret_cast<uchar4*>(result);
-
-
-Setting up Cuda OpenGL interop
-

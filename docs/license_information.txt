@@ -1,1 +1,0 @@
-We should compile a list of licenses to avoid, and ones we can include in our software.
