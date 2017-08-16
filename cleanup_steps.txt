@@ -1,0 +1,19 @@
+
+1) Get rid of user_debug.txt and the half-assed crap we have there
+
+2) Either video or images? Seems like this code has the potential to do both, but let's get the image processing work into shape first.
+
+What do we call this repo?
+
+Figure out where is the best place for it - a team repo or on each of our individual accounts?
+
+Linear Image Interpolation
+Linear Video Interpolation (are we really there yet? the resulting output is 10fps).
+
+^ Should probably be two separate things.
+
+
+Take as input: imageA/imageB file paths
+
+
+Things like proper 

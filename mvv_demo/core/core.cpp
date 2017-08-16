@@ -469,126 +469,45 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	return -1;
 }
 
-
-
-int danny_test() {
-	// danny left camera, flash test 217
-	// danny right camera, flash test 265
-
-	// MAIN CALCULATIONS
-	
-	// master function for constructing and saving a frame
-	/*
-	string src_path_1 = "../../data_store/images/frame1.png";
-	string tar_path_1 = "../../data_store/binary/frame1.bin";
-	string src_path_2 = "../../data_store/images/frame2.png";
-	string tar_path_2 = "../../data_store/binary/frame2.bin";
-
-	save_img_binary(src_path_1, tar_path_1, src_path_2, tar_path_2);
-
-	//string img1_path = "david_1.jpg";
-	//string img2_path = "david_2.jpg";
-	save_frame_master(src_path_1, src_path_2);
-	*/
-
-	// BACKGROUND MERGING
-	/*
-	string src_path_1 = "../../data_store/images/img_background_1.jpg";
-	string src_path_2 = "../../data_store/images/img_background_2.jpg";
-	string dst_path = "../../data_store/binary/background.bin";
-	merge_and_save(src_path_1, src_path_2, dst_path);
-	*/
-	
-	string video_path_1 = "../../data_store/flash/judo_left.mp4";
-	string video_path_2 = "../../data_store/flash/judo_right.mp4";
-
-	//video_preprocessing(video_path_1, video_path_2);
-	// desired size 1280 x 720
-
-	int start_offset = 500;
-	float delay = 6.2657f;
-	int framerate = 95;
+int video_preprocessing(string video_path_1, string video_path_2, int start_offset, float delay, int framerate) {
 	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
 
 	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1920, 1080);
 	return 0;
 }
 
-int adrian_test() {
-	//vector<Point2f> corners;
-	//trackbarCorners("..\\data_store\\david_1.jpg", corners);
-	//test_match_points("david_1.jpg", "david_2.jpg");
-
-	//test_match_points_2("david_1.jpg", "david_2.jpg");
-	//test_GFTT("david_1.jpg", "david_2.jpg");
-	//test_AGAST("david_1.jpg", "david_2.jpg");
-	//test_BRISK("david_1.jpg", "david_2.jpg");
-	//test_FAST("david_1.jpg", "david_2.jpg");
-	//test_ORB("david_1.jpg", "david_2.jpg");
-	//test_affine_ORB("david_1.jpg", "david_2.jpg");
-
-	//test_kmeans("david_1.jpg", "david_2.jpg");
-	//vector<KeyPoint> bs1;
-	//vector<KeyPoint> bs2;
-	//affine_akaze_test("..\\data_store\\david_1.jpg", "..\\data_store\\david_2.jpg", bs1, bs2);
-	//test_nbh_first("david_1.jpg", "david_2.jpg");
-	//test_nbh_grow("david_1.jpg", "david_2.jpg");
-	//test_one_nbh("david_1.jpg", "david_2.jpg");
-	//test_akaze_harris_global_harris_local("david_1.jpg", "david_2.jpg");
-
-	//loading an david seems to take approx 50ms, so two davids 100ms
-	/*
-	string address1 = "..\\data_store\\david_1.jpg";
-	Mat img1 = imread(address1, IMREAD_GRAYSCALE);
-	string address2 = "..\\data_store\\david_2_resize_no_background.jpg";
-	Mat img2 = imread(address2, IMREAD_GRAYSCALE);
-	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-
-
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	chrono::duration<double, std::milli> time_span = t2 - t1;
-	std::cout << "It took me " << time_span.count() / 10 << " milliseconds." << endl;
-	return 0;
-	*/
-	/*
-	string src_path_1 = "../../data_store/images/david_1.jpg";
-	string tar_path_1 = "../../data_store/binary/david_1.bin";
-	string src_path_2 = "../../data_store/images/david_2.jpg";
-	string tar_path_2 = "../../data_store/binary/david_2.bin";
-
-	save_img_binary(src_path_1, tar_path_1, src_path_2, tar_path_2);
-
-	string img1_path = "david_1.jpg";
-	string img2_path = "david_2.jpg";
-	save_frame_master(img1_path, img2_path);
-	*/
-	test_bs();
-	return 0;
-}
-
 int main()
 {
+	// Initializing application
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COMPANY_NAME << " " << COPYRIGHT_YEAR << ". " << "All rights reserved." << endl;
 
-	ifstream file("user_debug.txt");
-	string str;
-	getline(file, str);
+	// Likely, although this is subject to debate, there should be a command-line interface
+	// that prompts the user to enter the video file names and other input parameters, and does error
+	// checking to make sure everything is valid.
 
-	// Horrible hackish way of avoiding merge conflicts while we do testing
+	// KEY POINT #1: The program should fail gracefully if the input data is improper!
+	// KEY POINT #2: The program should exit with the first error code it encounters and print to the console. Although, for this
+	// part of the program, maybe it should just go in a loop until you get it right.
 
-	if (str == "danny") {
-		danny_test();
-	}
-	else if (str == "adrian") {
-		//adrian_test();	
-		danny_test();
-	}
-	else {
-		cout << "Invalid user";
-	}
+	// ERROR CODE 001: File name must contain a file extension of the form .mp4, .avi, etc. (all video types we support should be clearly listed)
+	// ERROR CODE 002: Video file not found. Please verify the file specified exists in the data_store/video folder (or whatever folder we use)
+	string video_path_1 = "../../data_store/flash/judo_left.mp4";
+	string video_path_2 = "../../data_store/flash/judo_right.mp4";
 
-	cout << "Finished. Press enter twice to terminate program.";
+	// ERROR CODE 003: The 'start_offset' parameter, which specifies how many frames (if any) are to be skipped before processing the video, cannot be negative.
+	// ERROR CODE 004: The 'start_offset' parameter cannot be greater than the number of frames in either of the two input videos.
+	int start_offset = 500;
+
+	// ERROR CODE 005: The 'delay' parameter must be a parsable positive floating point number (for example, 6.2657 is a valid input). 
+	// ERROR CODE 006: The 'delay' parameter specified was too large and did not yield any usable frames (no overlap).
+	float delay = 6.2657f;
+	// ERROR CODE 007: The framerate must be a positive integer.
+	int framerate = 95;
+
+	//video_preprocessing(video_path_1, video_path_2, start_offset, delay, framerate);
+
+	cout << "Finished. Press enter to terminate the program.";
 
 	cin.get();
 
