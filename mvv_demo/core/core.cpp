@@ -138,7 +138,7 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Poin
 	return matched_result;
 }
 
-MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size original_size, Size desired_size) {
+MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size video_size) {
 	// Please note that:
 	// A: source image
 	// B: target image
@@ -182,7 +182,7 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size origina
 		imgB_points_rescaled.push_back(pointB);
 	}
 	*/
-	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, desired_size);
+	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, video_size);
 	return geometry;
 }
 
@@ -212,8 +212,8 @@ void render_matched_geometry(GeometricSlice slice, string window_name) {
 	// Border (convex hull in blue) (last)
 }
 
-void save_frame_master(Mat &img1, Mat &img2, Size original_size, Size desired_size, string affine, string rasterA, string rasterB) {
-	MatchedGeometry geometry = read_matched_points_from_file(img1, img2, original_size, desired_size);
+void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string rasterA, string rasterB) {
+	MatchedGeometry geometry = read_matched_points_from_file(img1, img2, video_size);
 
 	vector<Vec6f> trianglesA = geometry.source_geometry.triangles;
 	vector<Vec6f> trianglesB = geometry.target_geometry.triangles;
@@ -453,7 +453,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 		cap_1.read(next_1);
 		cap_2.read(next_2);
 
-		//save_frame_master(next_1, next_2, original_size, desired_size, affine, rasterA, rasterB);
+		save_frame_master(next_1, next_2, video_size, affine, rasterA, rasterB);
 
 		cout << "Saving image for frame " << i << endl;
 		padded_number = pad_frame_number(i);
@@ -476,13 +476,6 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 		}
 	}
 	return -1;
-}
-
-int video_preprocessing(string video_path_1, string video_path_2, int start_offset, float delay, int framerate) {
-	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
-
-	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second);
-	return 0;
 }
 
 int main()
@@ -514,7 +507,8 @@ int main()
 	// ERROR CODE 007: The framerate must be a positive integer.
 	int framerate = 95;
 
-	video_preprocessing(video_path_1, video_path_2, start_offset, delay, framerate);
+	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second);
 
 	cout << "Finished. Press enter to terminate the program.";
 
