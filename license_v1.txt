@@ -1,7 +1,0 @@
-placeholder
-
-Possible license choices:
-
--MIT
--Apache
--BSD
