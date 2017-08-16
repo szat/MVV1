@@ -374,23 +374,34 @@ string pad_frame_number(int frame_number) {
 	return padded;
 }
 
-int video_loop(string video_path_1, string video_path_2, int start_1, int start_2, int width, int height){
+int video_loop(string video_path_1, string video_path_2, int start_1, int start_2){
 
 	// do the point matching at max resolution, then rescale
-	Size original_size = Size(1920, 1080);
-	Size desired_size = Size(width, height);
+	// doens't seem like we do any rescaling
 
 	int starter_offset = 10;
-	// danny left camera, flash test 217
-	// danny right camera, flash test 265
-	// max left cmaera: 501
-	// max right camera: 484
 
 	start_1 = start_1 + starter_offset;
 	start_2 = start_2 + starter_offset;
 
 	VideoCapture cap_1(video_path_1);
 	VideoCapture cap_2(video_path_2);
+
+	int num_frames_1 = cap_1.get(CV_CAP_PROP_FRAME_COUNT);
+	int num_frames_2 = cap_2.get(CV_CAP_PROP_FRAME_COUNT);
+
+	int width_1 = cap_1.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height_1 = cap_1.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	int width_2 = cap_2.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height_2 = cap_2.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	if (width_1 != width_2 || height_1 != height_2) {
+		cout << "ERROR" << endl;
+		return 0;
+	}
+
+	Size video_size = Size(width_1, height_1);
 
 	if (!cap_1.isOpened()) {
 		cout << "Video 1 failed to load." << endl;
@@ -399,9 +410,6 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	if (!cap_2.isOpened()) {
 		cout << "Video 2 failed to load." << endl;
 	}
-
-	int num_frames_1 = cap_1.get(CAP_PROP_FRAME_COUNT);
-	int num_frames_2 = cap_2.get(CAP_PROP_FRAME_COUNT);
 
 	cap_1.set(CV_CAP_PROP_POS_FRAMES, start_1);
 	cap_2.set(CV_CAP_PROP_POS_FRAMES, start_2);
@@ -413,11 +421,12 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 	int frames_remaining_2 = num_frames_2 - start_2 - 1;
 	int frames_remaining = min(frames_remaining_1, frames_remaining_2);
 
-	// Big for loop which:
-	// Prints console of what the progress is:
+	// Determining how many 'jumps' are required.
+	// TODO: Replace these variables with more descriptive and intuitive names.
 
+	int renderable_frames = frames_remaining - frames_remaining % 20;
 	int jump_size = 20;
-	int num_jumps = 400;
+	int num_jumps = renderable_frames / 20;
 	int cutoff_frame = jump_size * num_jumps;
 
 	for (int i = 0; i <= cutoff_frame; i += jump_size) {
@@ -452,7 +461,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 		filename_img_B = "imgB_" + padded_number + ".bin";
 		imgA = image_dir + filename_img_A;
 		imgB = image_dir + filename_img_B;
-		save_img_binary(next_1, next_2, desired_size, imgA, imgB);
+		save_img_binary(next_1, next_2, video_size, imgA, imgB);
 
 		for (int j = 1; j < 20; j++) {
 			cout << "Saving image for frame " << (i + j) << endl;
@@ -463,7 +472,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 			filename_img_B = "imgB_" + padded_number + ".bin";
 			imgA = image_dir + filename_img_A;
 			imgB = image_dir + filename_img_B;
-			save_img_binary(next_1, next_2, desired_size, imgA, imgB);
+			save_img_binary(next_1, next_2, video_size, imgA, imgB);
 		}
 	}
 	return -1;
@@ -472,7 +481,7 @@ int video_loop(string video_path_1, string video_path_2, int start_1, int start_
 int video_preprocessing(string video_path_1, string video_path_2, int start_offset, float delay, int framerate) {
 	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
 
-	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second, 1920, 1080);
+	video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second);
 	return 0;
 }
 
@@ -505,7 +514,7 @@ int main()
 	// ERROR CODE 007: The framerate must be a positive integer.
 	int framerate = 95;
 
-	//video_preprocessing(video_path_1, video_path_2, start_offset, delay, framerate);
+	video_preprocessing(video_path_1, video_path_2, start_offset, delay, framerate);
 
 	cout << "Finished. Press enter to terminate the program.";
 
