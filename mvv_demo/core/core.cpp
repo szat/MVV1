@@ -501,8 +501,8 @@ int main()
 
 	// ERROR CODE 001: File name must contain a file extension of the form .mp4, .avi, etc. (all video types we support should be clearly listed)
 	// ERROR CODE 002: Video file not found. Please verify the file specified exists in the data_store/video folder (or whatever folder we use)
-	string video_path_1 = "../../data_store/flash/judo_left.mp4";
-	string video_path_2 = "../../data_store/flash/judo_right.mp4";
+	string video_path_1 = "../../data_store/video/judo_left.mp4";
+	string video_path_2 = "../../data_store/video/judo_right.mp4";
 
 	// ERROR CODE 003: The 'start_offset' parameter, which specifies how many frames (if any) are to be skipped before processing the video, cannot be negative.
 	// ERROR CODE 004: The 'start_offset' parameter cannot be greater than the number of frames in either of the two input videos.
