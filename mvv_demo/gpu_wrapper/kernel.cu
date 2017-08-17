@@ -10,6 +10,7 @@
 #include "video_preprocessing.h"
 #include "interpolate_images.h"
 #include "polygon_raster.h"
+#include "build_geometry.h"
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -57,6 +58,80 @@ string pad_frame_number(int frame_number) {
 	for (int i = 0; i < 6 - str_length; i++)
 		padded = "0" + padded;
 	return padded;
+}
+
+MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Point2f> imgB_points, Size size) {
+	// triangulate source interior
+	vector<Vec6f> trianglesA = construct_triangles(imgA_points, size);
+
+	// triangulate target interior
+	vector<Vec6f> trianglesB = triangulate_target(imgA_points, imgB_points, trianglesA);
+
+	Rect img_bounds = Rect(0, 0, size.width, size.height);
+
+	// This could potentially be replaced by two constructors.
+	MatchedGeometry matched_result = MatchedGeometry();
+	GeometricSlice source = GeometricSlice();
+	GeometricSlice target = GeometricSlice();
+	source.triangles = trianglesA;
+	target.triangles = trianglesB;
+	source.img = img_bounds;
+	target.img = img_bounds;
+	matched_result.source_geometry = source;
+	matched_result.target_geometry = target;
+	return matched_result;
+}
+
+vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
+{
+	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
+	const float ratio = 0.8f;   // Nearest neighbor matching ratio
+	const float inlier_thr = 20.0f; // Distance threshold to identify inliers
+	const float ball_radius = 5;
+
+	vector<KeyPoint> kpts1_step1;
+	vector<KeyPoint> kpts2_step1;
+	Mat desc1_step1;
+	Mat desc2_step1;
+	//akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
+	//akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
+	
+	/*
+
+	vector<KeyPoint> kpts1_step2;
+	vector<KeyPoint> kpts2_step2;
+	ratio_matcher_script(ratio, kpts1_step1, kpts2_step1, desc1_step1, desc2_step1, kpts1_step2, kpts2_step2);
+
+	Mat homography;
+	vector<KeyPoint> kpts1_step3;
+	vector<KeyPoint> kpts2_step3;
+	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
+	*/
+
+	vector<KeyPoint> test1 = vector<KeyPoint>();
+	vector<KeyPoint> test2 = vector<KeyPoint>();
+
+	vector<vector<KeyPoint>> pointMatches = { test1, test2 };
+	return pointMatches;
+}
+
+MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size video_size) {
+	cout << "Initializing matched geometry routine" << endl;
+
+	Mat imgA;
+	Mat imgB;
+	cvtColor(img1, imgA, CV_BGR2GRAY);
+	cvtColor(img2, imgB, CV_BGR2GRAY);
+
+	vector<vector<KeyPoint>> point_matches = match_points_mat(imgA, imgB);
+
+	vector<KeyPoint> imgA_keypoints = point_matches[0];
+	vector<KeyPoint> imgB_keypoints = point_matches[1];
+	vector<Point2f> imgA_points = convert_key_points(imgA_keypoints);
+	vector<Point2f> imgB_points = convert_key_points(imgB_keypoints);
+
+	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, video_size);
+	return geometry;
 }
 
 void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string rasterA, string rasterB) {
