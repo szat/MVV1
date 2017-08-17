@@ -48,6 +48,7 @@ bool has_image_suffix(const std::string &str) {
 	return (has_suffix(str, ".jpg") || has_suffix(str, ".jpeg") || has_suffix(str, ".png") || has_suffix(str, ".bmp") || has_suffix(str, ".svg") || has_suffix(str, ".tiff") || has_suffix(str, ".ppm"));
 }
 
+/*
 void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
 	Ptr<AKAZE> akaze = AKAZE::create();
 	akaze->setThreshold(akaze_thresh);
@@ -57,6 +58,7 @@ void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_
 	tend = time(0);
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
+*/
 
 void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	time_t tstart, tend;
