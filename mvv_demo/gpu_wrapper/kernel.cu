@@ -82,6 +82,64 @@ MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Poin
 	return matched_result;
 }
 
+void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, const Mat& desc1_in, const Mat& desc2_in, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
+	time_t tstart, tend;
+	vector<vector<DMatch>> matchesLoweRatio;
+	BFMatcher matcher(NORM_HAMMING);
+	tstart = time(0);
+	matcher.knnMatch(desc1_in, desc2_in, matchesLoweRatio, 2);
+	int nbMatches = matchesLoweRatio.size();
+	for (int i = 0; i < nbMatches; i++) {
+		DMatch first = matchesLoweRatio[i][0];
+		float dist1 = matchesLoweRatio[i][0].distance;
+		float dist2 = matchesLoweRatio[i][1].distance;
+		if (dist1 < ratio * dist2) {
+			kpts1_out.push_back(kpts1_in[first.queryIdx]);
+			kpts2_out.push_back(kpts2_in[first.trainIdx]);
+		}
+	}
+	tend = time(0);
+	cout << "Ratio matching with BF(NORM_HAMMING) and ratio " << ratio << " finished in " << difftime(tend, tstart) << "s and matched " << kpts1_out.size() << " features." << endl;
+}
+
+void ransac_script(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
+	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
+
+	vector<Point2f> keysImage1;
+	vector<Point2f> keysImage2;
+	vector<DMatch> good_matches;
+
+	int nbMatches = kpts1_in.size();
+	for (int i = 0; i < nbMatches; i++) {
+		keysImage1.push_back(kpts1_in.at(i).pt);
+		keysImage2.push_back(kpts2_in.at(i).pt);
+	}
+
+	Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC, ball_radius);
+	homography_out = H;
+
+	cout << "RANSAC found the homography." << endl;
+
+	nbMatches = kpts1_in.size();
+	for (int i = 0; i < nbMatches; i++) {
+		Mat col = Mat::ones(3, 1, CV_64F);// , CV_32F);
+		col.at<double>(0) = kpts1_in[i].pt.x;
+		col.at<double>(1) = kpts1_in[i].pt.y;
+
+		col = H * col;
+		col /= col.at<double>(2); //because you are in projective space
+		double dist = sqrt(pow(col.at<double>(0) - kpts2_in[i].pt.x, 2) + pow(col.at<double>(1) - kpts2_in[i].pt.y, 2));
+
+		if (dist < inlier_thresh) {
+			int new_i = static_cast<int>(kpts1_out.size());
+			kpts1_out.push_back(kpts1_in[i]);
+			kpts2_out.push_back(kpts2_in[i]);
+		}
+	}
+
+	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
+}
+
 vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
@@ -93,10 +151,11 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 	vector<KeyPoint> kpts2_step1;
 	Mat desc1_step1;
 	Mat desc2_step1;
+
 	//akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
 	//akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
 	
-	/*
+	
 
 	vector<KeyPoint> kpts1_step2;
 	vector<KeyPoint> kpts2_step2;
@@ -106,12 +165,8 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 	vector<KeyPoint> kpts1_step3;
 	vector<KeyPoint> kpts2_step3;
 	ransac_script(ball_radius, inlier_thr, kpts1_step2, kpts2_step2, homography, kpts1_step3, kpts2_step3);
-	*/
 
-	vector<KeyPoint> test1 = vector<KeyPoint>();
-	vector<KeyPoint> test2 = vector<KeyPoint>();
-
-	vector<vector<KeyPoint>> pointMatches = { test1, test2 };
+	vector<vector<KeyPoint>> pointMatches = { kpts1_step3, kpts2_step3 };
 	return pointMatches;
 }
 
