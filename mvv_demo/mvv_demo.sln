@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "match_features", "match_fea
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "interpolate_images", "interpolate_images\interpolate_images.vcxproj", "{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gpu_wrapper", "gpu_wrapper\gpu_wrapper.vcxproj", "{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,16 @@ Global
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Release|x64.Build.0 = Release|x64
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Release|x86.ActiveCfg = Release|Win32
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Release|x86.Build.0 = Release|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Debug|x64.ActiveCfg = Debug|x64
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Debug|x64.Build.0 = Debug|x64
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Debug|x86.ActiveCfg = Debug|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Debug|x86.Build.0 = Debug|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Release|Any CPU.ActiveCfg = Release|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Release|x64.ActiveCfg = Release|x64
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Release|x64.Build.0 = Release|x64
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Release|x86.ActiveCfg = Release|Win32
+		{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
