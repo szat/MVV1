@@ -8,6 +8,8 @@
 
 #include "binary_write.h"
 #include "video_preprocessing.h"
+#include "interpolate_images.h"
+#include "polygon_raster.h"
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -34,6 +36,152 @@ using namespace libAKAZECU;
 
 const float MIN_H_ERROR = 5.00f;            ///< Maximum error in pixels to accept an inlier
 const float DRATIO = 0.80f;
+
+struct GeometricSlice {
+	Rect img;
+	vector<Vec6f> triangles;
+};
+
+struct MatchedGeometry {
+	GeometricSlice source_geometry;
+	GeometricSlice target_geometry;
+};
+
+string pad_frame_number(int frame_number) {
+	// zero-padding frame number
+	stringstream stream;
+	stream << frame_number;
+	string padded;
+	stream >> padded;
+	int str_length = padded.length();
+	for (int i = 0; i < 6 - str_length; i++)
+		padded = "0" + padded;
+	return padded;
+}
+
+void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string rasterA, string rasterB) {
+	MatchedGeometry geometry = read_matched_points_from_file(img1, img2, video_size);
+
+	vector<Vec6f> trianglesA = geometry.source_geometry.triangles;
+	vector<Vec6f> trianglesB = geometry.target_geometry.triangles;
+
+	Rect imgA_bounds = geometry.source_geometry.img;
+	Rect imgB_bounds = geometry.target_geometry.img;
+
+	vector<vector<Point>> rastered_trianglesA = raster_triangulation(trianglesA, imgA_bounds);
+	vector<vector<Point>> rastered_trianglesB = raster_triangulation(trianglesB, imgB_bounds);
+
+	int widthA = imgA_bounds.width;
+	int heightA = imgA_bounds.height;
+	int widthB = imgB_bounds.width;
+	int heightB = imgB_bounds.height;
+
+	// save affine params as .csv
+	// save image raster as grayscale .png from 0-65536 (2 images)
+	short** gridA = grid_from_raster(widthA, heightA, rastered_trianglesA);
+	short** gridB = grid_from_raster(widthB, heightB, rastered_trianglesB);
+	save_raster(rasterA, gridA, widthA, heightA);
+	save_raster(rasterB, gridB, widthB, heightB);
+
+	vector<Mat> affine_forward = get_affine_transforms_forward(trianglesA, trianglesB);
+	vector<Mat> affine_reverse = get_affine_transforms_reverse(trianglesB, trianglesA, affine_forward);
+
+	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
+	write_float_array(affine, affine_params, trianglesA.size() * 12);
+}
+
+int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int start_2) {
+
+	// do the point matching at max resolution, then rescale
+	// doens't seem like we do any rescaling
+
+	int starter_offset = 10;
+
+	start_1 = start_1 + starter_offset;
+	start_2 = start_2 + starter_offset;
+
+	int num_frames_1 = cap_1.get(CV_CAP_PROP_FRAME_COUNT);
+	int num_frames_2 = cap_2.get(CV_CAP_PROP_FRAME_COUNT);
+
+	int width_1 = cap_1.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height_1 = cap_1.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	int width_2 = cap_2.get(CV_CAP_PROP_FRAME_WIDTH);
+	int height_2 = cap_2.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	if (width_1 != width_2 || height_1 != height_2) {
+		cout << "ERROR" << endl;
+		return 0;
+	}
+
+	Size video_size = Size(width_1, height_1);
+
+	cap_1.set(CV_CAP_PROP_POS_FRAMES, start_1);
+	cap_2.set(CV_CAP_PROP_POS_FRAMES, start_2);
+
+	Mat next_1;
+	Mat next_2;
+
+	int frames_remaining_1 = num_frames_1 - start_1 - 1;
+	int frames_remaining_2 = num_frames_2 - start_2 - 1;
+	int frames_remaining = min(frames_remaining_1, frames_remaining_2);
+
+	// Determining how many 'jumps' are required.
+	// TODO: Replace these variables with more descriptive and intuitive names.
+
+	int renderable_frames = frames_remaining - frames_remaining % 20;
+	int jump_size = 20;
+	int num_jumps = renderable_frames / 20;
+	int cutoff_frame = jump_size * num_jumps;
+
+	for (int i = 0; i <= cutoff_frame; i += jump_size) {
+		string padded_number = pad_frame_number(i);
+		cout << "Processing frame " << i << " of " << cutoff_frame << endl;
+
+		string affine_dir = "../../data_store/affine/";
+		string filename_affine = "affine_" + padded_number + ".bin";
+
+		string raster_dir = "../../data_store/raster/";
+		string filename_raster_1 = "raster_1_" + padded_number + ".bin";
+		string filename_raster_2 = "raster_2_" + padded_number + ".bin";
+
+		string image_dir = "../../data_store/binary/";
+		string filename_img_1 = "img1_" + padded_number + ".bin";
+		string filename_img_2 = "img2_" + padded_number + ".bin";
+
+		string affine = affine_dir + filename_affine;
+		string raster1 = raster_dir + filename_raster_1;
+		string raster2 = raster_dir + filename_raster_2;
+		string img1;
+		string img2;
+
+		cap_1.read(next_1);
+		cap_2.read(next_2);
+
+		save_frame_master(next_1, next_2, video_size, affine, raster1, raster2);
+
+		cout << "Saving image for frame " << i << endl;
+		padded_number = pad_frame_number(i);
+		filename_img_1 = "img1_" + padded_number + ".bin";
+		filename_img_2 = "img2_" + padded_number + ".bin";
+		img1 = image_dir + filename_img_1;
+		img2 = image_dir + filename_img_2;
+		save_img_binary(next_1, next_2, video_size, img1, img2);
+
+		for (int j = 1; j < 20; j++) {
+			cout << "Saving image for frame " << (i + j) << endl;
+			cap_1.read(next_1);
+			cap_2.read(next_2);
+			padded_number = pad_frame_number(i + j);
+			filename_img_1 = "img1_" + padded_number + ".bin";
+			filename_img_2 = "img2_" + padded_number + ".bin";
+			img1 = image_dir + filename_img_1;
+			img2 = image_dir + filename_img_2;
+			save_img_binary(next_1, next_2, video_size, img1, img2);
+		}
+	}
+	return -1;
+}
 
 int main() {
 	// Initializing application
@@ -62,9 +210,6 @@ int main() {
 	float delay = 6.2657f;
 	int framerate = 95;
 
-	//pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
-	//video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second);
-
 	VideoCapture cap_1(video_path_1);
 	if (!cap_1.isOpened()) {
 		cout << "Video 1 failed to load." << endl;
@@ -76,6 +221,11 @@ int main() {
 		cout << "Video 2 failed to load." << endl;
 		return -1;
 	}
+
+	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+	video_loop(cap_1, cap_2, initial_offset.first, initial_offset.second);
+
+	/*
 
 	int num_frames_1 = cap_1.get(CAP_PROP_FRAME_COUNT);
 	int num_frames_2 = cap_2.get(CAP_PROP_FRAME_COUNT);
@@ -147,6 +297,8 @@ int main() {
 	cv::waitKey(0);
 
 	cout << "TESTING 001" << endl;
+
+	*/
 
 	cin.get();
 
