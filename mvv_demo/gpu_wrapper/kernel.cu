@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <iostream>
 
+#include "binary_write.h"
+#include "video_preprocessing.h"
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -20,6 +23,11 @@
 //#include <cuda_profiler_api.h>
 #include <opencv2/calib3d.hpp> //AKAZE seems not to work without this
 
+#define VERSION "1.0.6"
+#define APPLICATION_NAME "MVV"
+#define COPYRIGHT_AUTHORS "Adrian Szatmari, Daniel Hogg"
+#define COPYRIGHT_YEAR 2017
+
 using namespace std;
 using namespace cv;
 using namespace libAKAZECU;
@@ -28,13 +36,42 @@ const float MIN_H_ERROR = 5.00f;            ///< Maximum error in pixels to acce
 const float DRATIO = 0.80f;
 
 int main() {
-	VideoCapture cap_1("C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_left.MP4");
+	// Initializing application
+	cout << APPLICATION_NAME << " version " << VERSION << endl;
+	cout << COPYRIGHT_AUTHORS << " " << COPYRIGHT_YEAR << ". " << "MIT License." << endl;
+
+	// Likely, although this is subject to debate, there should be a command-line interface
+	// that prompts the user to enter the video file names and other input parameters, and does error
+	// checking to make sure everything is valid.
+
+	// KEY POINT #1: The program should fail gracefully if the input data is improper!
+	// KEY POINT #2: The program should exit with the first error code it encounters and print to the console. Although, for this
+	// part of the program, maybe it should just go in a loop until you get it right.
+
+	// ERROR CODE 001: File name must contain a file extension of the form .mp4, .avi, etc. (all video types we support should be clearly listed)
+	// ERROR CODE 002: Video file not found. Please verify the file specified exists in the data_store/video folder (or whatever folder we use)
+	// ERROR CODE 003: The 'start_offset' parameter, which specifies how many frames (if any) are to be skipped before processing the video, cannot be negative.
+	// ERROR CODE 004: The 'start_offset' parameter cannot be greater than the number of frames in either of the two input videos.
+	// ERROR CODE 005: The 'delay' parameter must be a parsable positive floating point number (for example, 6.2657 is a valid input). 
+	// ERROR CODE 006: The 'delay' parameter specified was too large and did not yield any usable frames (no overlap).
+	// ERROR CODE 007: The framerate must be a positive integer.
+
+	string video_path_1 = "C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_left.MP4";
+	string video_path_2 = "C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_right.MP4";
+	int start_offset = 500;
+	float delay = 6.2657f;
+	int framerate = 95;
+
+	//pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+	//video_loop(video_path_1, video_path_2, initial_offset.first, initial_offset.second);
+
+	VideoCapture cap_1(video_path_1);
 	if (!cap_1.isOpened()) {
 		cout << "Video 1 failed to load." << endl;
 		return -1;
 	}
 
-	VideoCapture cap_2("C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_right.MP4");
+	VideoCapture cap_2(video_path_2);
 	if (!cap_2.isOpened()) {
 		cout << "Video 2 failed to load." << endl;
 		return -1;
@@ -108,6 +145,8 @@ int main() {
 	cv::namedWindow("Inliers", cv::WINDOW_NORMAL);
 	cv::imshow("Inliers", img_com);
 	cv::waitKey(0);
+
+	cout << "TESTING 001" << endl;
 
 	cin.get();
 

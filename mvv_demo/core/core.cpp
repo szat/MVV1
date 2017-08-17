@@ -34,8 +34,7 @@
 #include "interpolate_images.h"
 #include "polygon_raster.h"
 
-
-#define VERSION "1.0.0"
+#define VERSION "1.0.6"
 #define APPLICATION_NAME "MVV"
 #define COMPANY_NAME "NDim Inc."
 #define COPYRIGHT_YEAR 2017
