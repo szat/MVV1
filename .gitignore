@@ -64,9 +64,5 @@
 *.mp4
 *.avi
 
-# Compressed archives
-*.zip
-*.7z
-
 # Other
 *.bin
