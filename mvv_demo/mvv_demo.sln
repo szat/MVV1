@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build_geometry", "build_geometry\build_geometry.vcxproj", "{5AE4532F-1F3B-46E8-981D-33329695F27C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "match_features", "match_features\match_features.vcxproj", "{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "interpolate_images", "interpolate_images\interpolate_images.vcxproj", "{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gpu_wrapper", "gpu_wrapper\gpu_wrapper.vcxproj", "{BBEB3A06-F351-4477-8C5B-B08E68C45F4F}"
@@ -43,16 +41,6 @@ Global
 		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x64.Build.0 = Release|x64
 		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x86.ActiveCfg = Release|Win32
 		{5AE4532F-1F3B-46E8-981D-33329695F27C}.Release|x86.Build.0 = Release|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Debug|x64.ActiveCfg = Debug|x64
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Debug|x64.Build.0 = Debug|x64
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Debug|x86.ActiveCfg = Debug|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Debug|x86.Build.0 = Debug|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Release|Any CPU.ActiveCfg = Release|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Release|x64.ActiveCfg = Release|x64
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Release|x64.Build.0 = Release|x64
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Release|x86.ActiveCfg = Release|Win32
-		{74770D0B-F78D-4C47-AAEA-704E4E6E3D73}.Release|x86.Build.0 = Release|Win32
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Debug|x64.ActiveCfg = Debug|x64
 		{B9B92BD2-CA82-4954-AC4F-F9D97520CC9B}.Debug|x64.Build.0 = Debug|x64

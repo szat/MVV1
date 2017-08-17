@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "binary_write.h"
-#include "video_preprocessing.h"
 #include "interpolate_images.h"
 #include "polygon_raster.h"
 #include "build_geometry.h"
@@ -60,7 +59,7 @@ string pad_frame_number(int frame_number) {
 	return padded;
 }
 
-MatchedGeometry create_matched_geometry(vector<Point2f> imgA_points, vector<Point2f> imgB_points, Size size) {
+MatchedGeometry create_matched_geometry(std::vector<cv::Point2f> imgA_points, std::vector<cv::Point2f> imgB_points, cv::Size size) {
 	// triangulate source interior
 	vector<Vec6f> trianglesA = construct_triangles(imgA_points, size);
 
@@ -140,6 +139,34 @@ void ransac_script(const float ball_radius, const float inlier_thresh, const vec
 	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
+void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
+	time_t tstart, tend;
+	tstart = time(0);
+
+	
+	AKAZEOptions options;
+	/*
+	Mat img_gray;
+	cvtColor(img_in, img_gray, CV_BGR2GRAY);
+	*/
+	Mat img_32;
+	img_in.convertTo(img_32, CV_32F, 1.0 / 255.0, 0);
+
+	// Don't forget to specify image dimensions in AKAZE's options
+	options.img_width = img_in.cols;
+	options.img_height = img_in.rows;
+
+	// Extract features
+	libAKAZECU::AKAZE evolution(options);
+
+	evolution.Create_Nonlinear_Scale_Space(img_32);
+	evolution.Feature_Detection(kpts_out);
+	evolution.Compute_Descriptors(kpts_out, desc_out);
+
+	tend = time(0);
+	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
+}
+
 vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
@@ -152,10 +179,8 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 	Mat desc1_step1;
 	Mat desc2_step1;
 
-	//akaze_script(akaze_thresh, img1, kpts1_step1, desc1_step1);
-	//akaze_script(akaze_thresh, img2, kpts2_step1, desc2_step1);
-	
-	
+	akaze_script(akaze_thr, img1, kpts1_step1, desc1_step1);
+	akaze_script(akaze_thr, img2, kpts2_step1, desc2_step1);
 
 	vector<KeyPoint> kpts1_step2;
 	vector<KeyPoint> kpts2_step2;
@@ -313,6 +338,17 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 	return -1;
 }
 
+pair<int, int> audio_sync(int initial_offset, float delay, int framerate) {
+	//6.2657
+	//95
+	std::pair<int, int> sync = std::pair<int, int>(initial_offset, initial_offset);
+	float offset2 = delay * (float)framerate;
+	int offset2_int = (int)offset2;
+	sync.first = initial_offset;
+	sync.second = initial_offset + offset2_int;
+	return sync;
+}
+
 int main() {
 	// Initializing application
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
@@ -352,7 +388,7 @@ int main() {
 		return -1;
 	}
 
-	pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+	std::pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
 	video_loop(cap_1, cap_2, initial_offset.first, initial_offset.second);
 
 	/*

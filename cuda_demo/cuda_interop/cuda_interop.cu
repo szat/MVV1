@@ -221,10 +221,10 @@ int main(int argc, char **argv)
 		cout << "frame number" << frame_number << endl;
 		auto t1 = std::chrono::high_resolution_clock::now();
 
-		string img_path_1 = "../../data_store/binary/imgA_" + padded_frame_number + ".bin";
-		string img_path_2 = "../../data_store/binary/imgB_" + padded_frame_number + ".bin";
-		string raster1_path = "../../data_store/raster/raster_A_" + padded_rounded_frame_number + ".bin";
-		string raster2_path = "../../data_store/raster/raster_B_" + padded_rounded_frame_number + ".bin";
+		string img_path_1 = "../../data_store/binary/img1_" + padded_frame_number + ".bin";
+		string img_path_2 = "../../data_store/binary/img2_" + padded_frame_number + ".bin";
+		string raster1_path = "../../data_store/raster/raster_1_" + padded_rounded_frame_number + ".bin";
+		string raster2_path = "../../data_store/raster/raster_2_" + padded_rounded_frame_number + ".bin";
 		string affine_path = "../../data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
 
 

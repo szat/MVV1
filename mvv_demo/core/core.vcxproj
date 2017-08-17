@@ -167,9 +167,6 @@
     <ProjectReference Include="..\interpolate_images\interpolate_images.vcxproj">
       <Project>{b9b92bd2-ca82-4954-ac4f-f9d97520cc9b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\match_features\match_features.vcxproj">
-      <Project>{74770d0b-f78d-4c47-aaea-704e4e6e3d73}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="core.rc" />

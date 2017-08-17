@@ -211,14 +211,3 @@ void save_trimmed_videos(pair<int,int> flash_result, string input_dir, string ou
 	}
 
 }
-
-pair<int, int> audio_sync(int initial_offset, float delay, int framerate) {
-	//6.2657
-	//95
-	pair<int, int> sync = pair<int, int>(initial_offset, initial_offset);
-	float offset2 = delay * (float)framerate;
-	int offset2_int = (int)offset2;
-	sync.first = initial_offset;
-	sync.second = initial_offset + offset2_int;
-	return sync;
-}
