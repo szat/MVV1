@@ -124,6 +124,7 @@ int main(int argc, char **argv)
 	}
 	// should be preloaded from a video config file
 
+	// determine width/height from config file
 	int width = 1920;
 	int height = 1080;
 
@@ -213,7 +214,7 @@ int main(int argc, char **argv)
 
 
 	for (;;) {
-		auto t1 = std::chrono::high_resolution_clock::now();
+		//auto t1 = std::chrono::high_resolution_clock::now();
 
 		int frame_number = frame_count % max_frames;
 		int rounded_frame_number = frame_number - frame_number % frame_intervals;
@@ -229,17 +230,11 @@ int main(int argc, char **argv)
 		string raster2_path = "../../data_store/raster/raster_2_" + padded_rounded_frame_number + ".bin";
 		string affine_path = "../../data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
 
-		auto t01 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 01: " << std::chrono::duration_cast<std::chrono::milliseconds>(t01 - t1).count() << "ms" << endl;
-
 		// RASTER READ
 		int num_pixels_1 = 0;
 		int num_pixels_2 = 0;
 		short *h_raster1 = read_short_array(raster1_path, num_pixels_1);
 		short *h_raster2 = read_short_array(raster2_path, num_pixels_2);
-
-		auto t02 = std::chrono::high_resolution_clock::now();
-		std::cout << "Raster read: " << std::chrono::duration_cast<std::chrono::milliseconds>(t02 - t01).count() << "ms" << endl;
 
 		// BINARY IMAGE READ
 		int length_1 = 0;
@@ -251,24 +246,15 @@ int main(int argc, char **argv)
 		uchar3 *h_in_1 = read_uchar3_array(img_path_1, length_1, width_1, height_1);
 		uchar3 *h_in_2 = read_uchar3_array(img_path_2, length_2, width_2, height_2);
 
-		auto t03 = std::chrono::high_resolution_clock::now();
-		std::cout << "Binary image read: " << std::chrono::duration_cast<std::chrono::milliseconds>(t03 - t02).count() << "ms" << endl;
-
 		// AFFINE READ
 		int num_floats = 0;
 		float *h_affine_data = read_float_array(affine_path, num_floats);
 		int num_triangles = num_floats / 12;
 
-		auto t04 = std::chrono::high_resolution_clock::now();
-		std::cout << "Read affine: " << std::chrono::duration_cast<std::chrono::milliseconds>(t04 - t03).count() << "ms" << endl;
-
 		if (height_1 != height_2 || width_1 != width_2) {
 			cout << "Incompatible image sizes. Program will now crash.\n";
 			exit(-1);
 		}
-
-		auto t3 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 2: " << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t04).count() << "ms" << endl;
 
 		//--Sending the data to the GPU memory
 		cout << "declaring device data-structures..." << endl;
@@ -282,9 +268,6 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		auto t4 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 3: " << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count() << "ms" << endl;
-
 		float tau = (float)(morphing_param % 50) * 0.02f;
 	
 		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
@@ -292,9 +275,6 @@ int main(int argc, char **argv)
 		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
 		reset_canvas(gridSize, blockSize, d_out_1, width, height);
 		reset_canvas(gridSize, blockSize, d_out_2, width, height);
-
-		auto t5 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 4: " << std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count() << "ms" << endl;
 
 		cudaFree(d_affine_data);
 
@@ -304,9 +284,6 @@ int main(int argc, char **argv)
 
 		morphing_param++;
 
-		auto t6 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 5: " << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count() << "ms" << endl;
-
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
 
@@ -314,17 +291,14 @@ int main(int argc, char **argv)
 		glutPostRedisplay();
 		glutMainLoopEvent();
 
-		auto t7 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 6: " << std::chrono::duration_cast<std::chrono::milliseconds>(t7 - t6).count() << "ms" << endl;
-
 		free(h_in_1);
 		free(h_in_2);
 		free(h_raster1);
 		free(h_raster2);
 		free(h_affine_data);
 
-		auto t8 = std::chrono::high_resolution_clock::now();
-		std::cout << "Step 7: " << std::chrono::duration_cast<std::chrono::milliseconds>(t8 - t7).count() << "ms" << endl;
+		//auto t2 = std::chrono::high_resolution_clock::now();
+		//std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "ms" << endl;
 		frame_count++;
 	}
 
