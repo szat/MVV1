@@ -1,8 +1,6 @@
 #pragma once
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include <iostream>
-#include <fstream>
 #include <chrono>
 #include <string>
 #include <stdio.h>
@@ -30,35 +28,39 @@ void write_uchar_array(std::string full_path, char * input, int length, int widt
 }
 
 void write_short_array(std::string full_path, short * input, int length) {
+	FILE *pFile;
+	const char *file_name = full_path.c_str();
+	pFile = fopen(file_name, "wb");
 	char * char_input = new char[length * 2];
-	std::ofstream ofile(full_path, std::ios::binary);
 	char * length_array = new char[4];
 	int * int_array = new int[1];
 	int_array[0] = length;
 	memcpy(length_array, int_array, 4);
-	ofile.write(length_array, 4);
+	fwrite(length_array, 4, 1, pFile);
 	memcpy(char_input, input, length * 2);
-	ofile.write(char_input, length * 2);
-	ofile.close();
+	fwrite(input, length * 2, 1, pFile);
 	free(input);
 	free(length_array);
 	free(int_array);
+	fclose(pFile);
 }
 
 void write_float_array(std::string full_path, float * input, int length) {
+	FILE *pFile;
+	const char *file_name = full_path.c_str();
+	pFile = fopen(file_name, "wb");
 	char * char_input = new char[length * 4];
-	std::ofstream ofile(full_path, std::ios::binary);
 	char * length_array = new char[4];
 	int * int_array = new int[1];
 	int_array[0] = length;
 	memcpy(length_array, int_array, 4);
-	ofile.write(length_array, 4);
+	fwrite(length_array, 4, 1, pFile);
 	memcpy(char_input, input, length * 4);
-	ofile.write(char_input, length * 4);
-	ofile.close();
+	fwrite(char_input, length * 4, 1, pFile);
 	free(input);
 	free(length_array);
 	free(int_array);
+	fclose(pFile);
 }
 
 void save_raster(std::string full_path, short ** raster, int width, int height) {
