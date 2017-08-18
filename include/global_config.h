@@ -1,13 +1,25 @@
 #pragma once
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include "INIReader.h"
+#include "windows.h"
 
+#define SETTINGS_PATH "../../data_store/settings.ini"
 
 int get_video_width() {
-	return 1920;
+	INIReader reader(SETTINGS_PATH);
+	if (reader.ParseError() < 0) {
+		std::cout << "Can't load 'settings.ini'\n";
+		return 0;
+	}
+	return reader.GetInteger("user", "video_width", 0);
 }
 
 int get_video_height() {
-	return 1080;
+	INIReader reader(SETTINGS_PATH);
+	if (reader.ParseError() < 0) {
+		std::cout << "Can't load 'settings.ini'\n";
+		return 0;
+	}
+	return reader.GetInteger("user", "video_height", 0);
 }
