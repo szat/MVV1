@@ -21,7 +21,7 @@ void write_uchar_array(std::string full_path, char * input, int length, int widt
 	memcpy(length_array, int_array, 12);
 	fwrite(length_array, 12, 1, pFile);
 	fwrite(input, length, 1, pFile);
-	free(input);
+	//free(input);
 	free(length_array);
 	free(int_array);
 	fclose(pFile);
@@ -39,7 +39,7 @@ void write_short_array(std::string full_path, short * input, int length) {
 	fwrite(length_array, 4, 1, pFile);
 	memcpy(char_input, input, length * 2);
 	fwrite(input, length * 2, 1, pFile);
-	free(input);
+	//free(input);
 	free(length_array);
 	free(int_array);
 	fclose(pFile);
@@ -57,7 +57,7 @@ void write_float_array(std::string full_path, float * input, int length) {
 	fwrite(length_array, 4, 1, pFile);
 	memcpy(char_input, input, length * 4);
 	fwrite(char_input, length * 4, 1, pFile);
-	free(input);
+	//free(input);
 	free(length_array);
 	free(int_array);
 	fclose(pFile);
@@ -72,6 +72,7 @@ void save_raster(std::string full_path, short ** raster, int width, int height) 
 		}
 	}
 	write_short_array(full_path, raster_1D, size);
+	free(raster_1D);
 }
 
 float* convert_vector_params(std::vector<cv::Mat> forward_params, std::vector<cv::Mat> reverse_params) {
@@ -117,6 +118,7 @@ void save_img(std::string tar_path, cv::Mat &img) {
 
 	memcpy(char_result, pixels, len);
 	write_uchar_array(tar_path, char_result, len, width, height);
+	free(char_result);
 	free(pixels);
 }
 
