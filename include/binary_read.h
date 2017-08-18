@@ -3,25 +3,33 @@
 #include <fstream>
 #include <chrono>
 #include <string>
-
+#include <stdio.h>
+#include <stdlib.h>
 
 uchar3 * read_uchar3_array(std::string full_path, int &length, int &width, int &height) {
 	// modifies length, returns char array
-	std::ifstream ifile(full_path, std::ios::binary);
+	const char *file_path = full_path.c_str();
+	FILE *f = fopen(file_path, "rb");
 	char * length_array = new char[12];
 	int * int_array = new int[3];
-	ifile.read(length_array, 12);
+
+	fread(length_array, 12, 1, f);
 	memcpy(int_array, length_array, 12);
+
 	length = int_array[0];
 	width = int_array[1];
 	height = int_array[2];
+
 	char * result = new char[length];
-	ifile.read(result, length);
+	fread(result, length, 1, f);
+
 	uchar3 * result_uchar3 = reinterpret_cast<uchar3*>(result);
+
+
 	result = nullptr;
 	free(length_array);
 	free(int_array);
-	ifile.close();
+	fclose(f);
 	return result_uchar3;
 }
 

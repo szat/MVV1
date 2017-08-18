@@ -5,24 +5,28 @@
 #include <fstream>
 #include <chrono>
 #include <string>
+#include <stdio.h>
 
 // Note about all of this:
 // OS-dependent! This will not work on other architectures (for now).
 
 void write_uchar_array(std::string full_path, char * input, int length, int width, int height) {
-	std::ofstream ofile(full_path, std::ios::binary);
+	FILE *pFile;
+	const char *file_name = full_path.c_str();
+	pFile = fopen(file_name, "wb");
 	char * length_array = new char[12];
 	int * int_array = new int[3];
 	int_array[0] = length;
 	int_array[1] = width;
 	int_array[2] = height;
+
 	memcpy(length_array, int_array, 12);
-	ofile.write(length_array, 12);
-	ofile.write(input, length);
-	ofile.close();
+	fwrite(length_array, 12, 1, pFile);
+	fwrite(input, length, 1, pFile);
 	free(input);
 	free(length_array);
 	free(int_array);
+	fclose(pFile);
 }
 
 void write_short_array(std::string full_path, short * input, int length) {
@@ -108,6 +112,7 @@ void save_img(std::string tar_path, cv::Mat &img) {
 	}
 
 	char *char_result = new char[len];
+
 	memcpy(char_result, pixels, len);
 	write_uchar_array(tar_path, char_result, len, width, height);
 	free(pixels);
