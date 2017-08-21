@@ -23,6 +23,7 @@
 #include <cuda_gl_interop.h>
 #include <vector_types.h>
 #include "binary_read.h"
+#include "global_config.h"
 #include "video_kernel.h"
 
 using namespace std;
@@ -32,6 +33,9 @@ using namespace std;
 
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
+
+int graphics_width = get_video_width();
+int graphics_height = get_video_height();
 
 cudaGraphicsResource *resource;
 __device__ int counter;
@@ -54,8 +58,8 @@ static void draw_func(void) {
 	// the source, and the field switches from being a pointer to a
 	// bitmap to now mean an offset into a bitmap object
 
-	int width = 1920;
-	int height = 1080;
+	int width = graphics_width;
+	int height = graphics_height;
 
 
 	glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -122,14 +126,9 @@ int main(int argc, char **argv)
 	else {
 		cout << "NDim is in debug mode" << endl;
 	}
-	// should be preloaded from a video config file
 
-	// determine width/height from config file
-	int width = 1920;
-	int height = 1080;
-
-	int memsize_uchar3 = width * height * sizeof(uchar3);
-	int memsize_uchar4 = width * height * sizeof(uchar4);
+	int memsize_uchar3 = graphics_width * graphics_height * sizeof(uchar3);
+	int memsize_uchar4 = graphics_width * graphics_height * sizeof(uchar4);
 
 	// Gaussian blur coefficients and calculation
 	int blur_radius = 3;
@@ -162,7 +161,7 @@ int main(int argc, char **argv)
 	// calls, else we get a seg fault
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(width, height);
+	glutInitWindowSize(graphics_width, graphics_height);
 	glutCreateWindow("bitmap");
 	//glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
@@ -187,17 +186,17 @@ int main(int argc, char **argv)
 	size_t  size;
 
 	dim3 blockSize(32, 32);
-	int bx = (width + 32 - 1) / 32;
-	int by = (height + 32 - 1) / 32;
+	int bx = (graphics_width + 32 - 1) / 32;
+	int by = (graphics_height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
 	int morphing_param = 0;
 
 	short *d_raster1;
-	cudaMalloc((void**)&d_raster1, width * height * sizeof(short));
+	cudaMalloc((void**)&d_raster1, graphics_width * graphics_height * sizeof(short));
 
 	short *d_raster2;
-	cudaMalloc((void**)&d_raster2, width * height * sizeof(short));
+	cudaMalloc((void**)&d_raster2, graphics_width * graphics_height * sizeof(short));
 	uchar3 * d_in_1;
 	cudaMalloc((void**)&d_in_1, memsize_uchar3);
 	uchar3 * d_in_2;
@@ -220,9 +219,6 @@ int main(int argc, char **argv)
 		int rounded_frame_number = frame_number - frame_number % frame_intervals;
 		string padded_frame_number = pad_frame_number(frame_count);
 		string padded_rounded_frame_number = pad_frame_number(rounded_frame_number);
-
-		cout << "frame number" << frame_number << endl;
-
 
 		string img_path_1 = "../../data_store/binary/img1_" + padded_frame_number + ".bin";
 		string img_path_2 = "../../data_store/binary/img2_" + padded_frame_number + ".bin";
@@ -257,24 +253,23 @@ int main(int argc, char **argv)
 		}
 
 		//--Sending the data to the GPU memory
-		cout << "declaring device data-structures..." << endl;
 
 		float * d_affine_data;
 		cudaMalloc((void**)&d_affine_data, num_floats * sizeof(float));
 		cudaMemcpy(d_affine_data, h_affine_data, num_floats * sizeof(float), cudaMemcpyHostToDevice);
 
-		cudaMemcpy(d_raster1, h_raster1, width * height * sizeof(short), cudaMemcpyHostToDevice);
-		cudaMemcpy(d_raster2, h_raster2, width * height * sizeof(short), cudaMemcpyHostToDevice);
+		cudaMemcpy(d_raster1, h_raster1, graphics_width * graphics_height * sizeof(short), cudaMemcpyHostToDevice);
+		cudaMemcpy(d_raster2, h_raster2, graphics_width * graphics_height * sizeof(short), cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
 		float tau = (float)(morphing_param % 50) * 0.02f;
 	
-		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, width, height, d_affine_data, 4, tau);
-		flip_image(gridSize, blockSize, d_render_final, width, height);
-		gaussian_2D_blur(gridSize, blockSize, d_render_final, width, height, d_blur_coeff, blur_radius);
-		reset_canvas(gridSize, blockSize, d_out_1, width, height);
-		reset_canvas(gridSize, blockSize, d_out_2, width, height);
+		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, graphics_width, graphics_height, d_affine_data, 4, tau);
+		flip_image(gridSize, blockSize, d_render_final, graphics_width, graphics_height);
+		gaussian_2D_blur(gridSize, blockSize, d_render_final, graphics_width, graphics_height, d_blur_coeff, blur_radius);
+		reset_canvas(gridSize, blockSize, d_out_1, graphics_width, graphics_height);
+		reset_canvas(gridSize, blockSize, d_out_2, graphics_width, graphics_height);
 
 		cudaFree(d_affine_data);
 
