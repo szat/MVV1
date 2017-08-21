@@ -34,6 +34,7 @@ using namespace std;
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
 
+int camera_angle = 0;
 int graphics_width = get_video_width();
 int graphics_height = get_video_height();
 
@@ -41,11 +42,16 @@ cudaGraphicsResource *resource;
 __device__ int counter;
 __device__ volatile int param = 50;
 
-
 static void key_func(unsigned char key, int x, int y) {
-	switch (key) {
-	case 27:
-		// clean up OpenGL and CUDA
+	if (key == 'a') {
+		camera_angle = -100;
+		cout << "a pressed " << endl;
+	}
+	else if (key == 'd') {
+		camera_angle = 100;
+		cout << "d pressed " << endl;
+	}
+	else if (key == 27) {
 		cudaGraphicsUnregisterResource(resource);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 		glDeleteBuffers(1, &bufferObj);
@@ -211,8 +217,8 @@ int main(int argc, char **argv)
 	int frame_intervals = 20;
 	int max_frames = 2220;
 
-
 	for (;;) {
+		cout << camera_angle << endl;
 		//auto t1 = std::chrono::high_resolution_clock::now();
 
 		int frame_number = frame_count % max_frames;
@@ -220,11 +226,11 @@ int main(int argc, char **argv)
 		string padded_frame_number = pad_frame_number(frame_count);
 		string padded_rounded_frame_number = pad_frame_number(rounded_frame_number);
 
-		string img_path_1 = "../../data_store/binary/img1_" + padded_frame_number + ".bin";
-		string img_path_2 = "../../data_store/binary/img2_" + padded_frame_number + ".bin";
-		string raster1_path = "../../data_store/raster/raster_1_" + padded_rounded_frame_number + ".bin";
-		string raster2_path = "../../data_store/raster/raster_2_" + padded_rounded_frame_number + ".bin";
-		string affine_path = "../../data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
+		string img_path_1 = "D:/data_store/binary/img1_" + padded_frame_number + ".bin";
+		string img_path_2 = "D:/data_store/binary/img2_" + padded_frame_number + ".bin";
+		string raster1_path = "D:/data_store/raster/raster_1_" + padded_rounded_frame_number + ".bin";
+		string raster2_path = "D:/data_store/raster/raster_2_" + padded_rounded_frame_number + ".bin";
+		string affine_path = "D:/data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
 
 		// RASTER READ
 		int num_pixels_1 = 0;
@@ -283,7 +289,9 @@ int main(int argc, char **argv)
 		cudaDeviceSynchronize();
 
 		//only gluMainLoopEvent() seems necessary
-		glutPostRedisplay();
+		glutKeyboardFunc(key_func);
+
+		//glutPostRedisplay();
 		glutMainLoopEvent();
 
 		free(h_in_1);
@@ -305,6 +313,6 @@ int main(int argc, char **argv)
 	cudaFree(d_raster2);
 	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
-	glutMainLoop();
-
+	//
+	glutMainLoop(); //does not seem necessary
 }
