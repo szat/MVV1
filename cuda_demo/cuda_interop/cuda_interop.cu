@@ -34,7 +34,8 @@ using namespace std;
 //TRY TO CALL GLUTPOSTREDISPLAY FROM A FOOR LOOP
 GLuint  bufferObj;
 
-int camera_angle = 0;
+int morphing_param = 100;
+
 int graphics_width = get_video_width();
 int graphics_height = get_video_height();
 
@@ -44,12 +45,18 @@ __device__ volatile int param = 50;
 
 static void key_func(unsigned char key, int x, int y) {
 	if (key == 'a') {
-		camera_angle = -100;
-		cout << "a pressed " << endl;
+		if (morphing_param > 0) {
+			morphing_param -= 5;
+			cout << morphing_param << endl;
+		}
+		cout << "left " << endl;
 	}
 	else if (key == 'd') {
-		camera_angle = 100;
-		cout << "d pressed " << endl;
+		if (morphing_param < 200) {
+			morphing_param += 5;
+			cout << morphing_param << endl;
+		}
+		cout << "right " << endl;
 	}
 	else if (key == 27) {
 		cudaGraphicsUnregisterResource(resource);
@@ -160,7 +167,6 @@ int main(int argc, char **argv)
 	//     requires that the CUDA device be specified by
 	//     cudaGLSetGLDevice() before any other runtime calls.
 
-
 	cudaGLSetGLDevice(dev);
 
 	// these GLUT calls need to be made before the other OpenGL
@@ -196,8 +202,6 @@ int main(int argc, char **argv)
 	int by = (graphics_height + 32 - 1) / 32;
 	dim3 gridSize = dim3(bx, by);
 
-	int morphing_param = 0;
-
 	short *d_raster1;
 	cudaMalloc((void**)&d_raster1, graphics_width * graphics_height * sizeof(short));
 
@@ -218,7 +222,6 @@ int main(int argc, char **argv)
 	int max_frames = 2220;
 
 	for (;;) {
-		cout << camera_angle << endl;
 		//auto t1 = std::chrono::high_resolution_clock::now();
 
 		int frame_number = frame_count % max_frames;
@@ -269,7 +272,7 @@ int main(int argc, char **argv)
 		cudaMemcpy(d_in_1, h_in_1, memsize_uchar3, cudaMemcpyHostToDevice);
 		cudaMemcpy(d_in_2, h_in_2, memsize_uchar3, cudaMemcpyHostToDevice);
 
-		float tau = (float)(morphing_param % 50) * 0.02f;
+		float tau = (float)(morphing_param) * 0.005f;
 	
 		interpolate_frame(gridSize, blockSize, d_out_1, d_out_2, d_in_1, d_in_2, d_render_final, d_raster1, d_raster2, graphics_width, graphics_height, d_affine_data, 4, tau);
 		flip_image(gridSize, blockSize, d_render_final, graphics_width, graphics_height);
@@ -282,8 +285,6 @@ int main(int argc, char **argv)
 		cudaGraphicsMapResources(1, &resource, NULL);
 		cudaGraphicsResourceGetMappedPointer((void**)&d_render_final, &size, resource);
 		cudaGraphicsUnmapResources(1, &resource, NULL);
-
-		morphing_param++;
 
 		//Does not seem "necessary"
 		cudaDeviceSynchronize();
