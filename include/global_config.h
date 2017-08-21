@@ -49,7 +49,7 @@ int get_framerate() {
 
 float get_delay() {
 	INIReader reader = initialize_reader();
-	double double_delay = reader.GetReal("user", "pi", -1);
+	double double_delay = reader.GetReal("user", "delay", 0);
 	float delay = (float)double_delay;
 	return delay;
 }
