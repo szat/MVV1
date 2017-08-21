@@ -243,6 +243,7 @@ void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, str
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
 	write_float_array(affine, affine_params, trianglesA.size() * 12);
+	free(affine_params);
 }
 
 int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int start_2) {
@@ -370,8 +371,8 @@ int main() {
 	// ERROR CODE 006: The 'delay' parameter specified was too large and did not yield any usable frames (no overlap).
 	// ERROR CODE 007: The framerate must be a positive integer.
 
-	string video_path_1 = "C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_left.MP4";
-	string video_path_2 = "C:\\Users\\Danny\\Documents\\GitHub\\mvv\\data_store\\video\\judo_right.MP4";
+	string video_path_1 = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\data_store\\video\\judo_left.MP4";
+	string video_path_2 = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\data_store\\video\\judo_right.MP4";
 	int start_offset = 500;
 	float delay = 6.2657f;
 	int framerate = 95;

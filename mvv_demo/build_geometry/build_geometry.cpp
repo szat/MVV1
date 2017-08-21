@@ -270,4 +270,3 @@ vector<Vec6f> triangulate_target(vector<Point2f> img_points_A, vector<Point2f> i
 
 	return triangles_B;
 }
-

@@ -71,7 +71,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\core;$(SolutionDir)\build_geometry;$(SolutionDir)\interpolate_images;$(SolutionDir)..\include;C:\opencv\build\include;C:\Users\Danny\Documents\GitHub\mvv\akaze-cpuidentity\src\lib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\core;$(SolutionDir)\build_geometry;$(SolutionDir)\interpolate_images;$(SolutionDir)..\include;C:\opencv\build\include;C:\Users\Adrian\Documents\GitHub\mvv\akaze-cpuidentity\src\lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -100,7 +100,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>opencv_world320d.lib;AKAZE.lib;AKAZE_CUDA.lib;akaze_features.lib;akaze_compare.lib;akaze_match.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\opencv\build\x64\vc14\lib;C:\Users\Danny\Documents\GitHub\mvv\akaze-cpuidentity\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\opencv\build\x64\vc14\lib;C:\Users\Adrian\Documents\GitHub\mvv\akaze-cpuidentity\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
@@ -160,9 +160,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <ProjectReference Include="..\build_geometry\build_geometry.vcxproj">
       <Project>{5ae4532f-1f3b-46e8-981d-33329695f27c}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\core\core.vcxproj">
-      <Project>{af93f136-825a-4fbe-8412-a36786115d34}</Project>
     </ProjectReference>
     <ProjectReference Include="..\interpolate_images\interpolate_images.vcxproj">
       <Project>{b9b92bd2-ca82-4954-ac4f-f9d97520cc9b}</Project>
