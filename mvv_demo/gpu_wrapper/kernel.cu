@@ -356,30 +356,24 @@ int main() {
 	cout << APPLICATION_NAME << " version " << VERSION << endl;
 	cout << COPYRIGHT_AUTHORS << " " << COPYRIGHT_YEAR << ". " << "MIT License." << endl;
 
-	// Likely, although this is subject to debate, there should be a command-line interface
-	// that prompts the user to enter the video file names and other input parameters, and does error
-	// checking to make sure everything is valid.
+	// Getting input parameters from the configuration file settings.ini.
 
-	// KEY POINT #1: The program should fail gracefully if the input data is improper!
-	// KEY POINT #2: The program should exit with the first error code it encounters and print to the console. Although, for this
-	// part of the program, maybe it should just go in a loop until you get it right.
+	string video_path_1 = get_video_path_1();
+	string video_path_2 = get_video_path_2();
 
-	// ERROR CODE 001: File name must contain a file extension of the form .mp4, .avi, etc. (all video types we support should be clearly listed)
-	//  (or whatever folder we use)
-	// ERROR CODE 003: The 'start_offset' parameter, which specifies how many frames (if any) are to be skipped before processing the video, cannot be negative.
-	// ERROR CODE 004: The 'start_offset' parameter cannot be greater than the number of frames in either of the two input videos.
-	// ERROR CODE 005: The 'delay' parameter must be a parsable positive floating point number (for example, 6.2657 is a valid input). 
-	// ERROR CODE 006: The 'delay' parameter specified was too large and did not yield any usable frames (no overlap).
-	// ERROR CODE 007: The framerate must be a positive integer.
+	int framerate = get_framerate();
+	if (framerate <= 0) {
+		cout << "ERROR CODE 003: Framerate must be a positive integer." << endl;
+		return -1;
+	}
 
-	int width = get_video_width();
-	int height = get_video_height();
+	int start_offset = get_start_offset();
+	if (framerate <= 0) {
+		cout << "ERROR CODE 005: Starting offset cannot be less than 0 (cannot start before the beginning of the video file)." << endl;
+		return -1;
+	}
 
-	string video_path_1 = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\data_store\\video\\judo_left.MP4";
-	string video_path_2 = "C:\\Users\\Adrian\\Documents\\GitHub\\mvv\\data_store\\video\\judo_right.MP4";
-	int start_offset = 500;
-	float delay = 6.2657f;
-	int framerate = 95;
+	float delay = get_delay();
 
 	VideoCapture cap_1(video_path_1);
 	if (!cap_1.isOpened()) {
@@ -396,6 +390,7 @@ int main() {
 	std::pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
 	video_loop(cap_1, cap_2, initial_offset.first, initial_offset.second);
 
+	cout << "Finished processing video files. Press enter to terminate program." << endl;
 	cin.get();
 
 	return 0;
