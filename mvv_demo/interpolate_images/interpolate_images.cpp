@@ -9,7 +9,7 @@
 using namespace cv;
 using namespace std;
 
-Mat affine_transform(Vec6f triangle_1, Vec6f triangle_2) {
+Mat affine_transform(const Vec6f & triangle_1, const Vec6f & triangle_2) {
 	cv::Point2f source_triangle[3];
 	source_triangle[0] = cv::Point2f(triangle_1[0], triangle_1[1]);
 	source_triangle[1] = cv::Point2f(triangle_1[2], triangle_1[3]);
@@ -30,7 +30,7 @@ Mat affine_transform(Vec6f triangle_1, Vec6f triangle_2) {
 	*/
 }
 
-vector<Mat> get_affine_transforms_forward(vector<Vec6f> &triangle_list_1, vector<Vec6f> &triangle_list_2) {
+vector<Mat> get_affine_transforms_forward(const vector<Vec6f> &triangle_list_1, const vector<Vec6f> &triangle_list_2) {
 	// Start off by calculating affine transformation of two triangles.
 	int num_zeros = 0;
 
@@ -59,7 +59,7 @@ vector<Mat> get_affine_transforms_forward(vector<Vec6f> &triangle_list_1, vector
 	return transforms;
 }
 
-void reverse_transform(Mat &forward, Mat &reverse) {
+void reverse_transform(const Mat &forward, Mat &reverse) {
 	// Simply put, this reverses the transform using the formula:
 	// X' = AX+B, so
 	// X = A^(-1)X - A^(-1)B
@@ -92,7 +92,7 @@ void reverse_transform(Mat &forward, Mat &reverse) {
 	}
 }
 
-vector<Mat> get_affine_transforms_reverse(vector<Vec6f> &triangle_list_1, vector<Vec6f> &triangle_list_2, vector<Mat> &forward_transforms) {
+vector<Mat> get_affine_transforms_reverse(const vector<Vec6f> &triangle_list_1, const vector<Vec6f> &triangle_list_2, const vector<Mat> &forward_transforms) {
 	// Start off by calculating affine transformation of two triangles.
 	int num_zeros = 0;
 
@@ -122,7 +122,7 @@ vector<Mat> get_affine_transforms_reverse(vector<Vec6f> &triangle_list_1, vector
 	return transforms;
 }
 
-vector<Vec6f> get_interpolated_triangles(vector<Vec6f> &triangle_list_1, vector<vector<vector<double>>> & affine, int tInt) {
+vector<Vec6f> get_interpolated_triangles(const vector<Vec6f> &triangle_list_1, const vector<vector<vector<double>>> & affine, const int tInt) {
 	int num_triangles = triangle_list_1.size();
 	float t = (float)tInt / 100;
 	vector<Vec6f> inter_triangles = vector<Vec6f>();
@@ -142,7 +142,7 @@ vector<Vec6f> get_interpolated_triangles(vector<Vec6f> &triangle_list_1, vector<
 	return inter_triangles;
 }
 
-void display_interpolated_triangles(vector<Vec6f> & triangles, Rect & image_bounds) {
+void display_interpolated_triangles(const vector<Vec6f> & triangles, const Rect & image_bounds) {
 	// the graphical_triangulation function is far too slow
 
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
@@ -189,7 +189,7 @@ static void onInterpolate(int tInt, void *userdata) //void* mean that it is a po
 	//display_triangulation(subdiv, imgSize);
 }
 
-void interpolation_trackbar(vector<Vec6f> & triangle_list_1, vector<Vec6f> & triangle_list_2, Rect & img1_size, Rect & img2_size, vector<vector<vector<double>>> & affine)
+void interpolation_trackbar(const vector<Vec6f> & triangle_list_1, const vector<Vec6f> & triangle_list_2, const Rect & img1_size, const Rect & img2_size, const vector<vector<vector<double>>> & affine)
 {
 	// max of height and weidth
 	int maxWidth = max(img1_size.width, img2_size.width);

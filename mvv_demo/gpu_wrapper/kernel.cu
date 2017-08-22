@@ -60,7 +60,7 @@ string pad_frame_number(int frame_number) {
 	return padded;
 }
 
-MatchedGeometry create_matched_geometry(std::vector<cv::Point2f> img1_points, std::vector<cv::Point2f> img2_points, cv::Size size) {
+MatchedGeometry create_matched_geometry(const std::vector<cv::Point2f> & img1_points, const std::vector<cv::Point2f> & img2_points, const cv::Size & size) {
 	// triangulate source interior
 	vector<Vec6f> img1_triangles = construct_triangles(img1_points, size);
 
@@ -140,7 +140,7 @@ void ransac_script(const float ball_radius, const float inlier_thresh, const vec
 	cout << "Homography filtering with inlier threshhold of " << inlier_thresh << " has matched " << kpts1_out.size() << " features." << endl;
 }
 
-void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
+void akaze_script(const float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_out, Mat& desc_out) {
 	time_t tstart, tend;
 	tstart = time(0);
 
@@ -168,7 +168,7 @@ void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
-vector<vector<KeyPoint>> match_points_mat(Mat &img1, Mat &img2)
+vector<vector<KeyPoint>> match_points_mat(const Mat &img1, const Mat &img2)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 	const float ratio = 0.8f;   // Nearest neighbor matching ratio
@@ -196,7 +196,7 @@ vector<vector<KeyPoint>> match_points_mat(Mat &img1, Mat &img2)
 	return pointMatches;
 }
 
-MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size video_size) {
+MatchedGeometry read_matched_points_from_file(const Mat &img1, const Mat &img2, const Size & video_size) {
 	cout << "Initializing matched geometry routine" << endl;
 
 	Mat img1_gray;
@@ -215,7 +215,7 @@ MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size video_s
 	return geometry;
 }
 
-void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string img1_raster, string img2_raster) {
+void save_frame_master(const Mat &img1, const Mat &img2, const Size & video_size, string affine, string img1_raster, string img2_raster) {
 	MatchedGeometry geometry = read_matched_points_from_file(img1, img2, video_size);
 
 	vector<Vec6f> img1_triangles = geometry.source_geometry.triangles;
@@ -340,7 +340,7 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 	return -1;
 }
 
-pair<int, int> audio_sync(int initial_offset, float delay, int framerate) {
+pair<int, int> audio_sync(const int initial_offset, const float delay, const int framerate) {
 	//6.2657
 	//95
 	std::pair<int, int> sync = std::pair<int, int>(initial_offset, initial_offset);

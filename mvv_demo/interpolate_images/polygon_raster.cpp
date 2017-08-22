@@ -26,7 +26,7 @@ int max3(int x, int y, int z) {
 }
 
 // Replace with more efficient method
-vector<Point> raster_triangle(Vec6f &t, int imgWidth, int imgHeight)
+vector<Point> raster_triangle(const Vec6f &t, const int img_width, const int img_height)
 {
 	vector<Point> points = vector<Point>();
 	Point v0 = Point(t[0], t[1]);
@@ -41,8 +41,8 @@ vector<Point> raster_triangle(Vec6f &t, int imgWidth, int imgHeight)
 	// Clip against screen bounds
 	minX = max(minX, 0);
 	minY = max(minY, 0);
-	maxX = min(maxX, imgWidth - 1);
-	maxY = min(maxY, imgHeight - 1);
+	maxX = min(maxX, img_width - 1);
+	maxY = min(maxY, img_height - 1);
 
 	// Rasterize
 	Point p;
@@ -66,14 +66,14 @@ vector<Point> raster_triangle(Vec6f &t, int imgWidth, int imgHeight)
 	return points;
 }
 
-vector<vector<Point>> raster_triangulation(vector<Vec6f> &triangles, Rect imgBounds) {
+vector<vector<Point>> raster_triangulation(const vector<Vec6f> &triangles, const Rect & img_bounds) {
 	vector<vector<Point>> raster = vector<vector<Point>>();
 	int size = triangles.size();
-	float width = imgBounds.width;
-	float height = imgBounds.height;
+	float width = img_bounds.width;
+	float height = img_bounds.height;
 	for (int i = 0; i < size; i++) {
-		vector<Point> rasteredTriangle = raster_triangle(triangles[i], width, height);
-		raster.push_back(rasteredTriangle);
+		vector<Point> rastered_triangle = raster_triangle(triangles[i], width, height);
+		raster.push_back(rastered_triangle);
 	}
 	return raster;
 }
@@ -117,18 +117,18 @@ vector<int> get_colors(int colorCase) {
 	return colors;
 }
 
-void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
-	int width = imgBounds.width;
-	int height = imgBounds.height;
+void render_rasterization(const vector<vector<Point>> & raster, const Rect & img_bounds) {
+	int width = img_bounds.width;
+	int height = img_bounds.height;
 	Mat img(height, width, CV_8UC3, Scalar(0, 0, 0));
-	int numTriangles = raster.size();
+	int num_triangles = raster.size();
 
-	for (int i = 0; i < numTriangles; i++) {
-		int numPixels = raster[i].size();
-		for (int j = 0; j < numPixels; j++) {
+	for (int i = 0; i < num_triangles; i++) {
+		int num_pixels = raster[i].size();
+		for (int j = 0; j < num_pixels; j++) {
 			Point pixel = raster[i][j];
-			int colorCase = i % 6;
-			vector<int> colors = get_colors(colorCase);
+			int color_case = i % 6;
+			vector<int> colors = get_colors(color_case);
 			img.at<cv::Vec3b>(pixel.y, pixel.x)[0] = colors[0];
 			img.at<cv::Vec3b>(pixel.y, pixel.x)[1] = colors[1];
 			img.at<cv::Vec3b>(pixel.y, pixel.x)[2] = colors[2];
@@ -139,7 +139,7 @@ void render_rasterization(vector<vector<Point>> raster, Rect imgBounds) {
 	waitKey(1);
 }
 
-short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
+short** grid_from_raster(const int width, const int height, const vector<vector<Point>> & raster) {
 	short** grid = new short*[height];
 	// Initializing arrays to default -1 value, which indicates no triangulation in this region.
 
@@ -153,11 +153,11 @@ short** grid_from_raster(int width, int height, vector<vector<Point>> raster) {
 		}
 	}
 
-	int numRaster = raster.size();
+	int num_raster = raster.size();
 
-	for (int i = 0; i < numRaster; i++) {
-		int numPixels = raster[i].size();
-		for (int j = 0; j < numPixels; j++) {
+	for (int i = 0; i < num_raster; i++) {
+		int num_pixels = raster[i].size();
+		for (int j = 0; j < num_pixels; j++) {
 			short x = (short)raster[i][j].x;
 			short y = (short)raster[i][j].y;
 			// weird index swapping

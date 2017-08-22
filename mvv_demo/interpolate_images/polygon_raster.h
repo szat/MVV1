@@ -4,10 +4,10 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 
-std::vector<cv::Point> raster_triangle(cv::Vec6f &t, int imgWidth, int imgHeight);
+std::vector<cv::Point> raster_triangle(const cv::Vec6f &t, const int img_width, const int img_height);
 
-std::vector<std::vector<cv::Point>> raster_triangulation(std::vector<cv::Vec6f> &triangles, cv::Rect imgBounds);
+std::vector<std::vector<cv::Point>> raster_triangulation(const std::vector<cv::Vec6f> &triangles, const cv::Rect & imgBounds);
 
-void render_rasterization(std::vector<std::vector<cv::Point>> raster, cv::Rect imgBounds);
+void render_rasterization(const std::vector<std::vector<cv::Point>> & raster, const cv::Rect & imgBounds);
 
-short** grid_from_raster(int width, int height, std::vector<std::vector<cv::Point>> raster);
+short** grid_from_raster(const int width, const int height, const std::vector<std::vector<cv::Point>> & raster);

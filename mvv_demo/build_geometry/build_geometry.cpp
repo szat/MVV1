@@ -70,12 +70,12 @@ the use of this software, even if advised of the possibility of such damage.
 using namespace cv;
 using namespace std;
 
-static void draw_subdiv_point(Mat& img, Point2f fp, Scalar color)
+static void draw_subdiv_point(Mat& img, const Point2f & fp, const Scalar & color)
 {
 	circle(img, fp, 3, color, FILLED, LINE_8, 0);
 }
 
-static void draw_subdiv(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color)
+static void draw_subdiv(Mat& img, const Subdiv2D& subdiv, const Scalar & delaunay_color)
 {
 	vector<Vec6f> triangle_list;
 	subdiv.getTriangleList(triangle_list);
@@ -96,7 +96,7 @@ static void draw_subdiv(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color)
 
 }
 
-static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_color)
+static void locate_point(Mat& img, Subdiv2D& subdiv, const Point2f & fp, const Scalar & active_color)
 {
 	int e0 = 0, vertex = 0;
 
@@ -118,7 +118,7 @@ static void locate_point(Mat& img, Subdiv2D& subdiv, Point2f fp, Scalar active_c
 	draw_subdiv_point(img, fp, active_color);
 }
 
-Subdiv2D graphical_triangulation(vector<Point2f> points, Rect source_image_box) {
+Subdiv2D graphical_triangulation(const vector<Point2f> & points, const Rect & source_image_box) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 
 	Subdiv2D subdiv(source_image_box);
@@ -147,7 +147,7 @@ Subdiv2D graphical_triangulation(vector<Point2f> points, Rect source_image_box) 
 	return subdiv;
 }
 
-Subdiv2D raw_triangulation(vector<Point2f> points, Size size) {
+Subdiv2D raw_triangulation(const vector<Point2f> & points, const Size & size) {
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
 	Rect bounding_box = Rect(0, 0, size.width, size.height);
 	Subdiv2D subdiv(bounding_box);
@@ -160,7 +160,7 @@ Subdiv2D raw_triangulation(vector<Point2f> points, Size size) {
 	return subdiv;
 }
 
-vector<Vec6f> construct_triangles(vector<Point2f> source_image_points, Size source_size) {
+vector<Vec6f> construct_triangles(const vector<Point2f> & source_image_points, const Size & source_size) {
 	// Constructing triangulation of first image
 
 	Subdiv2D subdiv;
@@ -197,7 +197,7 @@ vector<Vec6f> construct_triangles(vector<Point2f> source_image_points, Size sour
 	return filtered_triangles;
 }
 
-void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
+void display_triangulation(const Subdiv2D & subdiv, const Rect & imageBounds) {
 	// the graphical_triangulation function is far too slow
 
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
@@ -212,7 +212,7 @@ void display_triangulation(Subdiv2D subdiv, Rect imageBounds) {
 	waitKey(1);
 }
 
-vector<Point2f> convert_key_points(vector<KeyPoint> key_points) {
+vector<Point2f> convert_key_points(const vector<KeyPoint> & key_points) {
 	int len = key_points.size();
 	vector<Point2f> result = vector<Point2f>();
 	for (int i = 0; i < len; i++) {
@@ -221,7 +221,7 @@ vector<Point2f> convert_key_points(vector<KeyPoint> key_points) {
 	return result;
 }
 
-long long pair_hash(Point2f pt) {
+long long pair_hash(const Point2f & pt) {
 	int imax = std::numeric_limits<int>::max();
 
 	pair<int, int> hash = pair<int, int>();
@@ -231,7 +231,7 @@ long long pair_hash(Point2f pt) {
 	return first * (imax + 1) + second;
 }
 
-vector<Vec6f> triangulate_target(vector<Point2f> img1_points, vector<Point2f> img2_points, vector<Vec6f> img1_triangles) {
+vector<Vec6f> triangulate_target(const vector<Point2f> & img1_points, const vector<Point2f> & img2_points, const vector<Vec6f> & img1_triangles) {
 	std::clock_t start;
 	double duration;
 	start = clock();

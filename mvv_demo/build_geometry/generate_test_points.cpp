@@ -83,7 +83,7 @@ vector<Point2f> get_sample_points() {
 	return points;
 }
 
-vector<Point2f> get_n_random_points(Rect bounding_box, int n) {
+vector<Point2f> get_n_random_points(const Rect & bounding_box, const int n) {
 	vector<Point2f> random_points = vector<Point2f>();
 
 	if (n < 0) {
