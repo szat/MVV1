@@ -9,16 +9,16 @@
 using namespace cv;
 using namespace std;
 
-Mat affine_transform(Vec6f sourceTri, Vec6f targetTri) {
-	cv::Point2f sourceP[3];
-	sourceP[0] = cv::Point2f(sourceTri[0], sourceTri[1]);
-	sourceP[1] = cv::Point2f(sourceTri[2], sourceTri[3]);
-	sourceP[2] = cv::Point2f(sourceTri[4], sourceTri[5]);
-	cv::Point2f targetP[3];
-	targetP[0] = cv::Point2f(targetTri[0], targetTri[1]);
-	targetP[1] = cv::Point2f(targetTri[2], targetTri[3]);
-	targetP[2] = cv::Point2f(targetTri[4], targetTri[5]);
-	cv::Mat trans = cv::getAffineTransform(sourceP, targetP);
+Mat affine_transform(Vec6f triangle_1, Vec6f triangle_2) {
+	cv::Point2f source_triangle[3];
+	source_triangle[0] = cv::Point2f(triangle_1[0], triangle_1[1]);
+	source_triangle[1] = cv::Point2f(triangle_1[2], triangle_1[3]);
+	source_triangle[2] = cv::Point2f(triangle_1[4], triangle_1[5]);
+	cv::Point2f target_triangle[3];
+	target_triangle[0] = cv::Point2f(triangle_2[0], triangle_2[1]);
+	target_triangle[1] = cv::Point2f(triangle_2[2], triangle_2[3]);
+	target_triangle[2] = cv::Point2f(triangle_2[4], triangle_2[5]);
+	cv::Mat trans = cv::getAffineTransform(source_triangle, target_triangle);
 	return trans;
 
 	/*
@@ -30,36 +30,36 @@ Mat affine_transform(Vec6f sourceTri, Vec6f targetTri) {
 	*/
 }
 
-vector<Mat> get_affine_transforms_forward(vector<Vec6f> sourceT, vector<Vec6f> targetT) {
+vector<Mat> get_affine_transforms_forward(vector<Vec6f> &triangle_list_1, vector<Vec6f> &triangle_list_2) {
 	// Start off by calculating affine transformation of two triangles.
-	int numZeros = 0;
+	int num_zeros = 0;
 
-	int numTriangles = sourceT.size();
+	int num_triangles = triangle_list_1.size();
 
 	vector<Mat> transforms = vector<Mat>();
-	for (int i = 0; i < numTriangles; i++) {
-		Vec6f sourceTri = sourceT[i];
-		Vec6f targetTri = targetT[i];
-		cv::Point2f sourceP[3];
-		sourceP[0] = cv::Point2f(sourceTri[0], sourceTri[1]);
-		sourceP[1] = cv::Point2f(sourceTri[2], sourceTri[3]);
-		sourceP[2] = cv::Point2f(sourceTri[4], sourceTri[5]);
-		cv::Point2f targetP[3];
-		targetP[0] = cv::Point2f(targetTri[0], targetTri[1]);
-		targetP[1] = cv::Point2f(targetTri[2], targetTri[3]);
-		targetP[2] = cv::Point2f(targetTri[4], targetTri[5]);
-		cv::Mat trans = cv::getAffineTransform(sourceP, targetP);
+	for (int i = 0; i < num_triangles; i++) {
+		Vec6f triangle_1 = triangle_list_1[i];
+		Vec6f triangle_2 = triangle_list_2[i];
+		cv::Point2f triangle_1_points[3];
+		triangle_1_points[0] = cv::Point2f(triangle_1[0], triangle_1[1]);
+		triangle_1_points[1] = cv::Point2f(triangle_1[2], triangle_1[3]);
+		triangle_1_points[2] = cv::Point2f(triangle_1[4], triangle_1[5]);
+		cv::Point2f triangle_2_points[3];
+		triangle_2_points[0] = cv::Point2f(triangle_2[0], triangle_2[1]);
+		triangle_2_points[1] = cv::Point2f(triangle_2[2], triangle_2[3]);
+		triangle_2_points[2] = cv::Point2f(triangle_2[4], triangle_2[5]);
+		cv::Mat trans = cv::getAffineTransform(triangle_1_points, triangle_2_points);
 		if (trans.at<double>(0, 0) == 0 && trans.at<double>(0, 1) == 0 && trans.at<double>(0, 2) == 0 &&
 			trans.at<double>(1, 0) == 0 && trans.at<double>(1, 1) == 0 && trans.at<double>(1, 2) == 0) {
-			numZeros++;
+			num_zeros++;
 		}
 		transforms.push_back(trans);
 	}
-	cout << "Number of forward null transforms: " << numZeros << endl;
+	cout << "Number of forward null transforms: " << num_zeros << endl;
 	return transforms;
 }
 
-void reverse_transform(Mat forward, Mat &reverse) {
+void reverse_transform(Mat &forward, Mat &reverse) {
 	// Simply put, this reverses the transform using the formula:
 	// X' = AX+B, so
 	// X = A^(-1)X - A^(-1)B
@@ -92,67 +92,67 @@ void reverse_transform(Mat forward, Mat &reverse) {
 	}
 }
 
-vector<Mat> get_affine_transforms_reverse(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<Mat> forward_transforms) {
+vector<Mat> get_affine_transforms_reverse(vector<Vec6f> &triangle_list_1, vector<Vec6f> &triangle_list_2, vector<Mat> &forward_transforms) {
 	// Start off by calculating affine transformation of two triangles.
-	int numZeros = 0;
+	int num_zeros = 0;
 
-	int numTriangles = sourceT.size();
+	int num_triangles = triangle_list_1.size();
 
 	vector<Mat> transforms = vector<Mat>();
-	for (int i = 0; i < numTriangles; i++) {
-		Vec6f sourceTri = sourceT[i];
-		Vec6f targetTri = targetT[i];
-		cv::Point2f sourceP[3];
-		sourceP[0] = cv::Point2f(sourceTri[0], sourceTri[1]);
-		sourceP[1] = cv::Point2f(sourceTri[2], sourceTri[3]);
-		sourceP[2] = cv::Point2f(sourceTri[4], sourceTri[5]);
-		cv::Point2f targetP[3];
-		targetP[0] = cv::Point2f(targetTri[0], targetTri[1]);
-		targetP[1] = cv::Point2f(targetTri[2], targetTri[3]);
-		targetP[2] = cv::Point2f(targetTri[4], targetTri[5]);
-		cv::Mat trans = cv::getAffineTransform(sourceP, targetP);
+	for (int i = 0; i < num_triangles; i++) {
+		Vec6f triangle_1 = triangle_list_1[i];
+		Vec6f triangle_2 = triangle_list_2[i];
+		cv::Point2f triangle_1_points[3];
+		triangle_1_points[0] = cv::Point2f(triangle_1[0], triangle_1[1]);
+		triangle_1_points[1] = cv::Point2f(triangle_1[2], triangle_1[3]);
+		triangle_1_points[2] = cv::Point2f(triangle_1[4], triangle_1[5]);
+		cv::Point2f triangle_2_points[3];
+		triangle_2_points[0] = cv::Point2f(triangle_2[0], triangle_2[1]);
+		triangle_2_points[1] = cv::Point2f(triangle_2[2], triangle_2[3]);
+		triangle_2_points[2] = cv::Point2f(triangle_2[4], triangle_2[5]);
+		cv::Mat trans = cv::getAffineTransform(triangle_1_points, triangle_2_points);
 		if (trans.at<double>(0, 0) == 0 && trans.at<double>(0, 1) == 0 && trans.at<double>(0, 2) == 0 &&
 			trans.at<double>(1, 0) == 0 && trans.at<double>(1, 1) == 0 && trans.at<double>(1, 2) == 0) {
 			reverse_transform(forward_transforms[i], trans);
-			numZeros++;
+			num_zeros++;
 		}
 		transforms.push_back(trans);
 	}
-	cout << "Number of reverse null transforms: " << numZeros << endl;
+	cout << "Number of reverse null transforms: " << num_zeros << endl;
 	return transforms;
 }
 
-vector<Vec6f> get_interpolated_triangles(vector<Vec6f> sourceT, vector<Vec6f> targetT, vector<vector<vector<double>>> affine, int tInt) {
-	int numTriangles = sourceT.size();
+vector<Vec6f> get_interpolated_triangles(vector<Vec6f> &triangle_list_1, vector<vector<vector<double>>> & affine, int tInt) {
+	int num_triangles = triangle_list_1.size();
 	float t = (float)tInt / 100;
-	vector<Vec6f> interT = vector<Vec6f>();
+	vector<Vec6f> inter_triangles = vector<Vec6f>();
 
 	// It is by will alone I set my mind in motion.
 	// Good luck with these indices...
-	for (int i = 0; i < numTriangles; i++) {
-		vector<vector<double>> affineParams = affine[i];
-		float pt1x = (1 - t + affineParams[0][0] * t) * sourceT[i][0] + (affineParams[0][1] * t) * sourceT[i][1] + (affineParams[0][2] * t);
-		float pt1y = (affineParams[1][0] * t) * sourceT[i][0] + (1 - t + affineParams[1][1] * t) * sourceT[i][1] + (affineParams[1][2] * t);
-		float pt2x = (1 - t + affineParams[0][0] * t) * sourceT[i][2] + (affineParams[0][1] * t) * sourceT[i][3] + (affineParams[0][2] * t);
-		float pt2y = (affineParams[1][0] * t) * sourceT[i][2] + (1 - t + affineParams[1][1] * t) * sourceT[i][3] + (affineParams[1][2] * t);
-		float pt3x = (1 - t + affineParams[0][0] * t) * sourceT[i][4] + (affineParams[0][1] * t) * sourceT[i][5] + (affineParams[0][2] * t);
-		float pt3y = (affineParams[1][0] * t) * sourceT[i][4] + (1 - t + affineParams[1][1] * t) * sourceT[i][5] + (affineParams[1][2] * t);
-		interT.push_back(Vec6f(pt1x, pt1y, pt2x, pt2y, pt3x, pt3y));
+	for (int i = 0; i < num_triangles; i++) {
+		vector<vector<double>> affine_params = affine[i];
+		float pt1x = (1 - t + affine_params[0][0] * t) * triangle_list_1[i][0] + (affine_params[0][1] * t) * triangle_list_1[i][1] + (affine_params[0][2] * t);
+		float pt1y = (affine_params[1][0] * t) * triangle_list_1[i][0] + (1 - t + affine_params[1][1] * t) * triangle_list_1[i][1] + (affine_params[1][2] * t);
+		float pt2x = (1 - t + affine_params[0][0] * t) * triangle_list_1[i][2] + (affine_params[0][1] * t) * triangle_list_1[i][3] + (affine_params[0][2] * t);
+		float pt2y = (affine_params[1][0] * t) * triangle_list_1[i][2] + (1 - t + affine_params[1][1] * t) * triangle_list_1[i][3] + (affine_params[1][2] * t);
+		float pt3x = (1 - t + affine_params[0][0] * t) * triangle_list_1[i][4] + (affine_params[0][1] * t) * triangle_list_1[i][5] + (affine_params[0][2] * t);
+		float pt3y = (affine_params[1][0] * t) * triangle_list_1[i][4] + (1 - t + affine_params[1][1] * t) * triangle_list_1[i][5] + (affine_params[1][2] * t);
+		inter_triangles.push_back(Vec6f(pt1x, pt1y, pt2x, pt2y, pt3x, pt3y));
 	}
-	return interT;
+	return inter_triangles;
 }
 
-void display_interpolated_triangles(vector<Vec6f> triangles, Rect imageBounds) {
+void display_interpolated_triangles(vector<Vec6f> & triangles, Rect & image_bounds) {
 	// the graphical_triangulation function is far too slow
 
 	Scalar active_facet_color(0, 0, 255), delaunay_color(255, 255, 255);
-	Mat img(imageBounds.size(), CV_8UC3);
+	Mat img(image_bounds.size(), CV_8UC3);
 
 	img = Scalar::all(0);
 	string win = "Delaunay Demo";
 
-	int numTriangles = triangles.size();
-	for (size_t i = 0; i < numTriangles; i++)
+	int num_triangles = triangles.size();
+	for (size_t i = 0; i < num_triangles; i++)
 	{
 		Vec6f t = triangles[i];
 		Point pt0 = Point(cvRound(t[0]), cvRound(t[1]));
@@ -183,22 +183,22 @@ static void onInterpolate(int tInt, void *userdata) //void* mean that it is a po
 	vector<Vec6f> targetT = (*((interpolationMorph*)userdata)).targetT;
 	vector<vector<vector<double>>> affineParams = (*((interpolationMorph*)userdata)).affineParams;
 	Rect imgSize = (*((interpolationMorph*)userdata)).imageSize;
-	vector<Vec6f> interT = get_interpolated_triangles(sourceT, targetT, affineParams, tInt);
+	vector<Vec6f> interT = get_interpolated_triangles(sourceT, affineParams, tInt);
 	display_interpolated_triangles(interT, imgSize);
 	//Subdiv2D subdiv = raw_triangulation(interPoints, imgSize);
 	//display_triangulation(subdiv, imgSize);
 }
 
-void interpolation_trackbar(vector<Vec6f> trianglesA, vector<Vec6f> trianglesB, Rect imgSizeA, Rect imgSizeB, vector<vector<vector<double>>> affine)
+void interpolation_trackbar(vector<Vec6f> & triangle_list_1, vector<Vec6f> & triangle_list_2, Rect & img1_size, Rect & img2_size, vector<vector<vector<double>>> & affine)
 {
 	// max of height and weidth
-	int maxWidth = max(imgSizeA.width, imgSizeB.width);
-	int maxHeight = max(imgSizeA.height, imgSizeB.height);
+	int maxWidth = max(img1_size.width, img2_size.width);
+	int maxHeight = max(img1_size.height, img2_size.height);
 	Rect imgSize = Rect(0,0,maxWidth, maxHeight);
 
 	interpolationMorph holder;
-	holder.sourceT = trianglesA;
-	holder.targetT = trianglesB;
+	holder.sourceT = triangle_list_1;
+	holder.targetT = triangle_list_2;
 	holder.imageSize = imgSize;
 	holder.affineParams = affine;
 	holder.tInt = 0;
