@@ -4,7 +4,7 @@
 #include "INIReader.h"
 #include "windows.h"
 
-#define SETTINGS_PATH "../../data_store/settings.ini"
+#define SETTINGS_PATH "../../settings.ini"
 
 INIReader initialize_reader() {
 	INIReader reader(SETTINGS_PATH);
@@ -17,6 +17,8 @@ INIReader initialize_reader() {
 	return reader;
 }
 
+
+
 int get_video_width() {
 	INIReader reader = initialize_reader();
 	return reader.GetInteger("user", "video_width", 0);
@@ -25,6 +27,11 @@ int get_video_width() {
 int get_video_height() {
 	INIReader reader = initialize_reader();
 	return reader.GetInteger("user", "video_height", 0);
+}
+
+string get_data_folder_path() {
+	INIReader reader = initialize_reader();
+	return reader.Get("user", "data_store_path", "UNKNOWN");
 }
 
 string get_video_path_1() {

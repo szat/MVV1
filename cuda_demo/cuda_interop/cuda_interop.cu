@@ -140,6 +140,8 @@ int main(int argc, char **argv)
 		cout << "NDim is in debug mode" << endl;
 	}
 
+	string data_folder_path = get_data_folder_path();
+
 	int memsize_uchar3 = graphics_width * graphics_height * sizeof(uchar3);
 	int memsize_uchar4 = graphics_width * graphics_height * sizeof(uchar4);
 
@@ -229,11 +231,11 @@ int main(int argc, char **argv)
 		string padded_frame_number = pad_frame_number(frame_count);
 		string padded_rounded_frame_number = pad_frame_number(rounded_frame_number);
 
-		string img_path_1 = "D:/data_store/binary/img1_" + padded_frame_number + ".bin";
-		string img_path_2 = "D:/data_store/binary/img2_" + padded_frame_number + ".bin";
-		string raster1_path = "D:/data_store/raster/raster_1_" + padded_rounded_frame_number + ".bin";
-		string raster2_path = "D:/data_store/raster/raster_2_" + padded_rounded_frame_number + ".bin";
-		string affine_path = "D:/data_store/affine/affine_" + padded_rounded_frame_number + ".bin";
+		string img_path_1 = data_folder_path + "binary\\img1_" + padded_frame_number + ".bin";
+		string img_path_2 = data_folder_path + "binary\\img2_" + padded_frame_number + ".bin";
+		string raster1_path = data_folder_path + "raster\\raster_1_" + padded_rounded_frame_number + ".bin";
+		string raster2_path = data_folder_path + "raster\\raster_2_" + padded_rounded_frame_number + ".bin";
+		string affine_path = data_folder_path + "affine\\affine_" + padded_rounded_frame_number + ".bin";
 
 		// RASTER READ
 		int num_pixels_1 = 0;
