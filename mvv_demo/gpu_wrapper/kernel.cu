@@ -325,7 +325,7 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 		img2 = image_dir + filename_img_2;
 		save_img_binary(next_1, next_2, video_size, img1, img2);
 
-		for (int j = 1; j < 20; j++) {
+		for (int j = 1; j < jump_size; j++) {
 			cout << "Saving image for frame " << (i + j) << endl;
 			cap_1.read(next_1);
 			cap_2.read(next_2);
@@ -364,12 +364,16 @@ int main() {
 	int framerate = get_framerate();
 	if (framerate <= 0) {
 		cout << "ERROR CODE 003: Framerate must be a positive integer." << endl;
+		cout << "Press enter to exit." << endl;
+		cin.ignore();
 		return -1;
 	}
 
 	int start_offset = get_start_offset();
 	if (framerate <= 0) {
 		cout << "ERROR CODE 005: Starting offset cannot be less than 0 (cannot start before the beginning of the video file)." << endl;
+		cout << "Press enter to exit." << endl;
+		cin.ignore();
 		return -1;
 	}
 
@@ -378,12 +382,16 @@ int main() {
 	VideoCapture cap_1(video_path_1);
 	if (!cap_1.isOpened()) {
 		cout << "ERROR CODE 002: Video file not found. Please verify the file specified exists in the folder: data_store/video." << endl;
+		cout << "Press enter to exit." << endl;
+		cin.ignore();
 		return -1;
 	}
 
 	VideoCapture cap_2(video_path_2);
 	if (!cap_2.isOpened()) {
 		cout << "ERROR CODE 002: Video file not found. Please verify the file specified exists in the folder: data_store/video." << endl;
+		cout << "Press enter to exit." << endl;
+		cin.ignore();
 		return -1;
 	}
 
