@@ -248,9 +248,14 @@ void save_frame_master(const Mat &img1, const Mat &img2, const Size & video_size
 }
 
 int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int start_2) {
-
-	// do the point matching at max resolution, then rescale
-	// doens't seem like we do any rescaling
+	// This code uses OpenCV to first:
+	// -sync the two video files using a precomputed offset
+	// -determine the total length of usable video from both inputs
+	// -goes through the video frame-by-frame and saves the binary images as img.bin files
+	// -every 20 frames, affine transformation parameters are computed using AKAZE, Lowe's RATIO & RANSAC
+	// -these transformation parameters are saved as affine.bin files
+	// -every 20 frames, we use a triangular grid of coorespondences between the images to create a set of
+	// matched triangles. These triangles are then rasterized to provide a raster map between the two frames.
 
 	int starter_offset = 10;
 
@@ -283,9 +288,6 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 	int frames_remaining_2 = num_frames_2 - start_2 - 1;
 	int frames_remaining = min(frames_remaining_1, frames_remaining_2);
 
-	// Determining how many 'jumps' are required.
-	// TODO: Replace these variables with more descriptive and intuitive names.
-
 	int renderable_frames = frames_remaining - frames_remaining % 20;
 	int jump_size = 20;
 	int num_jumps = renderable_frames / 20;
@@ -317,6 +319,10 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 
 		save_frame_master(next_1, next_2, video_size, affine, raster1, raster2);
 
+		// This code could be simplified by putting the following code inside the j for loop,
+		// but we have not done that as it would result in an extra execution of cap_1.read(next_1)
+		// and cap_2.read(next_2) per cycle.
+
 		cout << "Saving image for frame " << i << endl;
 		padded_number = pad_frame_number(i);
 		filename_img_1 = "img1_" + padded_number + ".bin";
@@ -341,8 +347,7 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 }
 
 pair<int, int> audio_sync(const int initial_offset, const float delay, const int framerate) {
-	//6.2657
-	//95
+	// Use the matlab code provided to generate the delay parameter.
 	std::pair<int, int> sync = std::pair<int, int>(initial_offset, initial_offset);
 	float offset2 = delay * (float)framerate;
 	int offset2_int = (int)offset2;
@@ -395,7 +400,14 @@ int main() {
 		return -1;
 	}
 
+	// The audio sync function takes offset information about two video files that has been computed outside of the code.
+	// This code does not provide a way to sync two video streams so that they are precisely in-step
+
 	std::pair<int, int> initial_offset = audio_sync(start_offset, delay, framerate);
+
+	// The video_loop function is the access point for the entire preprocessing application, where affine transformation
+	// parameters between frames of the video are computed.
+
 	video_loop(cap_1, cap_2, initial_offset.first, initial_offset.second);
 
 	cout << "Finished processing video files. Press enter to terminate program." << endl;
