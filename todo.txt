@@ -1,4 +1,4 @@
-1. absolute vs relative paths, in both property sheets and code
+1. absolute vs relative paths, in both property sheets and code (x)
 2. standard variable names
 3. simplifying making it elegant, mvv_demo loop
 4. error codes, error catching
