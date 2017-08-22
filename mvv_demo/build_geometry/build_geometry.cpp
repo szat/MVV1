@@ -231,42 +231,42 @@ long long pair_hash(Point2f pt) {
 	return first * (imax + 1) + second;
 }
 
-vector<Vec6f> triangulate_target(vector<Point2f> img_points_A, vector<Point2f> img_points_B, vector<Vec6f> triangles_A) {
+vector<Vec6f> triangulate_target(vector<Point2f> img1_points, vector<Point2f> img2_points, vector<Vec6f> img1_triangles) {
 	std::clock_t start;
 	double duration;
 	start = clock();
 
 
-	vector<Vec6f> triangles_B = vector<Vec6f>();
+	vector<Vec6f> img2_triangles = vector<Vec6f>();
 
 	// build up correspondence hashtable
 	std::unordered_map<long long, Point2f> point_dict;
 	
-	int numTriangles = triangles_A.size();
-	int numPoints = img_points_A.size();
+	int numTriangles = img1_triangles.size();
+	int numPoints = img1_points.size();
 
 	for (int i = 0; i < numPoints; i++) {
-		long long hash = pair_hash(img_points_A[i]);
-		point_dict.insert(make_pair(hash, img_points_B[i]));
+		long long hash = pair_hash(img1_points[i]);
+		point_dict.insert(make_pair(hash, img2_points[i]));
 	}
-	Point2f test_point = point_dict[pair_hash(img_points_A[0])];
+	Point2f test_point = point_dict[pair_hash(img1_points[0])];
 
 	duration = (clock() - start) / (double)CLOCKS_PER_MS;
 	cout << "built dictionary in " << duration << " ms" << endl;
 
 	for (int i = 0; i < numTriangles; i++) {
-		Vec6f current_triangle_A = triangles_A[i];
-		Point2f vertex1 = Point2f(current_triangle_A[0], current_triangle_A[1]);
-		Point2f vertex2 = Point2f(current_triangle_A[2], current_triangle_A[3]);
-		Point2f vertex3 = Point2f(current_triangle_A[4], current_triangle_A[5]);
+		Vec6f img1_current_triangle = img1_triangles[i];
+		Point2f vertex1 = Point2f(img1_current_triangle[0], img1_current_triangle[1]);
+		Point2f vertex2 = Point2f(img1_current_triangle[2], img1_current_triangle[3]);
+		Point2f vertex3 = Point2f(img1_current_triangle[4], img1_current_triangle[5]);
 	
 		Point2f new_vertex_1 = point_dict[pair_hash(vertex1)];
 		Point2f new_vertex_2 = point_dict[pair_hash(vertex2)];
 		Point2f new_vertex_3 = point_dict[pair_hash(vertex3)];
 
-		Vec6f triangle_B = Vec6f(new_vertex_1.x, new_vertex_1.y, new_vertex_2.x, new_vertex_2.y, new_vertex_3.x, new_vertex_3.y);
-		triangles_B.push_back(triangle_B);
+		Vec6f img2_triangle = Vec6f(new_vertex_1.x, new_vertex_1.y, new_vertex_2.x, new_vertex_2.y, new_vertex_3.x, new_vertex_3.y);
+		img2_triangles.push_back(img2_triangle);
 	}
 
-	return triangles_B;
+	return img2_triangles;
 }

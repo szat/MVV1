@@ -60,12 +60,12 @@ string pad_frame_number(int frame_number) {
 	return padded;
 }
 
-MatchedGeometry create_matched_geometry(std::vector<cv::Point2f> imgA_points, std::vector<cv::Point2f> imgB_points, cv::Size size) {
+MatchedGeometry create_matched_geometry(std::vector<cv::Point2f> img1_points, std::vector<cv::Point2f> img2_points, cv::Size size) {
 	// triangulate source interior
-	vector<Vec6f> trianglesA = construct_triangles(imgA_points, size);
+	vector<Vec6f> img1_triangles = construct_triangles(img1_points, size);
 
 	// triangulate target interior
-	vector<Vec6f> trianglesB = triangulate_target(imgA_points, imgB_points, trianglesA);
+	vector<Vec6f> img2_triangles = triangulate_target(img1_points, img2_points, img1_triangles);
 
 	Rect img_bounds = Rect(0, 0, size.width, size.height);
 
@@ -73,8 +73,8 @@ MatchedGeometry create_matched_geometry(std::vector<cv::Point2f> imgA_points, st
 	MatchedGeometry matched_result = MatchedGeometry();
 	GeometricSlice source = GeometricSlice();
 	GeometricSlice target = GeometricSlice();
-	source.triangles = trianglesA;
-	target.triangles = trianglesB;
+	source.triangles = img1_triangles;
+	target.triangles = img2_triangles;
 	source.img = img_bounds;
 	target.img = img_bounds;
 	matched_result.source_geometry = source;
@@ -105,17 +105,17 @@ void ratio_matcher_script(const float ratio, const vector<KeyPoint>& kpts1_in, c
 void ransac_script(const float ball_radius, const float inlier_thresh, const vector<KeyPoint>& kpts1_in, const vector<KeyPoint>& kpts2_in, Mat& homography_out, vector<KeyPoint>& kpts1_out, vector<KeyPoint>& kpts2_out) {
 	cout << "RANSAC to estimate global homography with max deviating distance being " << ball_radius << "." << endl;
 
-	vector<Point2f> keysImage1;
-	vector<Point2f> keysImage2;
+	vector<Point2f> img1_keys;
+	vector<Point2f> img2_keys;
 	vector<DMatch> good_matches;
 
 	int nbMatches = kpts1_in.size();
 	for (int i = 0; i < nbMatches; i++) {
-		keysImage1.push_back(kpts1_in.at(i).pt);
-		keysImage2.push_back(kpts2_in.at(i).pt);
+		img1_keys.push_back(kpts1_in.at(i).pt);
+		img2_keys.push_back(kpts2_in.at(i).pt);
 	}
 
-	Mat H = findHomography(keysImage1, keysImage2, CV_RANSAC, ball_radius);
+	Mat H = findHomography(img1_keys, img2_keys, CV_RANSAC, ball_radius);
 	homography_out = H;
 
 	cout << "RANSAC found the homography." << endl;
@@ -168,7 +168,7 @@ void akaze_script(float akaze_thresh, const Mat& img_in, vector<KeyPoint>& kpts_
 	cout << "akaze_wrapper(thr=" << akaze_thresh << ",[h=" << img_in.size().height << ",w=" << img_in.size().width << "]) finished in " << difftime(tend, tstart) << "s and found " << kpts_out.size() << " features." << endl;
 }
 
-vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
+vector<vector<KeyPoint>> match_points_mat(Mat &img1, Mat &img2)
 {
 	const float akaze_thr = 3e-4;    // AKAZE detection threshold set to locate about 1000 keypoints
 	const float ratio = 0.8f;   // Nearest neighbor matching ratio
@@ -199,51 +199,51 @@ vector<vector<KeyPoint>> match_points_mat(Mat img1, Mat img2)
 MatchedGeometry read_matched_points_from_file(Mat &img1, Mat &img2, Size video_size) {
 	cout << "Initializing matched geometry routine" << endl;
 
-	Mat imgA;
-	Mat imgB;
-	cvtColor(img1, imgA, CV_BGR2GRAY);
-	cvtColor(img2, imgB, CV_BGR2GRAY);
+	Mat img1_gray;
+	Mat img2_gray;
+	cvtColor(img1, img1_gray, CV_BGR2GRAY);
+	cvtColor(img2, img2_gray, CV_BGR2GRAY);
 
-	vector<vector<KeyPoint>> point_matches = match_points_mat(imgA, imgB);
+	vector<vector<KeyPoint>> point_matches = match_points_mat(img1_gray, img2_gray);
 
-	vector<KeyPoint> imgA_keypoints = point_matches[0];
-	vector<KeyPoint> imgB_keypoints = point_matches[1];
-	vector<Point2f> imgA_points = convert_key_points(imgA_keypoints);
-	vector<Point2f> imgB_points = convert_key_points(imgB_keypoints);
+	vector<KeyPoint> img1_keypoints = point_matches[0];
+	vector<KeyPoint> img2_keypoints = point_matches[1];
+	vector<Point2f> img1_points = convert_key_points(img1_keypoints);
+	vector<Point2f> img2_points = convert_key_points(img2_keypoints);
 
-	MatchedGeometry geometry = create_matched_geometry(imgA_points, imgB_points, video_size);
+	MatchedGeometry geometry = create_matched_geometry(img1_points, img2_points, video_size);
 	return geometry;
 }
 
-void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string rasterA, string rasterB) {
+void save_frame_master(Mat &img1, Mat &img2, Size video_size, string affine, string img1_raster, string img2_raster) {
 	MatchedGeometry geometry = read_matched_points_from_file(img1, img2, video_size);
 
-	vector<Vec6f> trianglesA = geometry.source_geometry.triangles;
-	vector<Vec6f> trianglesB = geometry.target_geometry.triangles;
+	vector<Vec6f> img1_triangles = geometry.source_geometry.triangles;
+	vector<Vec6f> img2_triangles = geometry.target_geometry.triangles;
 
-	Rect imgA_bounds = geometry.source_geometry.img;
-	Rect imgB_bounds = geometry.target_geometry.img;
+	Rect img1_bounds = geometry.source_geometry.img;
+	Rect img2_bounds = geometry.target_geometry.img;
 
-	vector<vector<Point>> rastered_trianglesA = raster_triangulation(trianglesA, imgA_bounds);
-	vector<vector<Point>> rastered_trianglesB = raster_triangulation(trianglesB, imgB_bounds);
+	vector<vector<Point>> img1_rastered_triangles = raster_triangulation(img1_triangles, img1_bounds);
+	vector<vector<Point>> img2_rastered_triangles = raster_triangulation(img2_triangles, img2_bounds);
 
-	int widthA = imgA_bounds.width;
-	int heightA = imgA_bounds.height;
-	int widthB = imgB_bounds.width;
-	int heightB = imgB_bounds.height;
+	int img1_width = img1_bounds.width;
+	int img1_height = img1_bounds.height;
+	int img2_width = img2_bounds.width;
+	int img2_height = img2_bounds.height;
 
 	// save affine params as .csv
 	// save image raster as grayscale .png from 0-65536 (2 images)
-	short** gridA = grid_from_raster(widthA, heightA, rastered_trianglesA);
-	short** gridB = grid_from_raster(widthB, heightB, rastered_trianglesB);
-	save_raster(rasterA, gridA, widthA, heightA);
-	save_raster(rasterB, gridB, widthB, heightB);
+	short** img1_grid = grid_from_raster(img1_width, img1_height, img1_rastered_triangles);
+	short** img2_grid = grid_from_raster(img2_width, img2_height, img2_rastered_triangles);
+	save_raster(img1_raster, img1_grid, img1_width, img1_height);
+	save_raster(img2_raster, img2_grid, img1_width, img2_height);
 
-	vector<Mat> affine_forward = get_affine_transforms_forward(trianglesA, trianglesB);
-	vector<Mat> affine_reverse = get_affine_transforms_reverse(trianglesB, trianglesA, affine_forward);
+	vector<Mat> affine_forward = get_affine_transforms_forward(img1_triangles, img2_triangles);
+	vector<Mat> affine_reverse = get_affine_transforms_reverse(img2_triangles, img1_triangles, affine_forward);
 
 	float* affine_params = convert_vector_params(affine_forward, affine_reverse);
-	write_float_array(affine, affine_params, trianglesA.size() * 12);
+	write_float_array(affine, affine_params, img1_triangles.size() * 12);
 	free(affine_params);
 }
 

@@ -22,4 +22,4 @@ std::vector<cv::Vec6f> construct_triangles(std::vector<cv::Point2f> source_image
 
 std::vector<cv::Point2f> convert_key_points(std::vector<cv::KeyPoint> key_points);
 
-std::vector<cv::Vec6f> triangulate_target(std::vector<cv::Point2f> img_points_A, std::vector<cv::Point2f> img_points_B, std::vector<cv::Vec6f> triangles_A);
+std::vector<cv::Vec6f> triangulate_target(std::vector<cv::Point2f> img1_points, std::vector<cv::Point2f> img2_points, std::vector<cv::Vec6f> img1_triangles);
