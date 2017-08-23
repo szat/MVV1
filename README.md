@@ -9,7 +9,6 @@ Install to C:\opencv directory
 
 Note: The opencv installer specified in the above download link has precompiled lib/bin that can be used in 
 
-
 Steps for creating a first OpenCV solution (.sln) and project (.csproj) for the first time:
 1. Go to File --> New --> Project, and select Project.
 2. New Project window appears, select Win32 Console Application (Visual C++).
@@ -128,3 +127,12 @@ However, do NOT include namespaces in your header files. Every time you use a na
 directly (for example, std::vector or cv::Rect)
 
 You can use namespaces in your cpp files.
+
+======================================================================
+******** INSTALLATION PROCEDURE **************
+======================================================================
+Step 1. Install Visual Studio 2015
+Step 2. Install the Cuda SDK from https://developer.nvidia.com/cuda-downloads 
+Step 3. Update the Cuda drivers 
+Step 4. Send Danny 50$
+Step 5. Set startup project to be GPU wrapper
