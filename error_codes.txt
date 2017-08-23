@@ -1,7 +1,0 @@
-std::cout << "ERROR CODE 001: Can't load 'settings.ini'\n";
-
-cout << "ERROR CODE 002: Video file not found. Please verify the file specified exists in the folder: data_store/video." << endl;	
-
-if (width_1 != width_2 || height_1 != height_2) {
-		cout << "ERROR CODE 004: The widths and heights of both video files must be the same. We recommend shooting footage with two identical cameras." << endl;
-		return -1;
