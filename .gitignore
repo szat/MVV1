@@ -29,25 +29,6 @@
 *.svg
 
 # Visual studio generated files
-*.cache
-*.db
-*.opendb
-*.sdf
-*.aps
-*.idb
-*.ipch
-*.lastbuildstate
-*.lib
-*.manifest
-*.obj
-*.pch
-*.pdb
-*.res
-*.suo
-*.tlog
-*.ilk
-*.vcxproj.filters
-*.deps
 
 # Video files
 *.mp4
