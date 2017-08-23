@@ -1,7 +1,0 @@
-1. absolute vs relative paths, in both property sheets and code (x)
-2. standard variable names (x)
-3. simplifying making it elegant, mvv_demo loop (x)
-4. error codes, error catching (x)
-5. delete unused code (x)
-6. comment the code a bit more ( )
-7. installation process, potentially cmake
