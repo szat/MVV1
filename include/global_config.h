@@ -5,14 +5,19 @@
 #include "windows.h"
 
 #define SETTINGS_PATH "../../settings.ini"
+#define SETTINGS_PATH_ALTERNATE "../../../settings.ini"
 
 INIReader initialize_reader() {
 	INIReader reader(SETTINGS_PATH);
 	if (reader.ParseError() < 0) {
-		std::cout << "ERROR CODE 001: Can't load 'settings.ini'\n";
-		std::cout << "Press enter to exit program.\n";
-		std::cin.get();
-		exit(EXIT_FAILURE);
+		INIReader alternate_reader(SETTINGS_PATH_ALTERNATE);
+		if (alternate_reader.ParseError() < 0) {
+			std::cout << "ERROR CODE 001: Can't load 'settings.ini'\n";
+			std::cout << "Press enter to exit program.\n";
+			std::cin.get();
+			exit(EXIT_FAILURE);
+		}
+		return alternate_reader;
 	}
 	return reader;
 }

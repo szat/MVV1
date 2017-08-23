@@ -293,18 +293,20 @@ int video_loop(VideoCapture & cap_1, VideoCapture & cap_2, int start_1, int star
 	int num_jumps = renderable_frames / 20;
 	int cutoff_frame = jump_size * num_jumps;
 
+	string absolute_path_root = get_data_folder_path();
+
 	for (int i = 0; i <= cutoff_frame; i += jump_size) {
 		string padded_number = pad_frame_number(i);
 		cout << "Processing frame " << i << " of " << cutoff_frame << endl;
 
-		string affine_dir = "../../data_store/affine/";
+		string affine_dir = absolute_path_root + "affine\\";
 		string filename_affine = "affine_" + padded_number + ".bin";
 
-		string raster_dir = "../../data_store/raster/";
+		string raster_dir = absolute_path_root + "raster\\";
 		string filename_raster_1 = "raster_1_" + padded_number + ".bin";
 		string filename_raster_2 = "raster_2_" + padded_number + ".bin";
 
-		string image_dir = "../../data_store/binary/";
+		string image_dir = absolute_path_root + "binary\\";
 		string filename_img_1 = "img1_" + padded_number + ".bin";
 		string filename_img_2 = "img2_" + padded_number + ".bin";
 
