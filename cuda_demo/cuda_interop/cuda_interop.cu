@@ -317,5 +317,7 @@ int main(int argc, char **argv)
 	cudaFree(d_render_final);
 	// set up GLUT and kick off main loop
 	//
-	glutMainLoop(); //does not seem necessary
+	//glutMainLoop(); //does not seem necessary
+
+	
 }
