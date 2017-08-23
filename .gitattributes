@@ -58,6 +58,9 @@
 #*.dot   diff=astextplain
 #*.DOT   diff=astextplain
 #*.pdf   diff=astextplain
-#*.PDF   diff=astextplain
+#*.PDF   diff=astextplainhttps://github.com/danielhogg/mvv/tree/master/akaze-cpuidentity/src/lib
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+* linguist-vendored
+*.cpp linguist-vendored=false
