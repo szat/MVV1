@@ -1,0 +1,8 @@
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/akaze_compare.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/akaze_match.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE_CUDA.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/akaze_features.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/INSTALL.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/ZERO_CHECK.dir

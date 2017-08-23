@@ -1,0 +1,55 @@
+# CMake generation dependency list for this directory.
+C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/3.8.1/CMakeSystem.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeSystemSpecificInitialize.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/3.8.1/CMakeCCompiler.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/3.8.1/CMakeCXXCompiler.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeGenericSystem.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/Windows.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/WindowsPaths.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/Windows-MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/Windows-MSVC.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/3.8.1/CMakeRCCompiler.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeRCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeCXXInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Compiler/MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeCommonLanguageInclude.cmake
+C:/opencv/build/OpenCVConfig-version.cmake
+C:/opencv/build/OpenCVConfig.cmake
+C:/opencv/build/x64/vc14/lib/OpenCVConfig.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageMessage.cmake
+C:/opencv/build/x64/vc14/lib/OpenCVModules.cmake
+C:/opencv/build/x64/vc14/lib/OpenCVModules-debug.cmake
+C:/opencv/build/x64/vc14/lib/OpenCVModules-release.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindDoxygen.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindCUDA.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindCUDA/select_compute_arch.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindBoost.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPythonLibs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/CMakeFindFrameworks.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/SelectLibraryConfigurations.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindOpenMP.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/FindOpenMP/ompver.c
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/FindOpenMP/ompver.cpp
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindPackageMessage.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE_CUDA.dir/lib/AKAZE_CUDA_generated_cudaImage.cu.obj.depend
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindCUDA/run_nvcc.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE_CUDA.dir/lib/AKAZE_CUDA_generated_cuda_akaze.cu.obj.depend
+C:/Program Files/CMake/share/cmake-3.8/Modules/FindCUDA/run_nvcc.cmake
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE_CUDA.dir/lib/AKAZE_CUDA_generated_cudaImage.cu.obj.cmake.pre-gen
+C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/AKAZE_CUDA.dir/lib/AKAZE_CUDA_generated_cuda_akaze.cu.obj.cmake.pre-gen

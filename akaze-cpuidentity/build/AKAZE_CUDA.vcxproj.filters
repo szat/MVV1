@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\cudaImage.cu" />
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\cuda_akaze.cu" />
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\8484d6b623d5a8dbf5d69867a8020ce9\AKAZE_CUDA_intermediate_link.obj.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\$(Configuration)\AKAZE_CUDA_generated_cudaImage.cu.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\$(Configuration)\AKAZE_CUDA_generated_cuda_akaze.cu.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\$(Configuration)\AKAZE_CUDA_intermediate_link.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{46D2E5C9-1163-3B35-A4EB-386FB25257AB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object Files">
+      <UniqueIdentifier>{E0F34148-241C-3698-87DB-F733C5D70B90}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

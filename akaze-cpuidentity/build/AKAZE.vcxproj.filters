@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\AKAZE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\fed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\nldiffusion_functions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\AKAZEConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\AKAZE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\fed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\nldiffusion_functions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1FA2BBDB-D621-3F2E-8CBC-462FD207A1BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{BC58A9B8-E88A-3592-B6A0-C8506A061999}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

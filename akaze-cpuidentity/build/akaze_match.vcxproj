@@ -1,0 +1,335 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{8AF45092-6D1D-33FE-A1CD-D91C29071265}</ProjectGUID>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>akaze_match</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">akaze_match.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">akaze_match</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">akaze_match.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">akaze_match</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">akaze_match.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">akaze_match</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">akaze_match.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">akaze_match</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Debug\AKAZE.lib;Debug\AKAZE_CUDA.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudadevrt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/Adrian/Documents/akaze-cpuidentity/build/Debug/akaze_match.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/Adrian/Documents/akaze-cpuidentity/build/Debug/akaze_match.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Release\AKAZE.lib;Release\AKAZE_CUDA.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\opencv\build\x64\vc14\lib\opencv_world320.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudadevrt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/Adrian/Documents/akaze-cpuidentity/build/Release/akaze_match.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/Adrian/Documents/akaze-cpuidentity/build/Release/akaze_match.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;MinSizeRel\AKAZE.lib;MinSizeRel\AKAZE_CUDA.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudadevrt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/Adrian/Documents/akaze-cpuidentity/build/MinSizeRel/akaze_match.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/Adrian/Documents/akaze-cpuidentity/build/MinSizeRel/akaze_match.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\Adrian\Documents\akaze-cpuidentity\src\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;C:\opencv\build\include;C:\opencv\build\include\opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;RelWithDebInfo\AKAZE.lib;RelWithDebInfo\AKAZE_CUDA.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\opencv\build\x64\vc14\lib\opencv_world320d.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudadevrt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/Adrian/Documents/akaze-cpuidentity/build/RelWithDebInfo/akaze_match.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/Adrian/Documents/akaze-cpuidentity/build/RelWithDebInfo/akaze_match.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/Adrian/Documents/akaze-cpuidentity/src -BC:/Users/Adrian/Documents/akaze-cpuidentity/build --check-stamp-file C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCCompiler.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv\build\OpenCVConfig-version.cmake;C:\opencv\build\OpenCVConfig.cmake;C:\opencv\build\x64\vc14\lib\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-debug.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-release.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\select_compute_arch.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindBoost.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPythonLibs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeFindFrameworks.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\SelectLibraryConfigurations.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindOpenMP.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.c;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.cpp;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cudaImage.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cuda_akaze.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/Adrian/Documents/akaze-cpuidentity/src -BC:/Users/Adrian/Documents/akaze-cpuidentity/build --check-stamp-file C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCCompiler.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv\build\OpenCVConfig-version.cmake;C:\opencv\build\OpenCVConfig.cmake;C:\opencv\build\x64\vc14\lib\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-debug.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-release.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\select_compute_arch.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindBoost.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPythonLibs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeFindFrameworks.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\SelectLibraryConfigurations.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindOpenMP.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.c;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.cpp;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cudaImage.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cuda_akaze.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/Adrian/Documents/akaze-cpuidentity/src -BC:/Users/Adrian/Documents/akaze-cpuidentity/build --check-stamp-file C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCCompiler.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv\build\OpenCVConfig-version.cmake;C:\opencv\build\OpenCVConfig.cmake;C:\opencv\build\x64\vc14\lib\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-debug.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-release.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\select_compute_arch.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindBoost.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPythonLibs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeFindFrameworks.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\SelectLibraryConfigurations.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindOpenMP.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.c;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.cpp;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cudaImage.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cuda_akaze.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/Users/Adrian/Documents/akaze-cpuidentity/src -BC:/Users/Adrian/Documents/akaze-cpuidentity/build --check-stamp-file C:/Users/Adrian/Documents/akaze-cpuidentity/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/Adrian/Documents/akaze-cpuidentity/src/CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCCompiler.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\3.8.1\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv\build\OpenCVConfig-version.cmake;C:\opencv\build\OpenCVConfig.cmake;C:\opencv\build\x64\vc14\lib\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-debug.cmake;C:\opencv\build\x64\vc14\lib\OpenCVModules-release.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\select_compute_arch.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindBoost.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPythonLibs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeFindFrameworks.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\SelectLibraryConfigurations.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindOpenMP.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.c;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\FindOpenMP\ompver.cpp;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cudaImage.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\AKAZE_CUDA.dir\lib\AKAZE_CUDA_generated_cuda_akaze.cu.obj.depend;C:\Program Files\CMake\share\cmake-3.8\Modules\FindCUDA\run_nvcc.cmake;C:\Users\Adrian\Documents\akaze-cpuidentity\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\Adrian\Documents\akaze-cpuidentity\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Adrian\Documents\akaze-cpuidentity\src\akaze_match.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Copy.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
