@@ -56,3 +56,15 @@ start_offset = This gives an integer constant offset from the beginning of both 
 delay = The delay is a floating point number specifying the delay in seconds of the second video relative to the first video. In order to calculate the offset, separate the audio from the video files using ffmpeg, and then process the audio files with the MATLAB script audio_sync.m, provided in the repository.
 
 If you shoot your own videos to process with this approach, we recommend an inwards camera angle between 20 and 30 degrees.
+
+# Acknowledgements
+
+This project would not have been possible without the use of numerous open-source libraries that were included as part of this project. A special thanks to the creators of:
+
+AKAZE (Accelerated-KAZE Features with CUDA acceleration)
+Niklas Bergström
+https://github.com/nbergst/akaze
+
+INIH (Simple .INI file parser in C)
+Ben Hoyt
+https://github.com/benhoyt/inih
