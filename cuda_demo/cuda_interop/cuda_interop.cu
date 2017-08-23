@@ -1,6 +1,6 @@
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
-//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 
 // includes, system
@@ -47,16 +47,12 @@ static void key_func(unsigned char key, int x, int y) {
 	if (key == 'a') {
 		if (morphing_param > 0) {
 			morphing_param -= 5;
-			cout << morphing_param << endl;
 		}
-		cout << "left " << endl;
 	}
 	else if (key == 'd') {
 		if (morphing_param < 200) {
 			morphing_param += 5;
-			cout << morphing_param << endl;
 		}
-		cout << "right " << endl;
 	}
 	else if (key == 27) {
 		cudaGraphicsUnregisterResource(resource);
@@ -177,7 +173,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(graphics_width, graphics_height);
 	glutCreateWindow("bitmap");
-	//glutFullScreen();
+	glutFullScreen();
 	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
 	//not in tutorial, otherwise crashes
