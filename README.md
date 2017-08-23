@@ -62,9 +62,10 @@ If you shoot your own videos to process with this approach, we recommend an inwa
 This project would not have been possible without the use of numerous open-source libraries that were included as part of this project. A special thanks to the creators of:
 
 AKAZE (Accelerated-KAZE Features with CUDA acceleration)
-Niklas Bergström
-https://github.com/nbergst/akaze
+* Niklas Bergström
+* https://github.com/nbergst/akaze
+
 
 INIH (Simple .INI file parser in C)
-Ben Hoyt
-https://github.com/benhoyt/inih
+* Ben Hoyt
+* https://github.com/benhoyt/inih
