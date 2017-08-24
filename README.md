@@ -1,8 +1,8 @@
-# What is this?
+# What is Multi-View Video?
 
 This project takes aim at reproducing the results from the paper “Spatial and Temporal Interpolation of Multi-View Image Sequences”, by Tobias Gurdan, Martin R. Oswalk, Daniel Gurdan, and Daniel Cremers. 
 
-Although we were not able to achieve their results, this projects tries to morph a video into another video of the same scene, the two videos being synchronized. To achieve this, mvv\_demo is run, where we extract keypoints from both videos frame by frame using AKAZE, filter them using first Lowe's ratio test and then RANSAC. 
+This project morphs a video into another video of the same scene, the two videos being synchronized. To achieve this, mvv\_demo is run, where we extract keypoints from both videos frame by frame using AKAZE, filter them using first Lowe's ratio test and then RANSAC. 
 
 The resulting keypoints are triangulated using a Delauney triangulation and affine transformations are computed.  This triangulation information is fed into the CUDA routine cuda\_demo, which then morphs the frames by applying the affine transformations onto the triangles, sending the corresponding textures forward from one video onto the other, finally displaying the frames directly from the GPU. 
 
@@ -43,17 +43,21 @@ At this point, all you need to do before running the programs (mvv_demo first, t
 
 Six of these parameters are straightforward:
 
-data_store_path: absolute path of the data_store folder within the repository
-video_path_1 = absolute path of the first video file
-video_path_2 = absolute path of the first video file 
-video_width = horizontal pixel resolution of the videos
-video_height = vertical pixel resolution of the videos
-framerate = FPS of the videos;
+* data_store_path: absolute path of the data_store folder within the repository
+* video_path_1 = absolute path of the first video file
+* video_path_2 = absolute path of the first video file 
+* video_width = horizontal pixel resolution of the videos
+* video_height = vertical pixel resolution of the videos
+* framerate = FPS of the videos;
 
 Please note that the videos that are being interpolated must have the same resolution and framerate. Importantly, they do not have to be the same duration. The syncing of the video is taken care of by the following two parameters:
 
-start_offset = This gives an integer constant offset from the beginning of both videos. This can be set to zero if you want to start at the very beginning.
-delay = The delay is a floating point number specifying the delay in seconds of the second video relative to the first video. In order to calculate the offset, separate the audio from the video files using ffmpeg, and then process the audio files with the MATLAB script audio_sync.m, provided in the repository.
+* start_offset = This gives an integer constant offset from the beginning of both videos. This can be set to zero if you want to start at the very beginning.
+* delay = The delay is a floating point number specifying the delay in seconds of the second video relative to the first video. In order to calculate the offset, separate the audio from the video files using ffmpeg, and then process the audio files with the MATLAB script audio_sync.m, provided in the repository.
+
+In order to get the delay, you need to extract the raw audio files with the following ffmpeg command (directly from the command line):
+
+ffmpeg -i input-video.avi -vn -acodec copy output-audio.mp4
 
 If you shoot your own videos to process with this approach, we recommend an inwards camera angle between 20 and 30 degrees.
 
