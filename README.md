@@ -17,10 +17,10 @@ This utility requires a Windows 10 environment with Visual Studio 2015 installed
 Additionally, due to the extreme size of uncompressed 4D video files, you will want to make sure you have at least 100GB of free space.
 
 The program was tested and works well on the following specifications:
--Windows 10 (64-bit)
--Intel(R) Core i7-6700HQ CPU @ 2.60 GHz
--8.00GB RAM
--GeForce GTX 960M
+* Windows 10 (64-bit)
+* Intel(R) Core i7-6700HQ CPU @ 2.60 GHz
+* 8.00GB RAM
+* GeForce GTX 960M
 
 # Installation Procedure
 
