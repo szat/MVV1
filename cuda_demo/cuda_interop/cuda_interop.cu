@@ -1,3 +1,8 @@
+// Created by Adrian Szatmari and Daniel Hogg, 2017
+// MVV is released under the MIT license
+// https://github.com/danielhogg/mvv
+// https://github.com/szat/mvv
+
 // The following line starts the program without a console window.
 // Comment this out when you want to debug the application.
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")

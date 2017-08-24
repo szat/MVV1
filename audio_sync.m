@@ -1,3 +1,8 @@
+% Created by Adrian Szatmari and Daniel Hogg, 2017
+% MVV is released under the MIT license
+% https://github.com/danielhogg/mvv
+% https://github.com/szat/mvv
+
 % Use the following ffmpeg command in command prompt to separate audio
 % files:
 % ffmpeg -i input-video.mp4 -vn -acodec copy output-audio.mp4

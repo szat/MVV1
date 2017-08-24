@@ -1,3 +1,7 @@
+// Created by Adrian Szatmari and Daniel Hogg, 2017
+// MVV is released under the MIT license
+// https://github.com/danielhogg/mvv
+// https://github.com/szat/mvv
 
 #include "generate_test_points.h"
 #include <opencv2/imgproc.hpp>

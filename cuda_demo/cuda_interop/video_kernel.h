@@ -1,3 +1,8 @@
+// Created by Adrian Szatmari and Daniel Hogg, 2017
+// MVV is released under the MIT license
+// https://github.com/danielhogg/mvv
+// https://github.com/szat/mvv
+
 #pragma once
 
 void interpolate_frame(dim3 grid_size, dim3 block_size, uchar3* d_out_1, uchar3* d_out_2, uchar3* d_in_1, uchar3* d_in_2, uchar4* d_render_final,

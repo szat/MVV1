@@ -1,3 +1,8 @@
+// Created by Adrian Szatmari and Daniel Hogg, 2017
+// MVV is released under the MIT license
+// https://github.com/danielhogg/mvv
+// https://github.com/szat/mvv
+
 /*
 This code was adapted from the Delaunay demo code from openCV, and so we have attached
 the following BSD license.
